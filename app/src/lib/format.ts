@@ -66,3 +66,43 @@ export function icsFor(e: { id: string; title: string; start: Date; end: Date; v
   ].join('\r\n')
   return URL.createObjectURL(new Blob([body], { type: 'text/calendar' }))
 }
+
+/** Google Calendar "add event" link. Opens in a new tab; nothing is sent until the user saves. */
+export function googleCalendarUrl(e: { title: string; start: Date; end: Date; venue: string; summary: string; campus?: string }) {
+  const f = (d: Date) => d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '')
+  const q = new URLSearchParams({
+    action: 'TEMPLATE',
+    text: e.title,
+    dates: `${f(e.start)}/${f(e.end)}`,
+    details: `${e.summary}\n\nFrom RVU Connect`,
+    location: `${e.venue}, RV University${e.campus ? `, ${e.campus}` : ''}`,
+  })
+  return `https://calendar.google.com/calendar/render?${q}`
+}
+
+/** Absolute link to a screen in this app, for sharing. */
+export const shareUrl = (path: string) => `${location.origin}${location.pathname}#/${path}`
+
+/** Short, human-typeable ticket code. Deterministic so the host can match it. */
+export function ticketCode(eventId: string, attendeeId: string) {
+  let h = 2166136261
+  for (const ch of `${eventId}:${attendeeId}`) h = Math.imul(h ^ ch.charCodeAt(0), 16777619)
+  const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
+  let out = ''
+  let n = h >>> 0
+  for (let i = 0; i < 6; i++) {
+    out += alphabet[n % alphabet.length]
+    n = Math.floor(n / alphabet.length) || (h >>> (i + 3))
+  }
+  return `${out.slice(0, 3)}-${out.slice(3)}`
+}
+
+export const REMINDER_OPTIONS = [
+  { mins: 1440, label: 'A day before' },
+  { mins: 60, label: 'An hour before' },
+  { mins: 15, label: '15 minutes before' },
+] as const
+
+export const reminderLabel = (mins: number) => REMINDER_OPTIONS.find((o) => o.mins === mins)?.label ?? `${mins} min before`
+
+export const monthLabel = (d: Date) => `${d.toLocaleString('en-GB', { month: 'long' })} ${d.getFullYear()}`

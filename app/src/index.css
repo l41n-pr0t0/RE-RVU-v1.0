@@ -356,3 +356,16 @@ html.ink-vt::view-transition-group(root) { animation-duration: var(--ink-duratio
 /* Room for the phone tab bar */
 .pb-tabs { padding-bottom: calc(4.75rem + env(safe-area-inset-bottom)); }
 @media (min-width: 768px) { .pb-tabs { padding-bottom: 0; } }
+
+/* Archive frame placeholder: a warm exposure, different per frame, until the host uploads a photograph */
+.frame-placeholder {
+  background:
+    radial-gradient(120% 90% at calc(var(--seed) * 1%) 30%, rgb(215 172 84 / 0.28), transparent 60%),
+    linear-gradient(160deg, #233039, #10171c 70%);
+}
+.frame-placeholder::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(0deg, rgb(255 255 255 / 0.025) 0 1px, transparent 1px 3px);
+}

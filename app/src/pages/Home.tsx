@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { EventRow, SeatMeter, StatusTag, useOpenEvent } from '../components/EventBits'
 import { GoldLine } from '../components/GoldLine'
 import { EmptyState, ErrorState, Icon, ListSkeleton, Monogram, Num, PageHeader, Reveal, SectionTitle } from '../components/ui'
-import { clubs, events, notices, projects } from '../data/mock'
+import { skillMatch, useCatalog } from '../lib/catalog'
 import { countdown, daysFrom, longDate, relativeDay, time } from '../lib/format'
 import { href } from '../lib/router'
 import { useQuery, useStore } from '../lib/store'
@@ -12,6 +12,7 @@ const greeting = (h: number) => (h < 12 ? 'Good morning' : h < 17 ? 'Good aftern
 /** Sc. 02: Today. What starts next, what is due, and the week on one line. */
 export default function Home() {
   const { profile, savedEvents, registered, followedClubs, readNotices, markRead } = useStore()
+  const { clubs, events, notices, projects } = useCatalog()
   const q = useQuery(events)
   const openEvent = useOpenEvent()
   const [day, setDay] = useState<number | null>(null)
@@ -27,7 +28,12 @@ export default function Home() {
   const interests = profile?.interests ?? []
   const forYou = upcoming.filter((e) => e.id !== next?.id && (interests.includes(e.category) || followedClubs.includes(e.hostId))).slice(0, 3)
   const dayList = day === null ? thisWeek : upcoming.filter((e) => daysFrom(e.start, now) === day)
-  const teams = (interests.length ? projects.filter((p) => interests.includes(p.category)) : projects).slice(0, 3)
+  const skills = profile?.skills ?? []
+  const hiring = projects.filter((p) => !p.mine && p.openings.length && (!p.closes || p.closes > now))
+  // Skill matches first, then interest matches, then whoever closes soonest
+  const score = (p: (typeof hiring)[number]) =>
+    Math.max(0, ...p.openings.map((o) => skillMatch(skills, o.skills).length)) * 10 + (interests.includes(p.category) ? 1 : 0)
+  const teams = [...hiring].sort((a, b) => score(b) - score(a) || +(a.closes ?? 0) - +(b.closes ?? 0)).slice(0, 3)
   const recruiting = clubs.filter((c) => c.recruiting && (!interests.length || interests.includes(c.category))).slice(0, 8)
 
   return (
@@ -174,16 +180,17 @@ export default function Home() {
         </section>
 
         <section aria-labelledby="teams">
-          <SectionTitle id="teams" title="Teams hiring" action={<a className="hover-gold text-sm text-mute" href={href('projects')}>All →</a>} />
+          <SectionTitle id="teams" title="Teams looking for you" action={<a className="hover-gold text-sm text-mute" href={href('projects')}>All →</a>} />
           <ul className="divide-y divide-line">
             {teams.map((p) => (
               <li key={p.id} className="py-4">
                 <a href={href(`projects/${p.id}`)} className="group block">
-                  <span className="block font-bold group-hover:text-gold">{p.title}</span>
-                  <span className="mt-1 block text-sm text-mute">Needs {p.roles.join(', ').toLowerCase()}</span>
-                  <span className="mt-2 flex items-center gap-3 text-xs text-mute">
-                    <span className="tag">{p.commitment}</span>
-                    <span>Closes <Num>{relativeDay(p.deadline, now)}</Num></span>
+                  <span className="block font-bold group-hover:text-gold">{p.name}</span>
+                  <span className="mt-1 block text-sm text-mute">Looking for {p.openings.map((o) => o.role).join(', ').toLowerCase()}</span>
+                  <span className="mt-2 flex flex-wrap items-center gap-3 text-xs text-mute">
+                    {p.openings.some((o) => skillMatch(skills, o.skills).length > 0) && <span className="tag tag-gold">Matches your skills</span>}
+                    <span className="tag">{p.openings[0].commitment}</span>
+                    {p.closes && <span>Closes <Num>{relativeDay(p.closes, now)}</Num></span>}
                   </span>
                 </a>
               </li>

@@ -1,36 +1,48 @@
 import { motion, useReducedMotion } from 'framer-motion'
 import { useState } from 'react'
 import { LinksFields, linksValid, normaliseLink } from '../components/LinksFields'
+import { blankLinks, clearPending, pendingIdentity } from '../components/SignIn'
 import { DOLLY, Icon, Logo, Num } from '../components/ui'
 import { CATEGORIES, SCHOOLS, type Category, type Links, type Profile, type School } from '../data/types'
 import { go } from '../lib/router'
 import { useStore } from '../lib/store'
 
 /**
- * Sc. 01: the only setup screen, shown once after sign-in (fixes F4, F7).
- * The name is already known from the email, so this asks for what isn't.
+ * The only setup screen, shown once after Google sign-in (fixes F4, F7).
+ * Google gives us the name and email; those are fixed here. Everything else starts
+ * empty and is the student's to fill in. Nothing is inferred from the address.
  */
 export default function Welcome() {
   const { profile, setProfile } = useStore()
   const reduce = useReducedMotion()
-  const [year, setYear] = useState<Profile['year']>(profile?.year ?? 1)
-  const [school, setSchool] = useState<School>(profile?.school ?? SCHOOLS[0])
+  const [who] = useState(() => pendingIdentity() ?? (profile ? { name: profile.name, email: profile.email } : null))
+  const [year, setYear] = useState<Profile['year'] | null>(profile?.year ?? null)
+  const [school, setSchool] = useState<School | ''>(profile?.school ?? '')
   const [interests, setInterests] = useState<Category[]>(profile?.interests ?? [])
-  const [links, setLinks] = useState<Links>(profile?.links ?? { github: '', linkedin: '', portfolio: '' })
+  const [links, setLinks] = useState<Links>(profile?.links ?? blankLinks)
+  const [tried, setTried] = useState(false)
 
-  if (!profile) return null
-  const first = profile.name.split(' ')[0]
+  if (!who) return null
+  const first = who.name.split(' ')[0]
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!linksValid(links)) return
+    setTried(true)
+    if (!year || !school || !linksValid(links)) return
     setProfile({
+      skills: [],
+      openToCollaborate: false,
+      bio: '',
+      role: 'Student',
       ...profile,
+      name: who.name,
+      email: who.email,
       year,
       school,
       interests,
       links: { github: normaliseLink(links.github), linkedin: normaliseLink(links.linkedin), portfolio: normaliseLink(links.portfolio) },
     })
+    clearPending()
     go('home')
   }
 
@@ -45,21 +57,33 @@ export default function Welcome() {
         </div>
         <div className="wrap pt-8 pb-8 md:px-10 md:pb-14">
           <p className="flex items-center gap-3">
-            <span className="slate-no">Sc. 01</span>
-            <span className="h-px w-8 bg-line-strong" aria-hidden />
-            <span className="eyebrow">One step</span>
+            <span className="eyebrow">Signed in with Google</span>
           </p>
           <h1 className="mt-4 text-[clamp(2.3rem,1.8rem+2.4vw,4rem)] leading-[1.02]">
             Welcome, <span className="italic text-gold">{first}.</span>
           </h1>
           <p className="mt-4 max-w-[40ch] text-mute">
-            We read your name from your RVU email. Confirm the rest and choose what you care about. You can change any of it later under You.
+            Tell us your year and school, and what you’d like to see first. You can change all of it later under You.
           </p>
         </div>
       </aside>
 
-      <form onSubmit={submit} className="wrap max-w-2xl py-8 md:px-12 md:py-16">
-        <motion.fieldset {...enter(0)}>
+      <form onSubmit={submit} noValidate className="wrap max-w-2xl py-8 md:px-12 md:py-16">
+        <motion.dl className="grid gap-px border border-line bg-line sm:grid-cols-2" {...enter(0)}>
+          <div className="bg-ink px-4 py-3">
+            <dt className="eyebrow">Name</dt>
+            <dd className="mt-1 flex items-center justify-between gap-2 font-semibold">
+              {who.name}
+              <span className="text-xs font-normal text-mute">From Google</span>
+            </dd>
+          </div>
+          <div className="bg-ink px-4 py-3">
+            <dt className="eyebrow">Email</dt>
+            <dd className="mt-1 truncate">{who.email}</dd>
+          </div>
+        </motion.dl>
+
+        <motion.fieldset className="mt-8" {...enter(0)} aria-describedby={tried && !year ? 'year-err' : undefined}>
           <legend className="eyebrow">Year of study</legend>
           <div className="mt-3 grid grid-cols-4 border border-line">
             {([1, 2, 3, 4] as const).map((y) => (
@@ -74,15 +98,25 @@ export default function Welcome() {
               </button>
             ))}
           </div>
+          {tried && !year && <p id="year-err" className="mt-2 text-sm text-[#e0795f]">Error: choose your year.</p>}
         </motion.fieldset>
 
         <motion.div className="mt-8" {...enter(1)}>
           <label htmlFor="school" className="eyebrow">School</label>
-          <select id="school" className="field mt-3" value={school} onChange={(e) => setSchool(e.target.value as School)}>
+          <select
+            id="school"
+            className="field mt-3"
+            value={school}
+            aria-invalid={tried && !school}
+            aria-describedby={tried && !school ? 'school-err' : undefined}
+            onChange={(e) => setSchool(e.target.value as School)}
+          >
+            <option value="" disabled>Choose your school</option>
             {SCHOOLS.map((s) => (
               <option key={s}>{s}</option>
             ))}
           </select>
+          {tried && !school && <p id="school-err" className="mt-2 text-sm text-[#e0795f]">Error: choose your school.</p>}
         </motion.div>
 
         <motion.fieldset className="mt-8" {...enter(2)}>
@@ -106,10 +140,10 @@ export default function Welcome() {
 
         <motion.div className="mt-10 flex flex-wrap items-center gap-3 border-t border-line pt-8" {...enter(4)}>
           <button type="submit" className="btn btn-gold">
-            <span>Open today’s call sheet</span>
+            <span>Go to my week</span>
             <Icon name="arrow" className="h-4 w-4" />
           </button>
-          <button type="button" className="btn" onClick={() => go('home')}>Skip for now</button>
+          <button type="button" className="btn" onClick={() => { clearPending(); go('') }}>Cancel</button>
         </motion.div>
       </form>
     </div>

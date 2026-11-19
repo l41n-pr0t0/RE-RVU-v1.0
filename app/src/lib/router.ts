@@ -10,9 +10,13 @@ export type Route =
   | { name: 'projects'; id?: string }
   | { name: 'notices' }
   | { name: 'profile' }
+  | { name: 'people'; id?: string }
+  | { name: 'saved' }
+  | { name: 'calendar' }
+  | { name: 'host'; id?: string }
 
 export function parse(hash: string): Route {
-  const [, a, b] = hash.replace(/^#/, '').split('/')
+  const [, a, b] = hash.replace(/^#/, '').split('?')[0].split('/')
   switch (a) {
     case 'welcome':
       return { name: 'welcome' }
@@ -28,6 +32,14 @@ export function parse(hash: string): Route {
       return { name: 'notices' }
     case 'profile':
       return { name: 'profile' }
+    case 'people':
+      return { name: 'people', id: b }
+    case 'saved':
+      return { name: 'saved' }
+    case 'calendar':
+      return { name: 'calendar' }
+    case 'host':
+      return { name: 'host', id: b }
     default:
       return { name: 'landing' }
   }

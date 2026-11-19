@@ -5,6 +5,7 @@ import { ListSkeleton } from './components/ui'
 import { go, useRoute, type Route } from './lib/router'
 import { StoreProvider, useStore } from './lib/store'
 import Landing from './pages/Landing'
+import { pendingIdentity } from './components/SignIn'
 import Home from './pages/Home'
 
 // Landing and Today ship in the first bundle; the rest load on first visit.
@@ -41,7 +42,7 @@ const Fallback = () => (
 function Routed() {
   const route = useRoute()
   const { profile } = useStore()
-  const needsProfile = route.name !== 'landing' && !profile
+  const needsProfile = route.name !== 'landing' && !profile && !(route.name === 'welcome' && pendingIdentity())
 
   // Every app page needs a profile (guest counts). Without one, start at the landing screen.
   useEffect(() => {

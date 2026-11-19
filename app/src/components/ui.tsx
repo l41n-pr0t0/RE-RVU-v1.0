@@ -151,6 +151,7 @@ export function Dialog({
 export type IconName =
   | 'search' | 'close' | 'bookmark' | 'bookmark-fill' | 'calendar' | 'pin' | 'arrow' | 'arrow-left' | 'check' | 'clock'
   | 'users' | 'home' | 'layers' | 'user' | 'bell' | 'github' | 'linkedin' | 'link' | 'play' | 'pause' | 'plus' | 'external' | 'ticket'
+  | 'share' | 'qr' | 'camera' | 'edit' | 'mail' | 'globe' | 'chat' | 'image' | 'trash' | 'eye' | 'eye-off' | 'settings' | 'up' | 'down' | 'archive' | 'filter'
 
 export function Icon({ name, className = 'h-5 w-5' }: { name: IconName; className?: string }) {
   const p = { fill: 'none', stroke: 'currentColor', strokeWidth: 1.5, strokeLinecap: 'square' as const, strokeLinejoin: 'miter' as const }
@@ -178,6 +179,22 @@ export function Icon({ name, className = 'h-5 w-5' }: { name: IconName; classNam
     plus: <path d="M12 5v14M5 12h14" {...p} />,
     external: <><path d="M14 5h5v5M19 5l-8 8" {...p} /><path d="M17 14v5H5V7h5" {...p} /></>,
     ticket: <><path d="M4 7h16v3a2 2 0 0 0 0 4v3H4v-3a2 2 0 0 0 0-4z" {...p} /><path d="M14 7v10" {...p} strokeDasharray="1.5 2" /></>,
+    share: <><path d="M12 4v11M7.5 8.5 12 4l4.5 4.5" {...p} /><path d="M5 12v8h14v-8" {...p} /></>,
+    qr: <><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4z" {...p} /><path d="M14 14h2v2h-2zM18 14h2M14 18v2M18 18h2v2" {...p} /></>,
+    camera: <><path d="M4 8h3l2-3h6l2 3h3v11H4z" {...p} /><path d="M12 16.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z" {...p} /></>,
+    edit: <><path d="M4 20h4L19 9l-4-4L4 16z" {...p} /><path d="M13 7l4 4" {...p} /></>,
+    mail: <><path d="M3 6h18v12H3z" {...p} /><path d="m3 7 9 6 9-6" {...p} /></>,
+    globe: <><path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z" {...p} /><path d="M3 12h18M12 3c2.5 2.6 3.7 5.6 3.7 9s-1.2 6.4-3.7 9c-2.5-2.6-3.7-5.6-3.7-9S9.5 5.6 12 3z" {...p} /></>,
+    chat: <><path d="M4 5h16v11H9l-5 4z" {...p} /></>,
+    image: <><path d="M4 5h16v14H4z" {...p} /><path d="m4 16 5-5 4 4 2-2 5 5" {...p} /><path d="M15.5 9.5h.01" {...p} /></>,
+    trash: <><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13" {...p} /></>,
+    eye: <><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12z" {...p} /><path d="M12 14.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z" {...p} /></>,
+    'eye-off': <><path d="M2 12s3.5-6 10-6c1.6 0 3 .4 4.2 1M22 12s-3.5 6-10 6c-1.6 0-3-.4-4.2-1" {...p} /><path d="M4 20 20 4" {...p} /></>,
+    settings: <><path d="M4 7h10M18 7h2M4 17h2M10 17h10" {...p} /><path d="M14 5h4v4h-4zM6 15h4v4H6z" {...p} /></>,
+    up: <path d="m6 15 6-6 6 6" {...p} />,
+    down: <path d="m6 9 6 6 6-6" {...p} />,
+    archive: <><path d="M3 4h18v4H3zM5 8v12h14V8" {...p} /><path d="M10 12h4" {...p} /></>,
+    filter: <path d="M4 5h16l-6 8v6l-4-2v-4z" {...p} />,
   }
   return (
     <svg viewBox="0 0 24 24" className={className} aria-hidden>

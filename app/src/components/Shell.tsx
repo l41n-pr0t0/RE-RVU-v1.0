@@ -1,7 +1,8 @@
 import { motion } from 'framer-motion'
 import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react'
-import { clubs, events, notices, projects } from '../data/mock'
+import { useCatalog } from '../lib/catalog'
 import { relativeDay } from '../lib/format'
+import { NotificationsPanel, useNotifications } from './Notifications'
 import { initials } from '../lib/identity'
 import { go, href, type Route } from '../lib/router'
 import { useStore } from '../lib/store'
@@ -14,17 +15,23 @@ const NAV: { key: Route['name']; label: string; icon: IconName }[] = [
   { key: 'events', label: 'Events', icon: 'calendar' },
   { key: 'clubs', label: 'Clubs', icon: 'users' },
   { key: 'projects', label: 'Projects', icon: 'layers' },
+  { key: 'people', label: 'People', icon: 'user' },
   { key: 'notices', label: 'Notices', icon: 'bell' },
 ]
 // Phones: five thumb-reachable tabs. Notices move to the bell in the header.
 const TABS: { key: Route['name']; label: string; icon: IconName }[] = [...NAV.slice(0, 4), { key: 'profile', label: 'You', icon: 'user' }]
+// Pages reached from the header icons and the You tab, highlighted under "You" on phones
+const UNDER_YOU: Route['name'][] = ['profile', 'saved', 'calendar', 'people', 'host', 'notices']
 
 const SLAB = 'polygon(6% 0, 100% 0, 94% 100%, 0 100%)'
 
 export function Shell({ route, children }: { route: Route; children: ReactNode }) {
   const [paletteOpen, setPaletteOpen] = useState(false)
+  const [notifOpen, setNotifOpen] = useState(false)
   const { profile, readNotices } = useStore()
+  const { notices } = useCatalog()
   const unread = notices.filter((n) => n.priority === 'High' && !readNotices.includes(n.id)).length
+  const { unseen } = useNotifications()
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -90,10 +97,16 @@ export function Shell({ route, children }: { route: Route; children: ReactNode }
               <span className="hidden text-sm text-mute lg:inline">Search</span>
               <kbd className="num ml-auto hidden border border-line px-1.5 text-[0.64rem] text-mute lg:inline">Ctrl K</kbd>
             </button>
-            <a href={href('notices')} aria-label={`Notices${unread ? `, ${unread} need action` : ''}`} className="icon-btn relative md:hidden">
-              <Icon name="bell" className="h-[18px] w-[18px]" />
-              {unread > 0 && <span className="num absolute -top-1 -right-1 bg-gold px-1 text-[0.6rem] font-semibold text-black">{unread}</span>}
+            <a href={href('saved')} aria-label="Saved" aria-current={route.name === 'saved' ? 'page' : undefined} className="icon-btn hidden md:grid" aria-pressed={route.name === 'saved'}>
+              <Icon name="bookmark" className="h-[18px] w-[18px]" />
             </a>
+            <a href={href('calendar')} aria-label="Your calendar" aria-current={route.name === 'calendar' ? 'page' : undefined} className="icon-btn hidden md:grid" aria-pressed={route.name === 'calendar'}>
+              <Icon name="calendar" className="h-[18px] w-[18px]" />
+            </a>
+            <button onClick={() => setNotifOpen(true)} aria-label={`Notifications${unseen ? `, ${unseen} new` : ''}`} className="icon-btn relative">
+              <Icon name="bell" className="h-[18px] w-[18px]" />
+              {unseen > 0 && <span className="num absolute -top-1 -right-1 bg-gold px-1 text-[0.6rem] font-semibold text-black">{unseen > 9 ? '9+' : unseen}</span>}
+            </button>
             <ThemeToggle />
             <a
               href={href('profile')}
@@ -122,6 +135,7 @@ export function Shell({ route, children }: { route: Route; children: ReactNode }
 
       <MobileTabs route={route} />
       <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />
+      <NotificationsPanel open={notifOpen} onClose={() => setNotifOpen(false)} />
     </div>
   )
 }
@@ -132,7 +146,7 @@ function MobileTabs({ route }: { route: Route }) {
     <nav aria-label="Main" className="fixed inset-x-0 bottom-0 z-40 border-t border-line-strong bg-ink pb-[env(safe-area-inset-bottom)] md:hidden">
       <ul className="flex">
         {TABS.map((t) => {
-          const active = route.name === t.key
+          const active = route.name === t.key || (t.key === 'profile' && UNDER_YOU.includes(route.name))
           return (
             <li key={t.key} className="flex-1 border-l border-line first:border-l-0">
               <a
@@ -154,7 +168,7 @@ function MobileTabs({ route }: { route: Route }) {
 
 /* ---------- Command palette: one search across everything (F10) ---------- */
 
-type Hit = { kind: 'Event' | 'Club' | 'Project' | 'Notice' | 'Go to'; label: string; meta: string; run: () => void }
+type Hit = { kind: 'Event' | 'Past' | 'Club' | 'Project' | 'Person' | 'Notice' | 'Go to'; label: string; meta: string; run: () => void }
 
 function CommandPalette({ open, onClose }: { open: boolean; onClose: () => void }) {
   const titleId = useId()
@@ -170,22 +184,28 @@ function PaletteBody({ titleId, onClose }: { titleId: string; onClose: () => voi
   const [i, setI] = useState(0)
   const listRef = useRef<HTMLUListElement>(null)
   const openEvent = useOpenEvent()
+  const { events, pastEvents, clubs, projects, students, notices } = useCatalog()
 
   const hits = useMemo<Hit[]>(() => {
     const s = q.trim().toLowerCase()
     const nav: Hit[] = [
       ...NAV.map((n) => ({ kind: 'Go to' as const, label: n.label, meta: 'Page', run: () => go(n.key) })),
       { kind: 'Go to', label: 'Your profile', meta: 'Page', run: () => go('profile') },
+      { kind: 'Go to', label: 'Saved', meta: 'Events, notices and projects you kept', run: () => go('saved') },
+      { kind: 'Go to', label: 'Your calendar', meta: 'Everything you said yes to', run: () => go('calendar') },
+      { kind: 'Go to', label: 'Host dashboard', meta: 'For approved club cores', run: () => go('host') },
     ]
     const all: Hit[] = [
       ...events.map((e) => ({ kind: 'Event' as const, label: e.title, meta: `${relativeDay(e.start)} · ${e.hostName}`, run: () => openEvent(e.id) })),
-      ...clubs.map((c) => ({ kind: 'Club' as const, label: c.name, meta: c.category, run: () => go(`clubs/${c.id}`) })),
-      ...projects.map((p) => ({ kind: 'Project' as const, label: p.title, meta: p.roles.join(', '), run: () => go(`projects/${p.id}`) })),
+      ...clubs.map((c) => ({ kind: 'Club' as const, label: c.name, meta: `${c.category} · ${c.tagline}`, run: () => go(`clubs/${c.id}`) })),
+      ...projects.map((p) => ({ kind: 'Project' as const, label: p.name, meta: [p.status, ...p.stack, ...p.openings.map((o) => o.role)].join(', '), run: () => go(`projects/${p.id}`) })),
+      ...students.map((p) => ({ kind: 'Person' as const, label: p.name, meta: p.skills.join(', '), run: () => go(`people/${p.id}`) })),
+      ...pastEvents.map((e) => ({ kind: 'Past' as const, label: e.title, meta: `${e.hostName} · archive`, run: () => openEvent(e.id) })),
       ...notices.map((n) => ({ kind: 'Notice' as const, label: n.title, meta: n.from, run: () => go('notices') })),
     ]
     if (!s) return [...nav, ...all.filter((h) => h.kind === 'Event').slice(0, 4)]
     return [...nav, ...all].filter((h) => `${h.label} ${h.meta} ${h.kind}`.toLowerCase().includes(s)).slice(0, 12)
-  }, [q, openEvent])
+  }, [q, openEvent, events, pastEvents, clubs, projects, students, notices])
 
   useEffect(() => setI(0), [q])
   useEffect(() => {
@@ -219,7 +239,7 @@ function PaletteBody({ titleId, onClose }: { titleId: string; onClose: () => voi
               pick(hits[i])
             }
           }}
-          placeholder="Events, clubs, projects, notices"
+          placeholder="Events, clubs, projects, people, skills"
           aria-label="Search"
           aria-controls="palette-list"
           aria-activedescendant={hits[i] ? `hit-${i}` : undefined}

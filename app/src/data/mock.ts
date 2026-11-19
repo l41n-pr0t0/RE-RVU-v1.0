@@ -1,4 +1,4 @@
-import type { Ask, CampusEvent, Club, Notice, Project } from './types'
+import type { Ask, CampusEvent, Club, ClubPage, Notice, Photo, Project, Student } from './types'
 
 /**
  * Prototype data. Club names are the 26 approved clubs listed on the live
@@ -54,7 +54,7 @@ function ev(
   hours: number,
   venue: string,
   summary: string,
-  opts: Partial<Pick<CampusEvent, 'seats' | 'registered' | 'free' | 'registrationOpen' | 'campus'>> = {},
+  opts: Partial<Pick<CampusEvent, 'seats' | 'registered' | 'free' | 'registrationOpen' | 'campus' | 'waitlist' | 'photos' | 'recap'>> = {},
 ): CampusEvent {
   const c = clubs.find((x) => x.id === hostId)
   return {
@@ -73,15 +73,18 @@ function ev(
     registered: opts.registered ?? 40,
     free: opts.free ?? true,
     registrationOpen: opts.registrationOpen ?? true,
+    waitlist: opts.waitlist ?? 0,
+    photos: opts.photos,
+    recap: opts.recap,
   }
 }
 
 export const events: CampusEvent[] = [
-  ev('ai-build-night', 'AI Build Night', 'iterium', at(0, 18), 5, 'Innovation Lab, Block B', 'Five hours, one brief, small teams. Bring a laptop; mentors and dinner provided.', { seats: 80, registered: 71 }),
+  ev('ai-build-night', 'AI Build Night', 'iterium', at(0, 18), 5, 'Innovation Lab, Block B', 'Five hours, one brief, small teams. Bring a laptop; mentors and dinner provided.', { seats: 80, registered: 78 }),
   ev('ctf-101', 'Capture the Flag 101', 'cybersec', at(1, 16), 2, 'Seminar Hall 2', 'A beginner-friendly CTF. No prior security experience needed.', { seats: 60, registered: 22 }),
   ev('open-mic', 'Open Mic Friday', 'open-mike', at(2, 17, 30), 2, 'Central Lawn', 'Five-minute slots. Sign up on arrival or just come to listen.', { seats: 200, registered: 64 }),
   ev('recruitment-fair', 'Club Recruitment Fair', 'School of Liberal Arts and Sciences', at(3, 10), 6, 'Main Quadrangle', 'Every recruiting club in one place. Meet the core teams and sign up on the spot.', { seats: 1500, registered: 412 }),
-  ev('pitch-clinic', 'Pitch Clinic with Founders', 'ecell', at(3, 15), 2, 'Board Room, Block A', 'Bring a two-minute pitch and leave with direct feedback from three founders.', { seats: 30, registered: 30, registrationOpen: false }),
+  ev('pitch-clinic', 'Pitch Clinic with Founders', 'ecell', at(3, 15), 2, 'Board Room, Block A', 'Bring a two-minute pitch and leave with direct feedback from three founders.', { seats: 30, registered: 30, waitlist: 4 }),
   ev('night-sky', 'Night Sky Watch', 'vyoma', at(4, 19), 3, 'Rooftop, Block C', 'Telescopes on the roof. Saturn should be visible if the clouds behave.', { seats: 40, registered: 18 }),
   ev('aws-cert', 'Cloud Practitioner Study Circle', 'aws', at(5, 11), 2, 'Lab 4, Block B', 'Week 3 of 6: storage and databases. Newcomers welcome. Notes are shared.', { seats: 50, registered: 27 }),
   ev('screening', 'Screening: Student Shorts', 'thesis', at(6, 18), 2, 'Auditorium', 'Six short films by RV University students, followed by a Q&A with the directors.', { seats: 300, registered: 96 }),
@@ -92,20 +95,129 @@ export const events: CampusEvent[] = [
 ]
 
 /** Past events stay visible on a club page (fixes "events disappear"). */
+const frames = (prefix: string, captions: string[]): Photo[] => captions.map((caption, i) => ({ id: `${prefix}-${i}`, caption }))
+
 export const pastEvents: CampusEvent[] = [
-  ev('past-iterium-1', 'Automation Teardown', 'iterium', at(-12, 17), 2, 'Seminar Hall 2', 'We took apart three campus workflows and rebuilt them with agents.', { registrationOpen: false }),
-  ev('past-cybersec-1', 'Phishing in the Wild', 'cybersec', at(-9, 16), 1, 'Seminar Hall 1', 'Real phishing emails sent to students, and how to spot them.', { registrationOpen: false }),
-  ev('past-rudra-1', 'Monsoon Jam', 'rudra', at(-20, 18), 3, 'Amphitheatre', 'Seven bands, one very loud evening.', { registrationOpen: false }),
+  ev('past-iterium-1', 'Automation Teardown', 'iterium', at(-12, 17), 2, 'Seminar Hall 2', 'We took apart three campus workflows and rebuilt them with agents.', {
+    registrationOpen: false, seats: 90, registered: 84,
+    recap: 'Three teams rebuilt the room-booking, lost-and-found and attendance flows. The room-booking agent is now a club project.',
+    photos: frames('pi1', ['Teams pick a workflow', 'Whiteboard teardown', 'Demo of the booking agent', 'Judges’ questions', 'The winning team']),
+  }),
+  ev('past-cybersec-1', 'Phishing in the Wild', 'cybersec', at(-9, 16), 1, 'Seminar Hall 1', 'Real phishing emails sent to students, and how to spot them.', {
+    registrationOpen: false, seats: 120, registered: 97,
+    recap: 'Forty real emails, anonymised. Most of the room fell for the fee-receipt one.',
+    photos: frames('pc1', ['The fee-receipt email', 'Spot the sender', 'Q&A']),
+  }),
+  ev('past-rudra-1', 'Monsoon Jam', 'rudra', at(-20, 18), 3, 'Amphitheatre', 'Seven bands, one very loud evening.', {
+    registrationOpen: false, seats: 400, registered: 380,
+    recap: 'Seven bands, one power cut, and an acoustic set by phone light.',
+    photos: frames('pr1', ['Soundcheck', 'Band four', 'The power cut', 'Phone-light encore', 'Crowd at the front', 'Packing up']),
+  }),
+  ev('past-chiptech-1', 'Solder Saturday', 'chiptech', at(-15, 10), 4, 'Electronics Lab', 'Learn to solder by building a small LED badge.', {
+    registrationOpen: false, seats: 30, registered: 30,
+    recap: 'Thirty badges built, two burnt fingers, zero fires.',
+    photos: frames('pch1', ['Kits on the bench', 'First joints', 'Finished badges']),
+  }),
+  ev('past-ecell-1', 'Founders’ Fireside', 'ecell', at(-6, 17), 2, 'Board Room, Block A', 'Two alumni founders on their first year.', {
+    registrationOpen: false, seats: 40, registered: 40,
+    recap: 'Notes from the talk are on the ECell page.',
+    photos: frames('pe1', ['Fireside chairs', 'Questions from the floor']),
+  }),
 ]
 
+const P = 'School of Computer Science and Engineering' as const
+
 export const projects: Project[] = [
-  { id: 'p-mess', title: 'Mess menu that learns', owner: 'Ananya R.', school: 'School of Computer Science and Engineering', category: 'Technology', pitch: 'Predict tomorrow’s attendance at the mess to cut food waste. We have three weeks of footfall data.', roles: ['Data analyst', 'Frontend developer'], commitment: '4 hours a week', deadline: at(6, 23, 59), team: 3 },
-  { id: 'p-wayfind', title: 'Campus wayfinding signage', owner: 'Kabir S.', school: 'School of Design and Innovation', category: 'Design', pitch: 'New students get lost in Block B. Redesign the signage system and test it during orientation.', roles: ['Visual designer', 'Researcher'], commitment: '3 hours a week', deadline: at(9, 23, 59), team: 2 },
-  { id: 'p-podcast', title: 'Hallway: a student podcast', owner: 'Meera K.', school: 'School of Film, Media and Creative Arts', category: 'Media', pitch: 'Ten-minute episodes with the people who keep the campus running. Pilot recorded.', roles: ['Sound editor', 'Host', 'Producer'], commitment: '2 hours a week', deadline: at(4, 23, 59), team: 4 },
-  { id: 'p-thrift', title: 'Hostel thrift exchange', owner: 'Rohan P.', school: 'School of Business', category: 'Social impact', pitch: 'A swap shelf and a simple listing board so books and coats move instead of being thrown out.', roles: ['Operations lead', 'Marketing'], commitment: '2 hours a week', deadline: at(13, 23, 59), team: 2 },
-  { id: 'p-policy', title: 'Bus routes, by the numbers', owner: 'Ishita V.', school: 'School of Economics and Public Policy', category: 'Business', pitch: 'Survey commuters and model a better shuttle timetable to propose to the transport office.', roles: ['Survey designer', 'Data analyst'], commitment: '3 hours a week', deadline: at(2, 23, 59), team: 3 },
-  { id: 'p-legal', title: 'Know your tenancy rights', owner: 'Arjun M.', school: 'School of Law', category: 'Social impact', pitch: 'Plain-language guides for students renting near campus, reviewed by faculty.', roles: ['Writer', 'Illustrator'], commitment: '2 hours a week', deadline: at(10, 23, 59), team: 2 },
+  {
+    id: 'p-greenhouse', name: 'Greenhouse sensor mesh', category: 'Technology', school: P, status: 'Building',
+    description: 'Soil-moisture and temperature sensors across the campus garden, reporting to a small dashboard so the Green Alliance waters only what needs it.',
+    stack: ['ESP32', 'LoRa', 'C++', 'React', 'InfluxDB'],
+    github: 'https://github.com/rvu-greenhouse/mesh', demo: '',
+    team: [{ name: 'Nikhil Varma', role: 'Lead, firmware', studentId: 's-nikhil' }, { name: 'Sara Thomas', role: 'Dashboard', studentId: 's-sara' }],
+    openings: [{ role: 'Embedded systems developer', skills: ['C++', 'ESP32', 'Low-power design'], commitment: '4 hours a week' }, { role: 'PCB designer', skills: ['KiCad', 'Soldering'], commitment: '3 hours a week' }],
+    closes: at(6, 23, 59), updated: at(-1, 20),
+  },
+  {
+    id: 'p-mess', name: 'Mess menu that learns', category: 'Technology', school: P, status: 'Building',
+    description: 'Predicts tomorrow’s attendance at the mess from three weeks of footfall data, so the kitchen cooks closer to what gets eaten.',
+    stack: ['Python', 'scikit-learn', 'FastAPI', 'TypeScript'],
+    github: 'https://github.com/ananya-r/mess-forecast', demo: 'https://mess-forecast.example.app',
+    team: [{ name: 'Ananya Rao', role: 'Lead, modelling', studentId: 's-ananya' }, { name: 'Dev Malhotra', role: 'Backend' }, { name: 'Pooja Iyer', role: 'Data collection' }],
+    openings: [{ role: 'Data analyst', skills: ['Python', 'Pandas', 'Statistics'], commitment: '4 hours a week' }, { role: 'Frontend developer', skills: ['React', 'TypeScript'], commitment: '3 hours a week' }],
+    closes: at(4, 23, 59), updated: at(-2, 18),
+  },
+  {
+    id: 'p-wayfind', name: 'Campus wayfinding signage', category: 'Design', school: 'School of Design and Innovation', status: 'Building',
+    description: 'New students get lost in Block B. A redesigned signage system, prototyped in card and tested during orientation week.',
+    stack: ['Figma', 'Illustrator', 'Field testing'],
+    github: '', demo: 'https://www.figma.com/proto/wayfinding-demo',
+    team: [{ name: 'Kabir Sethi', role: 'Lead, wayfinding', studentId: 's-kabir' }, { name: 'Tara Nair', role: 'Research' }],
+    openings: [{ role: 'Visual designer', skills: ['Typography', 'Illustrator'], commitment: '3 hours a week' }],
+    closes: at(9, 23, 59), updated: at(-3, 12),
+  },
+  {
+    id: 'p-podcast', name: 'Hallway: a student podcast', category: 'Media', school: 'School of Film, Media and Creative Arts', status: 'Building',
+    description: 'Ten-minute episodes with the people who keep the campus running. The pilot with the night guard is recorded.',
+    stack: ['Audition', 'Riverside', 'Notion'],
+    github: '', demo: 'https://hallway.example.fm',
+    team: [{ name: 'Meera Krishnan', role: 'Host, producer', studentId: 's-meera' }, { name: 'Aarav Shetty', role: 'Recording' }],
+    openings: [{ role: 'Sound editor', skills: ['Audition', 'Mixing'], commitment: '2 hours a week' }],
+    closes: at(5, 23, 59), updated: at(-1, 9),
+  },
+  {
+    id: 'p-booking', name: 'Room booking agent', category: 'Technology', school: P, status: 'Completed',
+    description: 'Ask in plain words for a room, a time and a projector; the agent checks the timetable and books it. Born at Iterium’s Automation Teardown.',
+    stack: ['TypeScript', 'Node.js', 'Claude API', 'Google Calendar API'],
+    github: 'https://github.com/iterium-rvu/room-agent', demo: 'https://room-agent.example.app',
+    team: [{ name: 'Harsh Gupta', role: 'Lead', studentId: 's-harsh' }, { name: 'Ananya Rao', role: 'Prompting and evals', studentId: 's-ananya' }, { name: 'Leo D’Souza', role: 'Calendar integration' }],
+    openings: [], updated: at(-8, 16),
+  },
+  {
+    id: 'p-policy', name: 'Bus routes, by the numbers', category: 'Business', school: 'School of Economics and Public Policy', status: 'Building',
+    description: 'A commuter survey and a model for a better shuttle timetable, to propose to the transport office before next term.',
+    stack: ['Google Forms', 'R', 'QGIS'],
+    github: 'https://github.com/ishita-v/shuttle-model', demo: '',
+    team: [{ name: 'Ishita Verma', role: 'Lead', studentId: 's-ishita' }, { name: 'Neel Joshi', role: 'Survey' }],
+    openings: [{ role: 'Survey designer', skills: ['Questionnaire design'], commitment: '3 hours a week' }, { role: 'GIS analyst', skills: ['QGIS', 'R'], commitment: '3 hours a week' }],
+    closes: at(2, 23, 59), updated: at(-1, 14),
+  },
+  {
+    id: 'p-thrift', name: 'Hostel thrift exchange', category: 'Social impact', school: 'School of Business', status: 'Completed',
+    description: 'A swap shelf in each hostel and a listing board, so books and coats move on instead of being thrown out. 212 items swapped in the first month.',
+    stack: ['Glide', 'Google Sheets'],
+    github: '', demo: 'https://thrift.example.app',
+    team: [{ name: 'Rohan Patel', role: 'Operations', studentId: 's-rohan' }, { name: 'Diya Menon', role: 'Outreach' }],
+    openings: [], updated: at(-14, 11),
+  },
+  {
+    id: 'p-legal', name: 'Know your tenancy rights', category: 'Social impact', school: 'School of Law', status: 'Building',
+    description: 'Plain-language guides for students renting near campus, reviewed by School of Law faculty.',
+    stack: ['Markdown', 'Astro'],
+    github: 'https://github.com/arjun-m/tenancy-guide', demo: '',
+    team: [{ name: 'Arjun Mehta', role: 'Lead writer', studentId: 's-arjun' }],
+    openings: [{ role: 'Illustrator', skills: ['Illustration', 'Procreate'], commitment: '2 hours a week' }, { role: 'Web developer', skills: ['Astro', 'HTML', 'CSS'], commitment: '2 hours a week' }],
+    closes: at(10, 23, 59), updated: at(-4, 10),
+  },
 ]
+
+/** The student directory. People choose to be listed. */
+export const students: Student[] = [
+  { id: 's-nikhil', name: 'Nikhil Varma', school: P, year: 3, skills: ['C++', 'ESP32', 'LoRa', 'KiCad'], interests: ['Technology', 'Social impact'], bio: 'Building a sensor mesh for the campus garden. Happy to help anyone stuck on firmware.', openToCollaborate: true, links: { github: 'https://github.com/nikhilvarma' }, clubs: ['chiptech', 'green-alliance'] },
+  { id: 's-sara', name: 'Sara Thomas', school: P, year: 2, skills: ['React', 'TypeScript', 'D3'], interests: ['Technology', 'Design'], bio: 'Dashboards and data visualisation.', openToCollaborate: true, links: { github: 'https://github.com/sarathomas', linkedin: 'https://www.linkedin.com/in/sarathomas' }, clubs: ['devsphere'] },
+  { id: 's-ananya', name: 'Ananya Rao', school: P, year: 3, skills: ['Python', 'Machine learning', 'FastAPI', 'Pandas'], interests: ['Technology'], bio: 'Forecasting things nobody asked me to forecast.', openToCollaborate: true, links: { github: 'https://github.com/ananya-r' }, clubs: ['iterium', 'agentblazer'] },
+  { id: 's-kabir', name: 'Kabir Sethi', school: 'School of Design and Innovation', year: 4, skills: ['Wayfinding', 'Typography', 'Figma', 'User research'], interests: ['Design'], bio: 'Signs, systems and the people who get lost between them.', openToCollaborate: true, links: { portfolio: 'https://kabirsethi.design' }, clubs: ['artora'] },
+  { id: 's-meera', name: 'Meera Krishnan', school: 'School of Film, Media and Creative Arts', year: 2, skills: ['Audio production', 'Interviewing', 'Audition'], interests: ['Media', 'Culture'], bio: 'Host of Hallway. Always looking for the next guest.', openToCollaborate: true, links: { linkedin: 'https://www.linkedin.com/in/meerak' }, clubs: ['presscorps', 'thesis'] },
+  { id: 's-harsh', name: 'Harsh Gupta', school: P, year: 4, skills: ['TypeScript', 'Node.js', 'LLM agents'], interests: ['Technology', 'Business'], bio: 'Shipped the room-booking agent. Now mentoring at Iterium.', openToCollaborate: false, links: { github: 'https://github.com/harshg' }, clubs: ['iterium'] },
+  { id: 's-ishita', name: 'Ishita Verma', school: 'School of Economics and Public Policy', year: 3, skills: ['R', 'QGIS', 'Survey design'], interests: ['Business', 'Social impact'], bio: 'Trying to fix the 7:40 shuttle with a spreadsheet.', openToCollaborate: true, links: { linkedin: 'https://www.linkedin.com/in/ishitaverma' }, clubs: ['representatives'] },
+  { id: 's-rohan', name: 'Rohan Patel', school: 'School of Business', year: 4, skills: ['Operations', 'Marketing', 'Glide'], interests: ['Business', 'Social impact'], bio: 'Ran the hostel thrift exchange. Ask me about logistics.', openToCollaborate: false, links: { linkedin: 'https://www.linkedin.com/in/rohanpatel' }, clubs: ['ecell'] },
+  { id: 's-arjun', name: 'Arjun Mehta', school: 'School of Law', year: 3, skills: ['Legal writing', 'Research', 'Markdown'], interests: ['Social impact'], bio: 'Writing tenancy guides students will actually read.', openToCollaborate: true, links: {}, clubs: ['representatives'] },
+  { id: 's-zoya', name: 'Zoya Khan', school: P, year: 2, skills: ['Embedded C', 'STM32', 'PCB design', 'KiCad'], interests: ['Technology'], bio: 'Formula student electronics at RVOLT. Free on weekends.', openToCollaborate: true, links: { github: 'https://github.com/zoyakhan' }, clubs: ['rvolt', 'chiptech'] },
+  { id: 's-vivek', name: 'Vivek Bhat', school: 'School of Design and Innovation', year: 2, skills: ['Illustration', 'Procreate', 'Motion design'], interests: ['Design', 'Media'], bio: 'Illustrator. Will draw your explainer.', openToCollaborate: true, links: { portfolio: 'https://vivekbhat.art' }, clubs: ['artora', 'presscorps'] },
+  { id: 's-priya', name: 'Priya Natarajan', school: 'School of Liberal Arts and Sciences', year: 1, skills: ['Writing', 'Editing', 'Photography'], interests: ['Culture', 'Media'], bio: 'First year, writing for Presscorps.', openToCollaborate: true, links: {}, clubs: ['presscorps', 'poethra'] },
+  { id: 's-aditya', name: 'Aditya Rao', school: P, year: 1, skills: ['Python', 'Arduino', 'React'], interests: ['Technology', 'Sport'], bio: 'Looking for a first project to join.', openToCollaborate: true, links: { github: 'https://github.com/adityarao' }, clubs: ['cybersec'] },
+  { id: 's-fatima', name: 'Fatima Sheikh', school: 'School of Business', year: 2, skills: ['Finance', 'Excel', 'Pitching'], interests: ['Business'], bio: 'ECell core. Ask me about pitch decks.', openToCollaborate: true, links: { linkedin: 'https://www.linkedin.com/in/fatimasheikh' }, clubs: ['ecell'] },
+]
+export const studentById = (id: string) => students.find((s) => s.id === id)
 
 export const notices: Notice[] = [
   { id: 'n-exam', title: 'End-semester timetable published', from: 'Office of the Controller of Examinations', body: 'The provisional timetable for the end-semester examinations is out. Report clashes before the deadline so they can be resolved.', priority: 'High', posted: at(0, 9), actionLabel: 'Report a clash', due: at(4, 17) },
@@ -134,3 +246,49 @@ export const asksFor = (c: Club): Ask[] => {
 
 export const allEvents = [...events, ...pastEvents]
 export const eventById = (id: string) => allEvents.find((e) => e.id === id)
+
+
+const LEADS: Record<string, [string, string][]> = {
+  iterium: [['Harsh Gupta', 'President'], ['Ananya Rao', 'Vice-president'], ['Leo D’Souza', 'Events lead']],
+  cybersec: [['Aditi Kulkarni', 'President'], ['Rahul Shenoy', 'CTF lead']],
+  chiptech: [['Nikhil Varma', 'President'], ['Zoya Khan', 'Workshop lead']],
+  ecell: [['Fatima Sheikh', 'President'], ['Rohan Patel', 'Partnerships']],
+  rudra: [['Siddharth Rao', 'President'], ['Anika Das', 'Music director']],
+}
+const GIVEN = ['Aditi', 'Rahul', 'Sneha', 'Varun', 'Kavya', 'Manav', 'Riya', 'Omkar', 'Tanvi', 'Yash']
+const FAMILY = ['Kulkarni', 'Shenoy', 'Hegde', 'Pillai', 'Reddy', 'Menon', 'Bose', 'Kamath', 'Desai', 'Sharma']
+
+/** Default page for every club. Club cores change it from the host dashboard. */
+export function defaultClubPage(c: Club): ClubPage {
+  const n = c.id.length + c.name.length
+  const leads = LEADS[c.id] ?? [
+    [`${GIVEN[n % 10]} ${FAMILY[(n * 3) % 10]}`, 'President'],
+    [`${GIVEN[(n + 4) % 10]} ${FAMILY[(n + 7) % 10]}`, 'Secretary'],
+  ]
+  const slug = c.id.replace(/-/g, '')
+  return {
+    tagline: c.tagline,
+    about: `${c.name} is an approved student club at RV University. ${c.tagline} Open to every school and every year; no experience needed unless a role says so.`,
+    objectives:
+      c.category === 'Technology'
+        ? ['Run hands-on sessions every fortnight', 'Ship at least one project a semester that the campus uses', 'Pair first-years with a senior mentor']
+        : ['Meet every week during term', 'Put on one public showcase each semester', 'Make it easy for anyone to try it once'],
+    leadership: leads.map(([name, role]) => ({ name, role })),
+    recruitment: {
+      open: c.recruiting,
+      message: c.recruiting ? 'We are taking new members this month. Tell us a little about yourself; we reply within a week.' : '',
+      roles: c.recruiting ? (c.category === 'Technology' ? ['Member', 'Workshop volunteer', 'Design and media'] : ['Member', 'Events volunteer']) : [],
+      closes: c.recruiting ? at(10, 23, 59).toISOString() : undefined,
+    },
+    questions: [
+      { id: 'q-why', label: `Why do you want to join ${c.name}?`, kind: 'long', required: true },
+      { id: 'q-time', label: 'How much time can you give in a week?', kind: 'choice', required: true, options: ['1 to 2 hours', '3 to 5 hours', 'More than 5 hours'] },
+    ],
+    asks: asksFor(c),
+    contact: { email: `${slug}@rvu.edu.in`, instagram: `@${slug}.rvu`, whatsapp: '', website: c.id === 'iterium' ? 'https://iterium.rvu.edu.in' : '' },
+    sections: ['about', 'recruitment', 'upcoming', 'leadership', 'archive', 'contact'],
+    hidden: [],
+    tone: c.category === 'Technology' ? 'teal' : c.category === 'Culture' || c.category === 'Media' ? 'gold' : 'slate',
+    founded: 2021 + (n % 4),
+  }
+}
