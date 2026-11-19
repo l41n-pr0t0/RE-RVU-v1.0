@@ -35,7 +35,7 @@ type Focus = { place: Place; item: Featured } | null
 export default function Landing() {
   const { profile, setProfile } = useStore()
   const reduce = useReducedMotion()
-  const { clubs, events } = useCatalog()
+  const { events } = useCatalog()
   const [signIn, setSignIn] = useState(false)
   const [paused, setPaused] = useState(false)
   const [ready, setReady] = useState(false)
@@ -47,9 +47,7 @@ export default function Landing() {
     end.setDate(end.getDate() + 7)
     return events.filter((e) => e.end > now && e.start < end).sort((a, b) => +a.start - +b.start)
   }, [events, now])
-  const recruiting = useMemo(() => clubs.filter((c) => c.recruiting).slice(0, 8), [clubs])
   const weekItems = useMemo<Featured[]>(() => week.map((e) => ({ kind: 'event', e })), [week])
-  const clubItems = useMemo<Featured[]>(() => recruiting.map((c) => ({ kind: 'club', c })), [recruiting])
 
   const guest = (then = 'home') => {
     setProfile({ name: 'Guest', email: '', year: 1, school: SCHOOLS[0], role: 'Student', interests: [], links: blankLinks, skills: [], openToCollaborate: false, bio: '' })
@@ -99,15 +97,6 @@ export default function Landing() {
           onOpen={open}
         />
 
-        <Tour
-          id="clubs"
-          eyebrow={`${clubs.length} clubs · ${recruiting.length} recruiting now`}
-          title="Find your people before the semester fills up."
-          items={clubItems}
-          onFocus={setFocus}
-          onOpen={open}
-          small
-        />
 
         <Closing onStart={start} signedIn={!!profile && profile.name !== 'Guest'} />
       </div>
@@ -145,8 +134,7 @@ function Hero(props: {
         </a>
         <nav className="flex items-center gap-1 text-sm" aria-label="On this page">
           <a href="#this-week" className="hover-gold hidden px-3 py-2 text-paper/70 sm:inline-block">This week</a>
-          <a href="#clubs" className="hover-gold hidden px-3 py-2 text-paper/70 sm:inline-block">Clubs</a>
-          <button className="btn btn-sm ml-2" onClick={onStart}>{signedIn ? 'Open' : 'Sign in'}</button>
+                    <button className="btn btn-sm ml-2" onClick={onStart}>{signedIn ? 'Open' : 'Sign in'}</button>
         </nav>
       </header>
 
