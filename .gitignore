@@ -1,0 +1,7 @@
+Resources/
+node_modules/
+dist/
+.vercel/
+.env*
+.DS_Store
+*.log
