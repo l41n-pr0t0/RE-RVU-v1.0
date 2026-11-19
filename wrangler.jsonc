@@ -1,0 +1,10 @@
+// Cloudflare Workers static-assets deploy for the frontend in app/.
+// Build: cd app && npm ci && npm run build:cf   →  output in app/dist
+{
+  "name": "re-rvu-v1-0",
+  "compatibility_date": "2026-11-01",
+  "assets": {
+    "directory": "./app/dist",
+    "not_found_handling": "single-page-application"
+  }
+}
