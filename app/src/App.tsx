@@ -15,6 +15,10 @@ const Clubs = lazy(() => import('./pages/Clubs'))
 const Projects = lazy(() => import('./pages/Projects'))
 const Notices = lazy(() => import('./pages/Notices'))
 const Profile = lazy(() => import('./pages/Profile'))
+const People = lazy(() => import('./pages/People'))
+const Saved = lazy(() => import('./pages/Saved'))
+const Calendar = lazy(() => import('./pages/Calendar'))
+const Host = lazy(() => import('./pages/Host'))
 
 function Page({ route }: { route: Route }) {
   switch (route.name) {
@@ -28,6 +32,14 @@ function Page({ route }: { route: Route }) {
       return <Notices />
     case 'profile':
       return <Profile />
+    case 'people':
+      return <People key={route.id ?? 'index'} id={route.id} />
+    case 'saved':
+      return <Saved />
+    case 'calendar':
+      return <Calendar />
+    case 'host':
+      return <Host key={route.id ?? 'index'} id={route.id} />
     default:
       return <Home />
   }

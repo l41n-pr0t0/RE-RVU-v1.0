@@ -32,17 +32,13 @@ export function Reveal({ children, delay = 0, className = '', as = 'div' }: { ch
   )
 }
 
-/** Page title block. The slate number gives every page a scene number, like a call sheet. */
-export function PageHeader({ scene, eyebrow, title, children, aside }: { scene: string; eyebrow: string; title: ReactNode; children?: ReactNode; aside?: ReactNode }) {
+/** Page title block: a small label, the title, then one line of context. */
+export function PageHeader({ eyebrow, title, children, aside }: { scene?: string; eyebrow: string; title: ReactNode; children?: ReactNode; aside?: ReactNode }) {
   return (
     <header className="border-b border-line pt-8 pb-7 md:pt-14 md:pb-10">
       <div className="flex flex-wrap items-end justify-between gap-6">
         <Reveal className="min-w-0">
-          <p className="flex items-center gap-3">
-            <span className="slate-no">Sc. {scene}</span>
-            <span className="h-px w-8 bg-line-strong" aria-hidden />
-            <span className="eyebrow">{eyebrow}</span>
-          </p>
+          <p className="eyebrow">{eyebrow}</p>
           <h1 className="mt-4 text-[clamp(2.2rem,1.6rem+2.6vw,4.4rem)] leading-[1.02]">{title}</h1>
           {children && <div className="mt-4 max-w-[58ch] text-mute">{children}</div>}
         </Reveal>
@@ -105,7 +101,7 @@ export function Monogram({ text, size = 'md', gold = false }: { text: string; si
   const s = size === 'lg' ? 'h-20 w-20 text-3xl' : size === 'sm' ? 'h-9 w-9 text-sm' : 'h-12 w-12 text-lg'
   return (
     <span aria-hidden className={`${s} grid shrink-0 place-items-center border font-display italic ${gold ? 'border-gold bg-gold text-black' : 'border-line-strong text-gold'}`}>
-      {text}
+      {text.length > 3 ? text.split(/\s+/).map((w) => w[0]).join('').slice(0, 2).toUpperCase() : text}
     </span>
   )
 }

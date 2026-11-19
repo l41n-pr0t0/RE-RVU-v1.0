@@ -1,18 +1,21 @@
 import { useState } from 'react'
 import { LinksFields, linksValid, normaliseLink } from '../components/LinksFields'
 import { EmptyState, Icon, Monogram, Num, PageHeader } from '../components/ui'
-import { clubById, events, projects } from '../data/mock'
+import { useCatalog } from '../lib/catalog'
 import { CATEGORIES, SCHOOLS, type Category, type Links } from '../data/types'
 import { initials } from '../lib/identity'
 import { go, href } from '../lib/router'
 import { useStore } from '../lib/store'
 
-/** Sc. 07: You. Everything the app knows about you, editable in one place. */
+/** You. Everything the app knows about you, editable in one place. */
 export default function Profile() {
   const store = useStore()
+  const { allEvents: events, projects, clubById } = useCatalog()
   const { profile, savedEvents, registered, followedClubs, applications, joinRequests } = store
   const [links, setL] = useState<Links>(profile?.links ?? { github: '', linkedin: '', portfolio: '' })
   const [saved, setSaved] = useState(false)
+  const [skill, setSkill] = useState('')
+  const [bio, setBio] = useState(profile?.bio ?? '')
 
   if (!profile || !profile.email)
     return (
@@ -29,6 +32,14 @@ export default function Profile() {
     store.setLinks({ github: normaliseLink(links.github), linkedin: normaliseLink(links.linkedin), portfolio: normaliseLink(links.portfolio) })
     setSaved(true)
     window.setTimeout(() => setSaved(false), 2400)
+  }
+
+  const skills = profile.skills ?? []
+  const addSkill = (e: React.FormEvent) => {
+    e.preventDefault()
+    const k = skill.trim().replace(/\s+/g, ' ')
+    if (k && !skills.some((x) => x.toLowerCase() === k.toLowerCase())) store.setProfile({ ...profile, skills: [...skills, k].slice(0, 15) })
+    setSkill('')
   }
 
   const myEvents = events.filter((e) => registered.includes(e.id) || savedEvents.includes(e.id))
@@ -88,6 +99,36 @@ export default function Profile() {
             </div>
           </section>
 
+          <section aria-labelledby="skills">
+            <h2 id="skills" className="text-2xl">Skills and bio</h2>
+            <p className="mt-1 text-sm text-mute">Project leads see these, and we use your skills to suggest openings.</p>
+            <form className="mt-4 flex gap-2" onSubmit={addSkill}>
+              <label className="sr-only" htmlFor="skill-input">Add a skill</label>
+              <input id="skill-input" className="field" value={skill} maxLength={30} onChange={(e) => setSkill(e.target.value)} placeholder="e.g. React, Figma, Public speaking" />
+              <button className="btn shrink-0" type="submit" disabled={!skill.trim()}><Icon name="plus" /> Add</button>
+            </form>
+            {skills.length > 0 && (
+              <ul className="mt-3 flex flex-wrap gap-2" aria-label="Your skills">
+                {skills.map((k) => (
+                  <li key={k}>
+                    <button type="button" className="chip" aria-label={`Remove ${k}`} onClick={() => store.setProfile({ ...profile, skills: skills.filter((x) => x !== k) })}>
+                      {k} <Icon name="close" />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <label className="mt-5 block">
+              <span className="eyebrow">Bio</span>
+              <textarea className="field mt-2 min-h-24" maxLength={240} value={bio} onChange={(e) => setBio(e.target.value)} onBlur={() => bio !== profile.bio && store.setProfile({ ...profile, bio: bio.trim() })} placeholder="One or two lines on what you like building." />
+            </label>
+            <label className="mt-4 flex cursor-pointer items-center gap-3">
+              <input type="checkbox" className="h-5 w-5 accent-[var(--color-gold)]" checked={!!profile.openToCollaborate} onChange={(e) => store.setProfile({ ...profile, openToCollaborate: e.target.checked })} />
+              <span>Open to collaborate <span className="text-sm text-mute">(shows you in People searches)</span></span>
+            </label>
+            <a className="hover-gold mt-4 inline-flex items-center gap-2 text-sm" href={href('people/me')}>See how others see you <Icon name="arrow" /></a>
+          </section>
+
           <section aria-labelledby="links">
             <h2 id="links" className="text-2xl">Links</h2>
             <p className="mt-1 text-sm text-mute">Clubs and project leads ask for these. They’re attached when you apply.</p>
@@ -102,6 +143,20 @@ export default function Profile() {
         </div>
 
         <div className="space-y-12">
+          <nav aria-label="Your pages" className="grid grid-cols-2 gap-px border border-line bg-line">
+            {[
+              ['saved', 'Saved', 'bookmark'],
+              ['calendar', 'Calendar', 'calendar'],
+              ['host', 'Run a club', 'users'],
+              ['notices', 'Notices', 'bell'],
+            ].map(([to, label, icon]) => (
+              <a key={to} href={href(to)} className="row-hover flex items-center justify-between gap-3 bg-ink p-4">
+                <span className="flex items-center gap-3"><Icon name={icon as 'bookmark'} /> {label}</span>
+                <Icon name="arrow" />
+              </a>
+            ))}
+          </nav>
+
           <section aria-labelledby="my-events">
             <h2 id="my-events" className="text-2xl">Your events</h2>
             {myEvents.length ? (
@@ -124,7 +179,7 @@ export default function Profile() {
               <ul className="mt-4 border-t border-line">
                 {myApps.map(({ p, role }) => (
                   <li key={p.id} className="flex items-center justify-between gap-4 border-b border-line py-3">
-                    <a href={href(`projects/${p.id}`)} className="hover-gold min-w-0 truncate">{p.title}</a>
+                    <a href={href(`projects/${p.id}`)} className="hover-gold min-w-0 truncate">{p.name}</a>
                     <span className="tag tag-gold shrink-0">{role}</span>
                   </li>
                 ))}

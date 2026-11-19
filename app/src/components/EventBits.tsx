@@ -14,6 +14,12 @@ export const useOpenEvent = () => useContext(Ctx)
 
 export function EventDrawerProvider({ children }: { children: ReactNode }) {
   const [id, setId] = useState<string | null>(null)
+  // Leaving the page closes the sheet; an events/:id route reopens it after this runs.
+  useEffect(() => {
+    const close = () => setId(null)
+    window.addEventListener('hashchange', close)
+    return () => window.removeEventListener('hashchange', close)
+  }, [])
   return (
     <Ctx.Provider value={setId}>
       {children}
@@ -112,11 +118,11 @@ export function ShareButton({ path, title, className = 'btn', label = 'Share' }:
 }
 
 /** A row on a call sheet: time in Montserrat, title in Playfair, no card. */
-export function EventRow({ e, showDay = true }: { e: CampusEvent; showDay?: boolean }) {
+export function EventRow({ e, showDay = true, compact = false }: { e: CampusEvent; showDay?: boolean; compact?: boolean }) {
   const open = useOpenEvent()
   const past = e.end < new Date()
   return (
-    <article className="row-hover group relative grid grid-cols-[4.25rem_minmax(0,1fr)_auto] items-start gap-3 border-b border-line py-4 sm:grid-cols-[5.5rem_minmax(0,1fr)_auto] md:grid-cols-[6.5rem_minmax(0,1fr)_12rem_auto] md:gap-6 md:py-5">
+    <article className={`row-hover group relative grid grid-cols-[4.25rem_minmax(0,1fr)_auto] items-start gap-3 border-b border-line py-4 ${compact ? '' : 'sm:grid-cols-[5.5rem_minmax(0,1fr)_auto] md:grid-cols-[6.5rem_minmax(0,1fr)_12rem_auto] md:gap-6 md:py-5'}`}>
       <div className="pt-0.5">
         {showDay && <p className="eyebrow !text-[0.6rem] !tracking-[0.14em]">{Math.abs(daysFrom(e.start)) < 7 ? relativeDay(e.start) : dayMonth(e.start)}</p>}
         <Num className="mt-0.5 block text-base text-paper md:text-lg">{time(e.start)}</Num>
@@ -131,11 +137,11 @@ export function EventRow({ e, showDay = true }: { e: CampusEvent; showDay?: bool
         <p className="mt-1 truncate text-sm text-mute">
           {e.hostName} · {e.venue}
         </p>
-        <div className="mt-2 flex flex-wrap gap-2 md:hidden">
+        <div className={`mt-2 flex flex-wrap gap-2 ${compact ? '' : 'md:hidden'}`}>
           <StatusTag e={e} />
         </div>
       </div>
-      <div className="hidden pt-1 md:block">
+      <div className={compact ? 'hidden' : 'hidden pt-1 md:block'}>
         <div className="mb-2">
           <StatusTag e={e} />
         </div>
