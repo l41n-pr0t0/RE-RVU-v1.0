@@ -285,7 +285,7 @@ function Tour(props: {
           return (
             <li key={f.kind === 'event' ? f.e.id : f.c.id} data-row={i}>
               <button
-                className="grid w-full grid-cols-[4.75rem_minmax(0,1fr)] items-baseline gap-3 py-2 text-left md:grid-cols-[7rem_minmax(0,1fr)] md:py-3"
+                className="grid w-full grid-cols-1 gap-0.5 py-2 text-left md:grid-cols-[7rem_minmax(0,1fr)] md:items-baseline md:gap-3 md:py-3"
                 onMouseEnter={() => choose(i)}
                 onFocus={() => choose(i)}
                 onClick={() => onOpen(f)}
@@ -335,7 +335,7 @@ function Caption({ item, place, now }: { item: Featured; place: Place; now: Date
               </p>
               <p className="mt-1 font-semibold">{place.name}</p>
               <p className="truncate text-paper/65">
-                {item.e.venue} · {item.e.hostName}
+                {item.e.venue === place.name ? item.e.hostName : `${item.e.venue} · ${item.e.hostName}`}
               </p>
               {item.e.seats > 0 && (
                 <p className="mt-1 text-paper/65">
