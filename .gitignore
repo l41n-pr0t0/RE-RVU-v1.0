@@ -1,4 +1,4 @@
-Resources/
+*.pdf
 node_modules/
 dist/
 .vercel/
