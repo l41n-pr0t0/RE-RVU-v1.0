@@ -1,0 +1,199 @@
+@import "tailwindcss";
+
+@theme {
+  --color-ink: #000000;
+  --color-slate: #233039;
+  --color-slate-2: #1a242b;
+  --color-gold: #d7ac54;
+  --color-gold-2: #c29650;
+  --color-teal: #004854;
+  --color-teal-bright: #3d8f9b;
+  --color-paper: #f2ede3;
+  --color-mute: #a39f96;
+  --color-line: rgb(242 237 227 / 0.12);
+
+  --font-sans: "Cantarell", sans-serif;
+  --font-display: "Playfair Display", serif;
+  --font-num: "Montserrat", sans-serif;
+
+  --ease-dolly: cubic-bezier(0.2, 0.7, 0.1, 1);
+}
+
+@layer base {
+  html {
+    background: var(--color-ink);
+    color: var(--color-paper);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  body {
+    min-height: 100dvh;
+  }
+  h1, h2, h3 {
+    font-family: var(--font-display);
+    font-weight: 400;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+  }
+  p {
+    text-wrap: pretty;
+  }
+  ::selection {
+    background: var(--color-gold);
+    color: #000000;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-gold);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+}
+
+@layer components {
+  /* Brand rule: every numeral in Montserrat */
+  .num {
+    font-family: var(--font-num);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0;
+  }
+  .eyebrow {
+    font-size: 0.72rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--color-mute);
+  }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 2.75rem;
+    padding: 0 1.25rem;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 0.92rem;
+    transition: transform 0.2s var(--ease-dolly), background-color 0.2s, color 0.2s;
+  }
+  .btn:active { transform: scale(0.97); }
+  .btn-gold { background: var(--color-gold); color: #000000; }
+  .btn-gold:hover { background: var(--color-gold-2); }
+  .btn-ghost { border: 1px solid var(--color-line); color: var(--color-paper); }
+  .btn-ghost:hover { border-color: var(--color-gold); color: var(--color-gold); }
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-height: 2.25rem;
+    padding: 0 0.9rem;
+    border-radius: 999px;
+    border: 1px solid var(--color-line);
+    font-size: 0.85rem;
+    color: var(--color-paper);
+    transition: border-color 0.2s, background-color 0.2s, color 0.2s;
+  }
+  .chip:hover { border-color: rgb(215 172 84 / 0.6); }
+  .chip[aria-pressed="true"] { background: var(--color-gold); color: #000000; border-color: var(--color-gold); }
+  .panel {
+    background: var(--color-slate-2);
+    border: 1px solid var(--color-line);
+    border-radius: 1.25rem;
+  }
+  .skeleton {
+    background: linear-gradient(90deg, color-mix(in srgb, var(--color-paper) 5%, transparent), color-mix(in srgb, var(--color-paper) 10%, transparent), color-mix(in srgb, var(--color-paper) 5%, transparent));
+    background-size: 200% 100%;
+    animation: shimmer 1.4s linear infinite;
+    border-radius: 0.75rem;
+  }
+}
+
+/* ---------- Light theme ----------
+   Token names describe roles: `ink` = stage (page background), `paper` = text.
+   Brand guards: gold logo never on a light surface (Logo gets a black plate), and
+   gold *text* uses a deeper shade of brand gold so it passes AA on paper. */
+:root[data-theme="light"] {
+  --color-ink: #f4f0e6;
+  --color-slate: #e4ddcd;
+  --color-slate-2: #fbf8f1;
+  --color-paper: #11181d;
+  --color-mute: #565249;
+  --color-line: rgb(35 48 57 / 0.16);
+}
+:root[data-theme="light"] .text-gold,
+:root[data-theme="light"] .hover\:text-gold:hover,
+:root[data-theme="light"] .group:hover .group-hover\:text-gold,
+:root[data-theme="light"] .btn-ghost:hover { color: #85631f; }
+:root[data-theme="light"] .grain::after { opacity: 0.035; }
+.logo-plate { display: inline-flex; border-radius: 0; }
+:root[data-theme="light"] .logo-plate { background: #000000; padding: 0.45rem 0.7rem; border-radius: 0.6rem; }
+
+/* CSS cross-fade fallback for the theme switch (reduced motion, or no View Transitions). */
+html.theme-fade,
+html.theme-fade *,
+html.theme-fade *::before,
+html.theme-fade *::after {
+  transition:
+    background-color var(--theme-fade, 0.45s) ease,
+    color var(--theme-fade, 0.45s) ease,
+    border-color var(--theme-fade, 0.45s) ease,
+    box-shadow var(--theme-fade, 0.45s) ease,
+    fill var(--theme-fade, 0.45s) ease !important;
+}
+
+/* Ink theme switch (View Transitions, ported from MNEMOS-ZERO). The old page stays still;
+   the new one is revealed by a clip-path animated from JS. */
+html.ink-vt::view-transition-old(root) {
+  animation: none;
+  mix-blend-mode: normal;
+  z-index: 1;
+}
+html.ink-vt::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+  z-index: 2;
+  clip-path: circle(0px at var(--ink-x, 50%) var(--ink-y, 50%));
+}
+html.ink-vt::view-transition-group(root) {
+  animation-duration: var(--ink-duration, 1.6s);
+}
+::view-transition-group(ink-probe),
+::view-transition-old(ink-probe),
+::view-transition-new(ink-probe) {
+  animation: none;
+  opacity: 0;
+}
+.tap-marker {
+  position: fixed;
+  z-index: 1002;
+  width: 36px;
+  height: 36px;
+  margin: -18px 0 0 -18px;
+  border: 2px solid var(--color-gold);
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px var(--color-paper);
+  pointer-events: none;
+}
+
+/* Film grain + vignette: fixed, pointer-events none, GPU-cheap */
+.grain::after {
+  content: "";
+  position: fixed;
+  inset: -50%;
+  pointer-events: none;
+  z-index: 60;
+  opacity: 0.06;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  animation: grain 0.9s steps(4) infinite;
+}
+
+@keyframes shimmer { to { background-position: -200% 0; } }
+@keyframes grain {
+  0% { transform: translate(0, 0); }
+  25% { transform: translate(-3%, 2%); }
+  50% { transform: translate(2%, -3%); }
+  75% { transform: translate(-2%, -1%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .grain::after, .skeleton { animation: none; }
+  *, *::before, *::after { transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+}
