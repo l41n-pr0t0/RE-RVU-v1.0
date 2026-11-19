@@ -1,4 +1,4 @@
-import type { CampusEvent, Club, Notice, Project } from './types'
+import type { Ask, CampusEvent, Club, Notice, Project } from './types'
 
 /**
  * Prototype data. Club names are the 26 approved clubs listed on the live
@@ -116,3 +116,21 @@ export const notices: Notice[] = [
 ]
 
 export const clubById = club
+
+/** What each club asks for in a join request. Your profile links fill these in. */
+export const asksFor = (c: Club): Ask[] => {
+  switch (c.category) {
+    case 'Technology':
+      return ['GitHub', 'LinkedIn']
+    case 'Design':
+    case 'Media':
+      return ['Portfolio', 'LinkedIn']
+    case 'Business':
+      return ['LinkedIn']
+    default:
+      return []
+  }
+}
+
+export const allEvents = [...events, ...pastEvents]
+export const eventById = (id: string) => allEvents.find((e) => e.id === id)

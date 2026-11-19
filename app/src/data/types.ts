@@ -91,10 +91,22 @@ export interface Notice {
 
 export type Role = 'Student' | 'Club core' | 'School representative'
 
+export interface Links {
+  github: string
+  linkedin: string
+  portfolio: string
+}
+
 export interface Profile {
   name: string
+  /** Empty for a guest looking around */
+  email: string
   year: 1 | 2 | 3 | 4
   school: School
   role: Role
   interests: Category[]
+  links: Links
 }
+
+/** What a club asks for in a join request */
+export type Ask = 'GitHub' | 'LinkedIn' | 'Portfolio'

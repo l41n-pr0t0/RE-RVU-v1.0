@@ -49,8 +49,8 @@ export function GoldLine({
               key={i}
               onClick={() => onSelectDay(active ? null : i)}
               aria-pressed={active}
-              className={`group flex flex-col items-start gap-0.5 rounded-lg px-1.5 py-2 text-left transition-colors md:px-2 ${
-                active ? 'text-gold' : 'text-mute hover:text-paper'
+              className={`group flex flex-col items-start gap-0.5 px-1.5 py-2 text-left transition-colors md:px-2 ${
+                active ? "text-gold" : "text-mute hover-gold"
               }`}
             >
               <span className="text-[0.7rem] uppercase tracking-[0.16em]">{i === 0 ? 'Today' : weekday(d)}</span>
@@ -83,14 +83,14 @@ export function GoldLine({
         {selectedDay !== null && (
           <motion.span
             layoutId="dayband"
-            className="absolute top-0 h-full rounded-md bg-gold/10"
+            className="absolute top-0 h-full bg-gold/10"
             style={{ left: `${(selectedDay / 7) * 100}%`, width: `${100 / 7}%` }}
             aria-hidden
           />
         )}
         {/* now */}
         <span className="absolute top-1/2 -translate-x-1/2 -translate-y-1/2" style={{ left: `${nowPos * 100}%` }} aria-label="Now">
-          <span className="block h-3 w-3 rounded-full bg-paper shadow-[0_0_18px_4px_rgb(215_172_84/0.55)]" />
+          <span className="block h-3 w-3 rotate-45 bg-paper shadow-[0_0_18px_4px_rgb(215_172_84/0.55)]" />
         </span>
         {week.map((e, i) => (
           <motion.button
@@ -104,7 +104,7 @@ export function GoldLine({
             aria-label={`${e.title}, ${weekday(e.start, 'long')} ${time(e.start)}`}
           >
             <span className="block h-2.5 w-2.5 rotate-45 border border-gold bg-ink transition-transform group-hover:scale-150 group-hover:bg-gold" />
-            <span className="pointer-events-none absolute bottom-full left-1/2 mb-1 hidden -translate-x-1/2 whitespace-nowrap rounded-md bg-slate px-2.5 py-1 text-xs text-paper group-hover:block group-focus-visible:block">
+            <span className="pointer-events-none absolute bottom-full left-1/2 mb-1 hidden -translate-x-1/2 whitespace-nowrap border border-line-strong bg-slate-2 px-2.5 py-1 text-xs text-paper group-hover:block group-focus-visible:block">
               {e.title} · <Num>{time(e.start)}</Num>
             </span>
           </motion.button>

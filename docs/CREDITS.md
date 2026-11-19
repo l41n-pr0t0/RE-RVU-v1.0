@@ -8,5 +8,8 @@
 | React, Vite, TypeScript | react.dev, vite.dev, typescriptlang.org | MIT / Apache-2.0 |
 | Framer Motion | motion.dev | MIT |
 | Tailwind CSS | tailwindcss.com | MIT |
+| three.js (WebGL, EffectComposer, UnrealBloom, Afterimage, RoomEnvironment) | threejs.org | MIT |
+| Fluted-glass hero idea | After Miro Leon Bucher's CodePen "Fractal Glass Distortion" (technique only: post-process glass ribs over a bloomed metal object). Our shader, scene and geometry are written from scratch with no assets copied | Technique credit |
+| Mobile tab bar pattern | From our project MNEMOS-ZERO | Own work |
 
 AI tools (Claude) were used to help with the audit and the code. The team can explain every part.

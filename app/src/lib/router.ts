@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 /** Tiny hash router: deep links like #/clubs/iterium survive reloads (F4). */
 export type Route =
   | { name: 'landing' }
+  | { name: 'welcome' }
   | { name: 'home' }
   | { name: 'events'; id?: string }
   | { name: 'clubs'; id?: string }
@@ -13,6 +14,8 @@ export type Route =
 export function parse(hash: string): Route {
   const [, a, b] = hash.replace(/^#/, '').split('/')
   switch (a) {
+    case 'welcome':
+      return { name: 'welcome' }
     case 'home':
       return { name: 'home' }
     case 'events':
@@ -43,7 +46,7 @@ export function useRoute() {
       const next = parse(location.hash)
       setRoute((prev) => {
         // Only scroll to top when the page changes, not when a drawer opens
-        if (prev.name !== next.name) window.scrollTo({ top: 0 })
+        if (prev.name !== next.name || ('id' in prev && 'id' in next && prev.id !== next.id)) window.scrollTo({ top: 0, behavior: 'instant' })
         return next
       })
     }

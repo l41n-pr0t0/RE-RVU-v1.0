@@ -1,42 +1,65 @@
+import { lazy, Suspense, useEffect } from 'react'
 import { EventDrawerProvider } from './components/EventBits'
-import { Onboarding } from './components/Onboarding'
 import { Shell } from './components/Shell'
-import { EmptyState } from './components/ui'
-import { href, useRoute, type Route } from './lib/router'
+import { ListSkeleton } from './components/ui'
+import { go, useRoute, type Route } from './lib/router'
 import { StoreProvider, useStore } from './lib/store'
-import { Home } from './pages/Home'
-import { Landing } from './pages/Landing'
+import Landing from './pages/Landing'
+import Home from './pages/Home'
+
+// Landing and Today ship in the first bundle; the rest load on first visit.
+const Welcome = lazy(() => import('./pages/Welcome'))
+const Events = lazy(() => import('./pages/Events'))
+const Clubs = lazy(() => import('./pages/Clubs'))
+const Projects = lazy(() => import('./pages/Projects'))
+const Notices = lazy(() => import('./pages/Notices'))
+const Profile = lazy(() => import('./pages/Profile'))
 
 function Page({ route }: { route: Route }) {
   switch (route.name) {
-    case 'home':
-      return <Home />
+    case 'events':
+      return <Events id={route.id} />
+    case 'clubs':
+      return <Clubs key={route.id ?? 'index'} id={route.id} />
+    case 'projects':
+      return <Projects key={route.id ?? 'index'} id={route.id} />
+    case 'notices':
+      return <Notices />
+    case 'profile':
+      return <Profile />
     default:
-      // Pages still being built in this preview
-      return (
-        <div className="py-20">
-          <EmptyState
-            title="This page is next on our list"
-            body="Today and the event drawer are ready to try. The rest of the app lands in the next build."
-            action={
-              <a className="btn btn-gold" href={href('home')}>
-                Back to Today
-              </a>
-            }
-          />
-        </div>
-      )
+      return <Home />
   }
 }
+
+const Fallback = () => (
+  <div className="py-16">
+    <ListSkeleton rows={4} />
+  </div>
+)
 
 function Routed() {
   const route = useRoute()
   const { profile } = useStore()
-  if (route.name === 'landing') return <Landing />
-  if (!profile) return <Onboarding onDone={() => undefined} />
+  const needsProfile = route.name !== 'landing' && !profile
+
+  // Every app page needs a profile (guest counts). Without one, start at the landing screen.
+  useEffect(() => {
+    if (needsProfile) go('')
+  }, [needsProfile])
+
+  if (route.name === 'landing' || needsProfile) return <Landing />
+  if (route.name === 'welcome')
+    return (
+      <Suspense fallback={null}>
+        <Welcome />
+      </Suspense>
+    )
   return (
     <Shell route={route}>
-      <Page route={route} />
+      <Suspense fallback={<Fallback />}>
+        <Page route={route} />
+      </Suspense>
     </Shell>
   )
 }

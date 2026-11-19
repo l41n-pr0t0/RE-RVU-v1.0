@@ -90,4 +90,4 @@ Audited on 19 November 2026 at https://rvu-connect.vercel.app/?route=home, signe
 ---
 
 ### Not yet audited
-- Clubs, Projects, Announcements and Profile in a signed-in state, and the mobile layout. We paused because finishing onboarding would write to a real student profile. We will resume with team consent.
+- Clubs, Projects, Announcements and Profile in a signed-in state on the live site, and its mobile layout. We paused because finishing onboarding would write to a real student profile. Our prototype covers all of these screens; we still need to compare them against the live site with team consent.
