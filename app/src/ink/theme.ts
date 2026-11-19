@@ -1,10 +1,10 @@
 export type Theme = 'light' | 'dark'
 
 const root = document.documentElement
-const KEY = 'rvu-connect:theme'
+const KEY = 'rvu-connect:theme-v2'
 
 export function getTheme(): Theme {
-  return root.dataset.theme === 'light' ? 'light' : 'dark'
+  return root.dataset.theme === 'dark' ? 'dark' : 'light'
 }
 
 export function otherTheme(theme: Theme): Theme {

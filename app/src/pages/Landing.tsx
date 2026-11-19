@@ -63,7 +63,7 @@ export default function Landing() {
   }
 
   return (
-    <div className="stage-dark relative bg-[#000] text-paper">
+    <div className="relative bg-ink text-paper">
       {/* The pinned scene */}
       <div className="fixed inset-0 z-0" aria-hidden>
         <div className={`absolute inset-0 transition-opacity duration-[1600ms] ${ready ? 'opacity-100' : 'opacity-0'}`}>
@@ -74,7 +74,7 @@ export default function Landing() {
           </SceneGuard>
         </div>
         {/* Legibility: darker where the words are, open where the campus is */}
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgb(0_0_0/.6)_0%,transparent_24%,transparent_45%,rgb(0_0_0/.9)_88%)] md:bg-[linear-gradient(90deg,rgb(0_0_0/.9)_0%,rgb(0_0_0/.55)_36%,transparent_64%),linear-gradient(180deg,rgb(0_0_0/.55)_0%,transparent_18%,transparent_72%,rgb(0_0_0/.75)_100%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgb(244_240_230/.6)_0%,transparent_24%,transparent_45%,rgb(244_240_230/.9)_88%)] md:bg-[linear-gradient(90deg,rgb(244_240_230/.9)_0%,rgb(244_240_230/.55)_36%,transparent_64%),linear-gradient(180deg,rgb(244_240_230/.55)_0%,transparent_18%,transparent_72%,rgb(244_240_230/.75)_100%)]" />
         <div className="grain absolute inset-0" />
       </div>
 
@@ -317,7 +317,7 @@ function Caption({ item, place, now }: { item: Featured; place: Place; now: Date
   return (
     <motion.aside
       aria-live="polite"
-      className="pointer-events-none fixed inset-x-0 bottom-0 z-20 border-t border-line-strong bg-[#000]/85 pb-[env(safe-area-inset-bottom)] backdrop-blur-sm md:inset-x-auto md:right-8 md:bottom-8 md:w-[23rem] md:border md:pb-0"
+      className="pointer-events-none fixed inset-x-0 bottom-0 z-20 border-t border-line-strong bg-ink/90 pb-[env(safe-area-inset-bottom)] backdrop-blur-sm md:inset-x-auto md:right-8 md:bottom-8 md:w-[23rem] md:border md:pb-0"
       initial={reduce ? false : { opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       exit={reduce ? undefined : { opacity: 0, y: 8 }}
@@ -361,7 +361,7 @@ function Caption({ item, place, now }: { item: Featured; place: Place; now: Date
 
 function Closing({ onStart, signedIn }: { onStart: () => void; signedIn: boolean }) {
   return (
-    <section className="flex min-h-[85svh] flex-col justify-between bg-gradient-to-b from-transparent via-[#000]/90 to-[#000]" aria-labelledby="close-title">
+    <section className="flex min-h-[85svh] flex-col justify-between bg-gradient-to-b from-transparent via-ink/90 to-ink" aria-labelledby="close-title">
       <div className="wrap flex flex-1 flex-col justify-center py-20">
         <h2 id="close-title" className="max-w-[16ch] text-[clamp(2.2rem,1.3rem+3.4vw,4.8rem)] leading-[1.02]">
           Sign in once. <span className="italic text-gold">Your week sorts itself.</span>

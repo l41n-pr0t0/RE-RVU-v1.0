@@ -9,8 +9,8 @@
     <script>
       (function () {
         var t;
-        try { t = localStorage.getItem("rvu-connect:theme"); } catch (e) {}
-        if (t !== "light" && t !== "dark") t = "dark"; // first visit opens on the black stage
+        try { t = localStorage.getItem("rvu-connect:theme-v2"); } catch (e) {}
+        if (t !== "light" && t !== "dark") t = "light"; // first visit opens in the light theme
         var r = document.documentElement;
         r.dataset.theme = t;
         r.style.colorScheme = t;

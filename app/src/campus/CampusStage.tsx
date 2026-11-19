@@ -19,15 +19,15 @@ import { CAMPUS_CENTRE, type Place } from './venues'
  */
 
 const NIGHT = {
-  ground: '#0b1115',
-  context: '#161f25',
-  contextTop: '#1c272e',
-  road: '#1d2930',
-  campusRoad: '#2a3943',
-  path: '#24323a',
-  green: '#0d2b30',
-  building: '#24313a',
-  rvu: '#4a3f2a',
+  ground: '#EAE4D6',
+  context: '#DCD5C6',
+  contextTop: '#CFC7B5',
+  road: '#C9C1AE',
+  campusRoad: '#A9AFAA',
+  path: '#BEC1BB',
+  green: '#C6D6D0',
+  building: '#C5C7C1',
+  rvu: '#C29650',
   gold: '#D7AC54',
 }
 
@@ -47,9 +47,9 @@ function style(): StyleSpecification {
       buildings: src('buildings'),
     },
     sky: {
-      'sky-color': '#000000',
-      'horizon-color': '#1a252c',
-      'fog-color': '#0b1115',
+      'sky-color': '#F4F0E6',
+      'horizon-color': '#D3CBBB',
+      'fog-color': '#EAE4D6',
       'sky-horizon-blend': 0.7,
       'horizon-fog-blend': 0.6,
       'fog-ground-blend': 0.35,
