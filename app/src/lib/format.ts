@@ -67,6 +67,27 @@ export function icsFor(e: { id: string; title: string; start: Date; end: Date; v
   return URL.createObjectURL(new Blob([body], { type: 'text/calendar' }))
 }
 
+/** Build an .ics file containing multiple events for full schedule export. */
+export function multiIcsFor(events: { id: string; title: string; start: Date; end: Date; venue: string; summary: string }[]) {
+  const f = (d: Date) => d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '')
+  const lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//RVU Connect//EN', 'CALSCALE:GREGORIAN']
+  for (const e of events) {
+    lines.push(
+      'BEGIN:VEVENT',
+      `UID:${e.id}@rvu-connect`,
+      `DTSTAMP:${f(new Date())}`,
+      `DTSTART:${f(e.start)}`,
+      `DTEND:${f(e.end)}`,
+      `SUMMARY:${e.title}`,
+      `LOCATION:${e.venue}, RV University`,
+      `DESCRIPTION:${e.summary}`,
+      'END:VEVENT',
+    )
+  }
+  lines.push('END:VCALENDAR')
+  return URL.createObjectURL(new Blob([lines.join('\r\n')], { type: 'text/calendar' }))
+}
+
 /** Google Calendar "add event" link. Opens in a new tab; nothing is sent until the user saves. */
 export function googleCalendarUrl(e: { title: string; start: Date; end: Date; venue: string; summary: string; campus?: string }) {
   const f = (d: Date) => d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '')

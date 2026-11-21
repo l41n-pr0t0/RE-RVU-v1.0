@@ -4,7 +4,7 @@ import { CLUB_HOME, placeFor, type Place } from '../campus/venues'
 import { blankLinks, SignIn } from '../components/SignIn'
 import { ThemeToggle } from '../components/ThemeToggle'
 import { DOLLY, Icon, Logo, Num } from '../components/ui'
-import type { CampusEvent, Club } from '../data/types'
+import type { CampusEvent, Club, Project } from '../data/types'
 import { SCHOOLS } from '../data/types'
 import { useCatalog } from '../lib/catalog'
 import { relativeDay, time, weekday } from '../lib/format'
@@ -24,8 +24,14 @@ class SceneGuard extends Component<{ children: ReactNode }, { failed: boolean }>
   }
 }
 
-type Featured = { kind: 'event'; e: CampusEvent } | { kind: 'club'; c: Club }
+type Featured =
+  | { kind: 'event'; e: CampusEvent }
+  | { kind: 'club'; c: Club }
+  | { kind: 'project'; p: Project }
+
 type Focus = { place: Place; item: Featured } | null
+
+type TourPillar = 'events' | 'clubs' | 'projects'
 
 /**
  * The landing page is one continuous shot over the real campus at night.
@@ -36,11 +42,12 @@ type Focus = { place: Place; item: Featured } | null
 export default function Landing() {
   const { profile, setProfile } = useStore()
   const reduce = useReducedMotion()
-  const { events } = useCatalog()
+  const { events, clubs, projects, notices } = useCatalog()
   const [signIn, setSignIn] = useState(false)
   const [paused, setPaused] = useState(false)
   const [ready, setReady] = useState(false)
   const [focus, setFocus] = useState<Focus>(null)
+  const [pillar, setPillar] = useState<TourPillar>('events')
   const [now] = useState(() => new Date())
 
   const week = useMemo(() => {
@@ -48,7 +55,19 @@ export default function Landing() {
     end.setDate(end.getDate() + 7)
     return events.filter((e) => e.end > now && e.start < end).sort((a, b) => +a.start - +b.start)
   }, [events, now])
-  const weekItems = useMemo<Featured[]>(() => week.map((e) => ({ kind: 'event', e })), [week])
+
+  const recruitingClubs = useMemo(() => clubs.filter((c) => c.recruiting), [clubs])
+  const activeProjects = useMemo(() => projects.filter((p) => p.openings.length > 0), [projects])
+
+  const tourItems = useMemo<Featured[]>(() => {
+    if (pillar === 'clubs') {
+      return recruitingClubs.map((c) => ({ kind: 'club', c }))
+    }
+    if (pillar === 'projects') {
+      return activeProjects.map((p) => ({ kind: 'project', p }))
+    }
+    return week.map((e) => ({ kind: 'event', e }))
+  }, [pillar, week, recruitingClubs, activeProjects])
 
   const [, setTheme] = useState(() => (typeof document !== 'undefined' ? document.documentElement.dataset.theme : 'dark'))
   useEffect(() => {
@@ -71,7 +90,7 @@ export default function Landing() {
     }
   }
   const open = (f: Featured) => {
-    const path = f.kind === 'event' ? `events/${f.e.id}` : `clubs/${f.c.id}`
+    const path = f.kind === 'event' ? `events/${f.e.id}` : f.kind === 'club' ? `clubs/${f.c.id}` : `projects/${f.p.id}`
     if (profile) go(path)
     else guest(path)
   }
@@ -99,26 +118,40 @@ export default function Landing() {
           firstName={profile?.name.split(' ')[0]}
           onStart={start}
           onGuest={() => guest()}
+          onExplore={(p) => {
+            setPillar(p)
+            document.getElementById('this-week')?.scrollIntoView({ behavior: 'smooth' })
+          }}
           paused={paused}
           onPause={() => setPaused((p) => !p)}
           reduce={!!reduce}
+          eventsCount={week.length}
+          clubsCount={recruitingClubs.length}
+          projectsCount={activeProjects.length}
+          noticesCount={notices.length}
         />
 
         <Tour
           id="this-week"
-          eyebrow="This week on campus"
-          title={`${week.length} things on in the next seven days.`}
-          items={weekItems}
+          pillar={pillar}
+          onPillarChange={setPillar}
+          items={tourItems}
           onFocus={setFocus}
           onOpen={open}
         />
 
-
-        <Closing onStart={start} signedIn={!!profile && profile.name !== 'Guest'} />
+        <Closing onStart={start} onGuest={() => guest()} signedIn={!!profile && profile.name !== 'Guest'} />
       </div>
 
       <AnimatePresence>
-        {focus && <Caption key={focus.item.kind === 'event' ? focus.item.e.id : focus.item.c.id} item={focus.item} place={focus.place} now={now} />}
+        {focus && (
+          <Caption
+            key={focus.item.kind === 'event' ? focus.item.e.id : focus.item.kind === 'club' ? focus.item.c.id : focus.item.p.id}
+            item={focus.item}
+            place={focus.place}
+            now={now}
+          />
+        )}
       </AnimatePresence>
 
       <SignIn open={signIn} onClose={() => setSignIn(false)} />
@@ -134,11 +167,16 @@ function Hero(props: {
   firstName?: string
   onStart: () => void
   onGuest: () => void
+  onExplore: (p: TourPillar) => void
   paused: boolean
   onPause: () => void
   reduce: boolean
+  eventsCount: number
+  clubsCount: number
+  projectsCount: number
+  noticesCount: number
 }) {
-  const { next, signedIn, firstName, onStart, onGuest, paused, onPause, reduce } = props
+  const { next, signedIn, firstName, onStart, onGuest, onExplore, paused, onPause, reduce, eventsCount, clubsCount, projectsCount, noticesCount } = props
   const rise = (i: number) =>
     reduce ? {} : { initial: { opacity: 0, y: 28 }, animate: { opacity: 1, y: 0 }, transition: { duration: 1.1, ease: DOLLY, delay: 0.25 + i * 0.12 } }
 
@@ -148,8 +186,10 @@ function Hero(props: {
         <a href="#/" aria-label="RVU Connect, start">
           <Logo className="h-12 md:h-16" />
         </a>
-        <nav className="flex items-center gap-2 text-sm" aria-label="On this page">
-          <a href="#this-week" className="hover-gold hidden px-3 py-2 text-paper/70 sm:inline-block">This week</a>
+        <nav className="flex items-center gap-1.5 text-sm md:gap-3" aria-label="On this page">
+          <a href="#this-week" className="hover-gold hidden px-2 py-2 text-paper/70 sm:inline-block md:px-3">This week</a>
+          <button onClick={() => onExplore('clubs')} className="hover-gold hidden px-2 py-2 text-paper/70 md:inline-block">Clubs</button>
+          <button onClick={() => onExplore('projects')} className="hover-gold hidden px-2 py-2 text-paper/70 md:inline-block">Projects</button>
           <ThemeToggle />
           <button className="btn btn-sm ml-1" onClick={onStart}>{signedIn ? 'Open' : 'Sign in'}</button>
         </nav>
@@ -181,6 +221,26 @@ function Hero(props: {
               Look around first
             </button>
           )}
+        </motion.div>
+
+        {/* Live campus pulse strip */}
+        <motion.div {...rise(6)} className="mt-10 grid grid-cols-2 gap-2 border-t border-line-strong pt-4 sm:grid-cols-4 sm:gap-4">
+          <button onClick={() => onExplore('events')} className="group text-left transition-colors">
+            <span className="eyebrow !text-[0.6rem] text-paper/60 group-hover:text-gold">Events</span>
+            <span className="mt-0.5 block font-display text-xl sm:text-2xl"><Num>{eventsCount}</Num> this week</span>
+          </button>
+          <button onClick={() => onExplore('clubs')} className="group text-left transition-colors">
+            <span className="eyebrow !text-[0.6rem] text-paper/60 group-hover:text-gold">Clubs</span>
+            <span className="mt-0.5 block font-display text-xl sm:text-2xl"><Num>{clubsCount}</Num> recruiting</span>
+          </button>
+          <button onClick={() => onExplore('projects')} className="group text-left transition-colors">
+            <span className="eyebrow !text-[0.6rem] text-paper/60 group-hover:text-gold">Projects</span>
+            <span className="mt-0.5 block font-display text-xl sm:text-2xl"><Num>{projectsCount}</Num> looking</span>
+          </button>
+          <div className="text-left">
+            <span className="eyebrow !text-[0.6rem] text-paper/60">Notices</span>
+            <span className="mt-0.5 block font-display text-xl sm:text-2xl"><Num>{noticesCount}</Num> active</span>
+          </div>
         </motion.div>
       </div>
 
@@ -217,20 +277,15 @@ function Hero(props: {
 
 /* ------------------------------------------------------------------ tour */
 
-/**
- * Dogstudio's project list, adapted: big names, dim until chosen.
- * Desktop: pointer or keyboard focus chooses. Phones: whichever row crosses the middle of the screen.
- */
 function Tour(props: {
   id: string
-  eyebrow: string
-  title: string
+  pillar: TourPillar
+  onPillarChange: (p: TourPillar) => void
   items: Featured[]
-  small?: boolean
   onFocus: (f: Focus) => void
   onOpen: (item: Featured) => void
 }) {
-  const { id, eyebrow, title, items, small, onFocus, onOpen } = props
+  const { id, pillar, onPillarChange, items, onFocus, onOpen } = props
   const [active, setActive] = useState(-1)
   const listRef = useRef<HTMLOListElement>(null)
   const sectionRef = useRef<HTMLElement>(null)
@@ -241,7 +296,13 @@ function Tour(props: {
     const f = latest.current.items[i]
     if (!f) return
     setActive(i)
-    latest.current.onFocus({ place: f.kind === 'event' ? placeFor(f.e.venue) : CLUB_HOME[f.c.category], item: f })
+    const place =
+      f.kind === 'event'
+        ? placeFor(f.e.venue)
+        : f.kind === 'club'
+        ? CLUB_HOME[f.c.category]
+        : placeFor(f.p.school)
+    latest.current.onFocus({ place, item: f })
   }
 
   // The row crossing the middle band of the viewport becomes active as you scroll.
@@ -277,20 +338,62 @@ function Tour(props: {
   }, [])
 
   return (
-    <section id={id} ref={sectionRef} className="wrap scroll-mt-4 py-[16svh]" aria-labelledby={`${id}-title`}>
-      <p className="eyebrow text-gold">{eyebrow}</p>
-      <h2 id={`${id}-title`} className="mt-3 max-w-[22ch] text-[clamp(1.6rem,1.2rem+1.6vw,2.6rem)] leading-tight">
-        {title}
+    <section id={id} ref={sectionRef} className="wrap scroll-mt-4 py-[14svh]" aria-labelledby={`${id}-title`}>
+      <p className="eyebrow text-gold">Campus exploration</p>
+
+      {/* Pillar Switcher */}
+      <div className="mt-4 flex flex-wrap items-center gap-2 border-b border-line pb-4">
+        <button
+          type="button"
+          onClick={() => onPillarChange('events')}
+          className={`px-3 py-1.5 text-xs font-bold tracking-[0.1em] uppercase transition-colors ${
+            pillar === 'events' ? 'bg-gold text-ink' : 'border border-line text-paper/70 hover:text-gold'
+          }`}
+        >
+          Events this week
+        </button>
+        <button
+          type="button"
+          onClick={() => onPillarChange('clubs')}
+          className={`px-3 py-1.5 text-xs font-bold tracking-[0.1em] uppercase transition-colors ${
+            pillar === 'clubs' ? 'bg-gold text-ink' : 'border border-line text-paper/70 hover:text-gold'
+          }`}
+        >
+          Clubs recruiting
+        </button>
+        <button
+          type="button"
+          onClick={() => onPillarChange('projects')}
+          className={`px-3 py-1.5 text-xs font-bold tracking-[0.1em] uppercase transition-colors ${
+            pillar === 'projects' ? 'bg-gold text-ink' : 'border border-line text-paper/70 hover:text-gold'
+          }`}
+        >
+          Student projects
+        </button>
+      </div>
+
+      <h2 id={`${id}-title`} className="mt-6 max-w-[24ch] text-[clamp(1.6rem,1.2rem+1.6vw,2.6rem)] leading-tight">
+        {pillar === 'events'
+          ? `${items.length} things on in the next seven days.`
+          : pillar === 'clubs'
+          ? `${items.length} clubs looking for new members.`
+          : `${items.length} student teams with open roles.`}
       </h2>
-      <ol ref={listRef} className="mt-[8svh] md:max-w-[62%]">
+
+      <ol ref={listRef} className="mt-[6svh] md:max-w-[65%]">
         {items.map((f, i) => {
           const on = i === active
-          const name = f.kind === 'event' ? f.e.title : f.c.name
-          const meta = f.kind === 'event' ? `${weekday(f.e.start)} ${time(f.e.start)}` : f.c.category
+          const name = f.kind === 'event' ? f.e.title : f.kind === 'club' ? f.c.name : f.p.name
+          const meta =
+            f.kind === 'event'
+              ? `${weekday(f.e.start)} ${time(f.e.start)}`
+              : f.kind === 'club'
+              ? `${f.c.category} · ${f.c.members} members`
+              : `${f.p.openings.length} open role${f.p.openings.length === 1 ? '' : 's'} · ${f.p.category}`
           return (
-            <li key={f.kind === 'event' ? f.e.id : f.c.id} data-row={i}>
+            <li key={f.kind === 'event' ? f.e.id : f.kind === 'club' ? f.c.id : f.p.id} data-row={i}>
               <button
-                className="grid w-full grid-cols-1 gap-0.5 py-2 text-left md:grid-cols-[7rem_minmax(0,1fr)] md:items-baseline md:gap-3 md:py-3"
+                className="grid w-full grid-cols-1 gap-0.5 py-2 text-left md:grid-cols-[8.5rem_minmax(0,1fr)] md:items-baseline md:gap-3 md:py-3"
                 onMouseEnter={() => choose(i)}
                 onFocus={() => choose(i)}
                 onClick={() => onOpen(f)}
@@ -299,9 +402,9 @@ function Tour(props: {
                   {meta}
                 </Num>
                 <span
-                  className={`font-display leading-[1.02] transition-[color,translate] duration-500 ease-[cubic-bezier(.2,.7,.1,1)] ${
-                    small ? 'text-[clamp(1.6rem,1rem+2.6vw,3.6rem)]' : 'text-[clamp(2rem,1.1rem+3.6vw,5rem)]'
-                  } ${on ? 'translate-x-2 text-paper' : 'text-paper/45'}`}
+                  className={`font-display leading-[1.02] transition-[color,translate] duration-500 ease-[cubic-bezier(.2,.7,.1,1)] text-[clamp(1.8rem,1rem+3vw,4.2rem)] ${
+                    on ? 'translate-x-2 text-paper' : 'text-paper/45'
+                  }`}
                 >
                   {name}
                 </span>
@@ -348,12 +451,19 @@ function Caption({ item, place, now }: { item: Featured; place: Place; now: Date
                 </p>
               )}
             </>
-          ) : (
+          ) : item.kind === 'club' ? (
             <>
               <p className="text-gold">{item.c.recruiting ? 'Recruiting now' : item.c.category}</p>
               <p className="mt-1 font-semibold">{item.c.name}</p>
               <p className="line-clamp-2 text-paper/65">{item.c.tagline}</p>
               <p className="mt-1 text-xs text-paper/55">Usually around {place.name}</p>
+            </>
+          ) : (
+            <>
+              <p className="text-gold">Looking for collaborators</p>
+              <p className="mt-1 font-semibold">{item.p.name}</p>
+              <p className="line-clamp-2 text-paper/65">{item.p.description}</p>
+              <p className="mt-1 text-xs text-paper/55">{item.p.openings.map((o) => o.role).join(', ')}</p>
             </>
           )}
         </div>
@@ -364,7 +474,7 @@ function Caption({ item, place, now }: { item: Featured; place: Place; now: Date
 
 /* --------------------------------------------------------------- closing */
 
-function Closing({ onStart, signedIn }: { onStart: () => void; signedIn: boolean }) {
+function Closing({ onStart, onGuest, signedIn }: { onStart: () => void; onGuest: () => void; signedIn: boolean }) {
   return (
     <section className="flex min-h-[85svh] flex-col justify-between bg-gradient-to-b from-transparent via-ink/90 to-ink" aria-labelledby="close-title">
       <div className="wrap flex flex-1 flex-col justify-center py-20">
@@ -374,11 +484,16 @@ function Closing({ onStart, signedIn }: { onStart: () => void; signedIn: boolean
         <p className="mt-5 max-w-[46ch] text-paper/75">
           Save an event and it’s in your calendar. Follow a club and its news reaches you first. Due dates show up before they’re due.
         </p>
-        <div className="mt-8">
+        <div className="mt-8 flex flex-wrap gap-3">
           <button className="btn btn-gold" onClick={onStart}>
             {!signedIn && <GoogleMark />}
             <span>{signedIn ? 'Open my week' : 'Continue with Google'}</span>
           </button>
+          {!signedIn && (
+            <button className="btn" onClick={onGuest}>
+              Look around first
+            </button>
+          )}
         </div>
       </div>
       <footer className="wrap flex flex-col gap-2 border-t border-line py-6 text-xs text-paper/55 sm:flex-row sm:justify-between">
