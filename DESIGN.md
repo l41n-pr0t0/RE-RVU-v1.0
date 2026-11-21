@@ -14,6 +14,13 @@ grain, and RV Gold is used like a key light: on the one thing that matters most
 in the frame, nowhere else. Square corners everywhere. Hierarchy is shown by
 order, size and light, never by decoration.
 
+**The stage** (`.stage-bg`, mounted once in Shell): RV Black base, a Dark Slate
+key light from the top left, a Deep Teal floor at the bottom right, hairline
+"rigging" on the 12 columns of the `.wrap` frame, and grain. Slate and teal are
+used in the roles the brand book gives them (corporate backgrounds; environmental
+graphics). Gold never touches the backdrop. Sections sit straight on the stage;
+use `divide-*` hairlines, not opaque `bg-ink` cells, so the stage shows through.
+
 ## 1b. Signature element (exactly one)
 **Billing order: everything is credited in order of importance, and moves in that order.**
 Like film credits, the most important item is billed first, largest and in gold;

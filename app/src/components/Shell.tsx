@@ -1,6 +1,5 @@
 import { motion } from 'framer-motion'
 import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react'
-import { CAMPUS_VENUES } from '../campus/venues'
 import { useCatalog } from '../lib/catalog'
 import { relativeDay } from '../lib/format'
 import { NotificationsPanel, useNotifications } from './Notifications'
@@ -16,21 +15,20 @@ const NAV: { key: Route['name']; label: string; icon: IconName }[] = [
   { key: 'events', label: 'Events', icon: 'calendar' },
   { key: 'clubs', label: 'Clubs', icon: 'users' },
   { key: 'projects', label: 'Projects', icon: 'layers' },
-  { key: 'map', label: 'Map', icon: 'map' },
   { key: 'people', label: 'People', icon: 'user' },
 ]
 
-// Phones: five thumb-reachable tabs with Map for instant campus wayfinding
+// Phones: five thumb-reachable tabs
 const TABS: { key: Route['name']; label: string; icon: IconName }[] = [
   { key: 'home', label: 'Today', icon: 'home' },
   { key: 'events', label: 'Events', icon: 'calendar' },
-  { key: 'map', label: 'Map', icon: 'map' },
   { key: 'clubs', label: 'Clubs', icon: 'users' },
+  { key: 'projects', label: 'Projects', icon: 'layers' },
   { key: 'profile', label: 'You', icon: 'user' },
 ]
 
 // Pages reached from the header icons and the You tab, highlighted under "You" on phones
-const UNDER_YOU: Route['name'][] = ['profile', 'saved', 'calendar', 'projects', 'people', 'host', 'notices']
+const UNDER_YOU: Route['name'][] = ['profile', 'saved', 'calendar', 'people', 'host', 'notices']
 
 export function Shell({ route, children }: { route: Route; children: ReactNode }) {
   const [paletteOpen, setPaletteOpen] = useState(false)
@@ -54,7 +52,8 @@ export function Shell({ route, children }: { route: Route; children: ReactNode }
   }, [])
 
   return (
-    <div className="flex min-h-[100dvh] flex-col">
+    <div className="relative isolate flex min-h-[100dvh] flex-col">
+      <div className="stage-bg" aria-hidden />
       <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[70] focus:bg-gold focus:px-3 focus:py-2 focus:text-black">
         Skip to content
       </a>
@@ -221,7 +220,7 @@ function MobileTabs({ route }: { route: Route }) {
 
 /* ---------- Command palette: one search across everything (F10) ---------- */
 
-type Hit = { kind: 'Event' | 'Past' | 'Club' | 'Project' | 'Person' | 'Notice' | 'Venue' | 'Go to'; label: string; meta: string; run: () => void }
+type Hit = { kind: 'Event' | 'Past' | 'Club' | 'Project' | 'Person' | 'Notice' | 'Go to'; label: string; meta: string; run: () => void }
 
 function CommandPalette({ open, onClose }: { open: boolean; onClose: () => void }) {
   const titleId = useId()
@@ -243,7 +242,6 @@ function PaletteBody({ titleId, onClose }: { titleId: string; onClose: () => voi
     const s = q.trim().toLowerCase()
     const nav: Hit[] = [
       ...NAV.map((n) => ({ kind: 'Go to' as const, label: n.label, meta: 'Page', run: () => go(n.key) })),
-      { kind: 'Go to', label: 'Campus Map & Wayfinder', meta: 'Interactive 3D campus & building guide', run: () => go('map') },
       { kind: 'Go to', label: 'Your profile', meta: 'Page', run: () => go('profile') },
       { kind: 'Go to', label: 'Saved', meta: 'Events, notices and projects you kept', run: () => go('saved') },
       { kind: 'Go to', label: 'Your calendar', meta: 'Everything you said yes to', run: () => go('calendar') },
@@ -253,7 +251,6 @@ function PaletteBody({ titleId, onClose }: { titleId: string; onClose: () => voi
       ...events.map((e) => ({ kind: 'Event' as const, label: e.title, meta: `${relativeDay(e.start)} · ${e.hostName}`, run: () => openEvent(e.id) })),
       ...clubs.map((c) => ({ kind: 'Club' as const, label: c.name, meta: `${c.category} · ${c.tagline}`, run: () => go(`clubs/${c.id}`) })),
       ...projects.map((p) => ({ kind: 'Project' as const, label: p.name, meta: [p.status, ...p.stack, ...p.openings.map((o) => o.role)].join(', '), run: () => go(`projects/${p.id}`) })),
-      ...CAMPUS_VENUES.map((v) => ({ kind: 'Venue' as const, label: v.place.name, meta: `${v.category} · ${v.description}`, run: () => go('map') })),
       ...students.map((p) => ({ kind: 'Person' as const, label: p.name, meta: p.skills.join(', '), run: () => go(`people/${p.id}`) })),
       ...pastEvents.map((e) => ({ kind: 'Past' as const, label: e.title, meta: `${e.hostName} · archive`, run: () => openEvent(e.id) })),
       ...notices.map((n) => ({ kind: 'Notice' as const, label: n.title, meta: n.from, run: () => go('notices') })),

@@ -454,6 +454,66 @@ html.ink-vt::view-transition-group(root) { animation-duration: var(--ink-duratio
   75% { transform: translate(-2%, -1%); }
 }
 
+/* ---------- The stage (every signed-in page) ----------
+   Brand palette only (Brand guidelines March 2026, §11): RV Black is the base,
+   Dark Slate is the brand's colour for "corporate backgrounds, high-depth
+   contrast", Deep Teal its colour for "environmental graphics". Gold stays off
+   the backdrop so it can keep lighting the one thing that matters.
+   Layers: a slate key light from the top left (where the copy sits), a teal
+   floor at the bottom right, set-rigging hairlines on the .wrap columns, grain.
+   Fixed and painted once: nothing here animates except the grain. */
+:root {
+  --stage-key: color-mix(in srgb, #233039 92%, transparent);
+  --stage-fill: color-mix(in srgb, #233039 38%, transparent);
+  --stage-floor: color-mix(in srgb, #004854 46%, transparent);
+  --stage-rig: rgb(242 237 227 / 0.045);
+  --stage-grain: 0.06;
+}
+:root[data-theme="light"] {
+  --stage-key: rgb(255 255 255 / 0.85);
+  --stage-fill: color-mix(in srgb, #233039 7%, transparent);
+  --stage-floor: color-mix(in srgb, #004854 11%, transparent);
+  --stage-rig: rgb(35 48 57 / 0.06);
+  --stage-grain: 0.035;
+}
+.stage-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(70% 55% at 12% -8%, var(--stage-key), transparent 70%),
+    radial-gradient(60% 50% at 96% 108%, var(--stage-floor), transparent 72%),
+    linear-gradient(180deg, var(--stage-fill), transparent 42%, transparent 70%, var(--stage-fill)),
+    var(--color-ink);
+}
+/* Rigging: one hairline per column of the 90rem frame, fading towards the floor */
+.stage-bg::before {
+  content: "";
+  position: absolute;
+  inset: 0 max(clamp(1rem, 0.6rem + 2vw, 2.5rem), calc((100% - 90rem) / 2 + 2.5rem));
+  background:
+    linear-gradient(90deg, var(--stage-rig) 1px, transparent 1px) 0 0 / calc(100% / 12) 100%,
+    linear-gradient(270deg, var(--stage-rig) 1px, transparent 1px);
+  mask-image: linear-gradient(180deg, black, rgb(0 0 0 / 0.5) 45%, transparent 92%);
+}
+.stage-bg::after {
+  content: "";
+  position: absolute;
+  inset: -50%;
+  opacity: var(--stage-grain);
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+@media (min-width: 768px) {
+  .stage-bg::before { background-size: calc(100% / 12) 100%, 100% 100%; }
+}
+@media (max-width: 767px) {
+  .stage-bg::before { background-size: calc(100% / 4) 100%, 100% 100%; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .stage-bg::after { animation: grain 0.9s steps(4) infinite; }
+}
+
 /* ---------- Layout helpers ---------- */
 .wrap { width: 100%; max-width: 90rem; margin-inline: auto; padding-inline: clamp(1rem, 0.6rem + 2vw, 2.5rem); }
 /* Room for the phone tab bar */

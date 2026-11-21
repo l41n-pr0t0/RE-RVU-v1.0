@@ -71,9 +71,9 @@ export default function Home() {
       </PageHeader>
 
       {/* Next up + due: spacious editorial presentation */}
-      <div className={`grid gap-px border-b border-line bg-line ${due.length > 0 ? 'md:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]' : 'grid-cols-1'}`}>
+      <div className={`grid divide-y divide-line border-b border-line md:divide-x md:divide-y-0 ${due.length > 0 ? 'md:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]' : 'grid-cols-1'}`}>
         {next && (
-          <Reveal as="section" className="bg-ink py-8 md:py-12 md:pr-10">
+          <Reveal as="section" className="py-8 md:py-12 md:pr-10">
             <p className="eyebrow">{mine[0] ? 'Your next event' : 'Next on campus'}</p>
             <div className="mt-5 flex items-start gap-5 md:gap-7">
               <div className="shrink-0 border border-gold px-3.5 py-2.5 text-center">
@@ -100,7 +100,7 @@ export default function Home() {
         )}
 
         {due.length > 0 && (
-          <Reveal as="section" delay={0.08} className="bg-ink py-8 md:py-12 md:pl-10">
+          <Reveal as="section" delay={0.08} className="py-8 md:py-12 md:pl-10">
             <p className="eyebrow">Due soon</p>
             <ul className="mt-5 divide-y divide-line border-y border-line">
               {due.map((n) => (

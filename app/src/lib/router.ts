@@ -14,7 +14,6 @@ export type Route =
   | { name: 'saved' }
   | { name: 'calendar' }
   | { name: 'host'; id?: string }
-  | { name: 'map'; id?: string }
 
 export function parse(hash: string): Route {
   const [, a, b] = hash.replace(/^#/, '').split('?')[0].split('/')
@@ -41,8 +40,6 @@ export function parse(hash: string): Route {
       return { name: 'calendar' }
     case 'host':
       return { name: 'host', id: b }
-    case 'map':
-      return { name: 'map', id: b }
     default:
       return { name: 'landing' }
   }
