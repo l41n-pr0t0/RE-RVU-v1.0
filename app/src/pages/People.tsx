@@ -4,7 +4,7 @@ import { Flip } from 'gsap/Flip'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { SplitText } from 'gsap/SplitText'
 import { useId, useLayoutEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react'
-import { Dialog, EmptyState, ErrorState, Icon, ListSkeleton, Monogram, Num, PageHeader, SectionTitle } from '../components/ui'
+import { Dialog, EmptyState, ErrorState, Icon, ListSkeleton, Monogram, Num, SectionTitle } from '../components/ui'
 import {
   CATEGORIES,
   COMMITMENTS,
@@ -28,7 +28,8 @@ import { useQuery, useStore } from '../lib/store'
 gsap.registerPlugin(useGSAP, Flip, ScrollTrigger, SplitText)
 
 /**
- * People: the board.
+ * People: a crew call. Asks and offers in a job-board split view (billed list,
+ * the open post beside it), and the crew as a contact sheet of portrait plates.
  * Signature (see DESIGN.md): billing order. Every ask is ranked by how much it
  * needs *you*, then shown and animated in that order: Lead 01, Supporting 02–03,
  * Ensemble 04+. Motion is the hierarchy playing out, never decoration.
@@ -159,8 +160,30 @@ function useAuthor() {
 }
 
 /* ------------------------------------------------------------------ */
-/* The board                                                           */
+/* The board: a crew call                                              */
 /* ------------------------------------------------------------------ */
+
+const WIDE = '(min-width: 1024px)'
+function useWide() {
+  const [wide, setWide] = useState(() => typeof matchMedia !== 'undefined' && matchMedia(WIDE).matches)
+  useLayoutEffect(() => {
+    const m = matchMedia(WIDE)
+    const on = () => setWide(m.matches)
+    m.addEventListener('change', on)
+    return () => m.removeEventListener('change', on)
+  }, [])
+  return wide
+}
+
+/** Skills with the most open spots across live asks. */
+function useDemand() {
+  const { posts } = useCatalog()
+  return useMemo(() => {
+    const m = new Map<string, number>()
+    for (const p of posts) if (p.kind === 'seeking' && !closing(p.closes)?.closed) for (const k of p.skills) m.set(k, (m.get(k) ?? 0) + p.spots)
+    return [...m.entries()].sort((a, b) => b[1] - a[1]).slice(0, 8)
+  }, [posts])
+}
 
 function Board({ openId }: { openId?: string }) {
   const { posts, students, postById } = useCatalog()
@@ -192,16 +215,15 @@ function Board({ openId }: { openId?: string }) {
       if (next) Flip.from(state, { targets: next, duration: 0.55, ease: 'expo.out' })
     })
   }
-  const [open, setOpen] = useState<string | null>(openId ?? null)
   const [composing, setComposing] = useState<PostKind | null>(null)
   const [fresh, setFresh] = useState<string | null>(null)
+  const [text, setText] = useState('')
+  const demand = useDemand()
+  const mine = new Set((profile?.skills ?? []).map((s) => s.toLowerCase()))
 
   const asks = useBilling('seeking')
   const offers = useBilling('offering')
   const billing = tab === 'offering' ? offers : asks
-  const lead = billing.find((b) => !closing(b.post.closes)?.closed)
-  const openBilled = open ? [...asks, ...offers].find((b) => b.post.id === open) : undefined
-  const openPost = open ? postById(open) : undefined
 
   const hero = useRef<HTMLElement>(null)
   useGSAP(
@@ -220,7 +242,7 @@ function Board({ openId }: { openId?: string }) {
         }
         tl.from('[data-hero=slate]', { opacity: 0, x: -12, duration: 0.6 }, 0)
         tl.from('[data-hero=fade]', { opacity: 0, y: 14, duration: 0.8, stagger: 0.08 }, 0.35)
-        // Numbers roll up last: they are supporting facts, billed after the headline.
+        tl.from('[data-hero=chip]', { opacity: 0, y: 10, duration: 0.6, stagger: 0.04 }, 0.55)
         hero.current?.querySelectorAll<HTMLElement>('[data-count]').forEach((el, i) => {
           const to = Number(el.dataset.count)
           const o = { v: 0 }
@@ -242,21 +264,21 @@ function Board({ openId }: { openId?: string }) {
   const tabs: { id: Tab; label: string; n: number }[] = [
     { id: 'seeking', label: 'Asks', n: asks.length },
     { id: 'offering', label: 'Offers', n: offers.length },
-    { id: 'people', label: 'People', n: students.length },
+    { id: 'people', label: 'Crew', n: students.length },
   ]
   const openAsks = asks.filter((b) => !closing(b.post.closes)?.closed).length
   const collaborators = students.filter((s) => s.openToCollaborate).length
 
   return (
     <div className="pb-16">
-      <header ref={hero} className="grid gap-10 border-b border-line pt-8 pb-10 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] md:items-end md:gap-12 md:pt-14 md:pb-14">
+      <header ref={hero} className="grid gap-10 border-b border-line pt-8 pb-10 md:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] md:items-end md:gap-14 md:pt-14 md:pb-12">
         <div className="min-w-0">
           <p className="slate-no" data-hero="slate">Scene 06 · People</p>
           <h1 className="mt-4 text-[clamp(2.4rem,1.5rem+3.2vw,4.8rem)] leading-[1.02] tracking-[-0.02em]">
-            Who needs <em className="text-gold">a hand</em> this week.
+            Find your <em className="text-gold">crew</em>.
           </h1>
-          <p data-hero="fade" className="mt-5 max-w-[46ch] leading-relaxed text-mute">
-            Every ask on campus, billed by how much it needs you: your skills, the deadline and the spots still open. Post your own the way a team posts an opening.
+          <p data-hero="fade" className="mt-5 max-w-[50ch] leading-relaxed text-mute">
+            Teams post the hands they need, students post what they can teach. Asks are billed by how much they need you: your skills, the deadline, the spots still open.
           </p>
           <div data-hero="fade" className="mt-7 flex flex-wrap gap-3">
             <button type="button" className="btn btn-gold" disabled={!profile} onClick={() => setComposing('seeking')}>
@@ -264,149 +286,90 @@ function Board({ openId }: { openId?: string }) {
             </button>
             <button type="button" className="btn" disabled={!profile} onClick={() => setComposing('offering')}>Offer your skills</button>
           </div>
-          <dl className="mt-10 grid max-w-sm grid-cols-3 gap-4 border-t border-line pt-5">
+        </div>
+        <div className="min-w-0">
+          <dl className="grid grid-cols-3 border-y border-line">
             {(
               [
                 ['Open asks', openAsks],
                 ['Offering', offers.length],
                 ['Open to build', collaborators],
               ] as const
-            ).map(([k, v]) => (
-              <div key={k} data-hero="fade" className="min-w-0">
+            ).map(([k, v], i) => (
+              <div key={k} data-hero="fade" className={`min-w-0 py-4 ${i ? 'border-l border-line pl-4' : ''}`}>
                 <dt className="eyebrow !text-[0.6rem]">{k}</dt>
-                <dd className="num mt-1 text-3xl" data-count={v}>{pad(v)}</dd>
+                <dd className={`num mt-1 text-4xl ${i === 0 ? 'text-gold' : ''}`} data-count={v}>{pad(v)}</dd>
               </div>
             ))}
           </dl>
-        </div>
-        <div className="min-w-0">
-          {tab === 'people' ? (
-            <DemandPlate key="people" />
-          ) : lead ? (
-            <LeadPlate key={`${tab}-${lead.post.id}`} b={lead} total={billing.length} onOpen={() => setOpen(lead.post.id)} />
-          ) : (
-            <div className="border border-dashed border-line-strong p-8 text-mute">Nothing is billed yet. Post the first one.</div>
-          )}
+          <p data-hero="fade" className="eyebrow mt-6">Most asked for · open spots</p>
+          <ul className="mt-3 flex flex-wrap gap-2">
+            {demand.map(([k, n]) => (
+              <li key={k} data-hero="chip">
+                <button
+                  type="button"
+                  className="chip"
+                  aria-pressed={text.toLowerCase() === k.toLowerCase()}
+                  onClick={() => {
+                    setText(text.toLowerCase() === k.toLowerCase() ? '' : k)
+                    if (tab === 'offering') setTab('seeking')
+                  }}
+                >
+                  <span className={mine.has(k.toLowerCase()) ? 'text-gold' : ''}>{k}</span>
+                  <Num className="text-xs text-mute">{n}</Num>
+                </button>
+              </li>
+            ))}
+          </ul>
         </div>
       </header>
 
-      <div ref={tabsRef} role="tablist" aria-label="Board" className="no-scrollbar mt-6 flex gap-1 overflow-x-auto border-b border-line">
-        {tabs.map((t) => (
-          <button
-            key={t.id}
-            role="tab"
-            id={`tab-${t.id}`}
-            aria-selected={tab === t.id}
-            aria-controls={`panel-${t.id}`}
-            className={`relative shrink-0 px-4 pt-2 pb-3 text-sm transition-colors ${tab === t.id ? 'text-paper' : 'text-mute hover-gold'}`}
-            onClick={() => setTab(t.id)}
-          >
-            {t.label} <Num className="ml-1.5 text-xs text-mute">{pad(t.n)}</Num>
-            {tab === t.id && <span data-tab-bar data-flip-id="tab-bar" className="absolute inset-x-0 -bottom-px h-0.5 bg-gold" />}
-          </button>
-        ))}
+      <div className="mt-6 flex flex-col gap-4 border-b border-line md:flex-row md:items-end md:justify-between">
+        <div ref={tabsRef} role="tablist" aria-label="Board" className="no-scrollbar -mb-px flex gap-1 overflow-x-auto">
+          {tabs.map((t) => (
+            <button
+              key={t.id}
+              role="tab"
+              id={`tab-${t.id}`}
+              aria-selected={tab === t.id}
+              aria-controls={`panel-${t.id}`}
+              className={`relative shrink-0 px-4 pt-2 pb-3 text-sm transition-colors ${tab === t.id ? 'text-paper' : 'text-mute hover-gold'}`}
+              onClick={() => setTab(t.id)}
+            >
+              {t.label} <Num className="ml-1.5 text-xs text-mute">{pad(t.n)}</Num>
+              {tab === t.id && <span data-tab-bar data-flip-id="tab-bar" className="absolute inset-x-0 bottom-0 h-0.5 bg-gold" />}
+            </button>
+          ))}
+        </div>
+        <label className="relative mb-3 block md:w-80">
+          <span className="sr-only">Search {tab === 'people' ? 'people' : tab === 'seeking' ? 'asks' : 'offers'}</span>
+          <Icon name="search" className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-mute" />
+          <input className="field !min-h-10 pl-10" type="search" placeholder={tab === 'people' ? 'A skill, a name, “Figma”' : 'A skill or a word, “ESP32”'} value={text} onChange={(e) => setText(e.target.value)} />
+        </label>
       </div>
 
       <div role="tabpanel" id={`panel-${tab}`} aria-labelledby={`tab-${tab}`} className="mt-6">
         {tab === 'people' ? (
-          <Directory students={students} />
+          <Crew students={students} text={text} onClear={() => setText('')} />
         ) : (
           <Listing
             key={tab}
             kind={tab}
             billing={billing}
-            leadId={lead?.post.id}
+            text={text}
+            onClearText={() => setText('')}
+            initial={openId}
             mine={posts.filter((p) => p.kind === tab && p.authorId === 'me')}
             fresh={fresh}
-            onOpen={setOpen}
             onCompose={() => setComposing(tab)}
           />
         )}
       </div>
 
-      <Dialog open={!!openPost} onClose={() => setOpen(null)} variant="sheet" labelledBy="post-title">
-        {openPost && <PostSheet post={openPost} billed={openBilled} total={(openPost.kind === 'seeking' ? asks : offers).length} onClose={() => setOpen(null)} />}
-      </Dialog>
       <Dialog open={!!composing} onClose={() => setComposing(null)} variant="sheet" labelledBy="compose-title">
         {composing && <Composer kind={composing} onCancel={() => setComposing(null)} onPublish={publish} />}
       </Dialog>
     </div>
-  )
-}
-
-/* ---------- Lead plate: billed 01, the one thing in gold ---------- */
-
-function LeadPlate({ b, total, onOpen }: { b: Billed; total: number; onOpen: () => void }) {
-  const ref = useRef<HTMLElement>(null)
-  const author = useAuthor()(b.post.authorId)
-  const { profile, hands } = useStore()
-  const p = b.post
-  const seeking = p.kind === 'seeking'
-  const raised = p.hands.length + (hands[p.id] ? 1 : 0)
-
-  useGSAP(
-    () => {
-      const mm = gsap.matchMedia()
-      mm.add(MOTION, () => {
-        const tl = gsap.timeline({ defaults: { ease: 'expo.out' }, delay: 0.25 })
-        // A slate wipe: gold bar crosses the plate and the lead is underneath.
-        gsap.set('[data-lead=body]', { opacity: 0 })
-        tl.fromTo('[data-lead=wipe]', { scaleX: 0, transformOrigin: '0% 50%' }, { scaleX: 1, duration: 0.5, ease: 'power3.inOut' })
-          .set('[data-lead=body]', { opacity: 1 })
-          .to('[data-lead=wipe]', { scaleX: 0, transformOrigin: '100% 50%', duration: 0.6, ease: 'power3.inOut' })
-          .from('[data-lead=rank]', { yPercent: 105, duration: 1.1 }, '<')
-          .from('[data-lead=line]', { y: 16, opacity: 0, duration: 0.8, stagger: 0.06 }, '<0.1')
-          .from('[data-seg]', { scaleX: 0, transformOrigin: '0% 50%', duration: 0.55, stagger: 0.12, ease: 'power2.out' }, '<0.25')
-      })
-    },
-    { scope: ref },
-  )
-
-  return (
-    <article ref={ref} className="lead-plate relative overflow-hidden border border-line-strong bg-slate-2">
-      <span data-lead="wipe" aria-hidden className="absolute inset-0 z-[2] origin-left scale-x-0 bg-gold" />
-      <div data-lead="body" className="relative">
-        <div className="flex items-start justify-between gap-4 border-b border-line px-5 pt-5 pb-4 md:px-7">
-          <p data-lead="line" className="slate-no">Billed {pad(1)} of {pad(total)} · {seeking ? 'Needs you most' : 'Best fit for you'}</p>
-          {p.urgent && !closing(p.closes)?.closed && <span data-lead="line" className="tag tag-gold">Urgent</span>}
-        </div>
-        <div className="grid gap-x-6 px-5 pt-6 md:grid-cols-[auto_minmax(0,1fr)] md:px-7">
-          <span className="block overflow-hidden" aria-hidden>
-            <span data-lead="rank" className="lead-rank num block">01</span>
-          </span>
-          <div className="min-w-0">
-            <h2 data-lead="line" className="text-[clamp(1.7rem,1.2rem+1.6vw,2.6rem)] leading-[1.08]">{p.title}</h2>
-            {author && (
-              <p data-lead="line" className="mt-3 text-sm text-mute">
-                {author.name} · Year <Num>{author.year}</Num> · {shortSchool(author.school)}
-              </p>
-            )}
-            {b.reasons.length > 0 && (
-              <ul className="mt-5 space-y-1.5 text-sm">
-                {b.reasons.map((r) => (
-                  <li data-lead="line" key={r} className="flex items-baseline gap-3">
-                    <span aria-hidden className="h-px w-5 shrink-0 translate-y-[-0.25em] bg-gold" /> {r}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        </div>
-
-        <div data-lead="line" className="mt-6 px-5 md:px-7">
-          <FitMeter skills={p.skills} fit={b.fit} kind={p.kind} hasSkills={!!profile?.skills.length} />
-        </div>
-
-        <div className="mt-6 flex flex-wrap items-center justify-between gap-4 border-t border-line px-5 py-4 md:px-7">
-          <p data-lead="line" className="text-sm text-mute">
-            {p.commitment} · {p.mode} · <Num>{raised}</Num> {raised === 1 ? 'hand' : 'hands'}
-          </p>
-          <button data-lead="line" type="button" className="btn btn-gold" onClick={onOpen}>
-            {seeking ? 'Read the ask' : 'Read the offer'} <Icon name="arrow" className="h-4 w-4" />
-          </button>
-        </div>
-      </div>
-    </article>
   )
 }
 
@@ -436,85 +399,42 @@ function FitMeter({ skills, fit, kind, hasSkills }: { skills: string[]; fit: str
   )
 }
 
-/* ---------- People tab lead: what the campus is asking for ---------- */
-
-function DemandPlate() {
-  const ref = useRef<HTMLElement>(null)
-  const { posts } = useCatalog()
-  const { profile } = useStore()
-  const mine = new Set((profile?.skills ?? []).map((s) => s.toLowerCase()))
-  const demand = useMemo(() => {
-    const m = new Map<string, number>()
-    for (const p of posts) if (p.kind === 'seeking' && !closing(p.closes)?.closed) for (const k of p.skills) m.set(k, (m.get(k) ?? 0) + p.spots)
-    return [...m.entries()].sort((a, b) => b[1] - a[1]).slice(0, 6)
-  }, [posts])
-  const max = demand[0]?.[1] ?? 1
-
-  useGSAP(
-    () => {
-      const mm = gsap.matchMedia()
-      mm.add(MOTION, () => {
-        gsap
-          .timeline({ defaults: { ease: 'expo.out' }, delay: 0.2 })
-          .from('[data-d=line]', { y: 14, opacity: 0, duration: 0.7, stagger: 0.06 })
-          .from('[data-d=bar]', { scaleX: 0, transformOrigin: '0% 50%', duration: 0.9, stagger: 0.08 }, '<0.15')
-      })
-    },
-    { scope: ref },
-  )
-
-  return (
-    <article ref={ref} className="border border-line-strong bg-slate-2">
-      <p data-d="line" className="slate-no border-b border-line px-5 pt-5 pb-4 md:px-7">Most asked for · open spots by skill</p>
-      <ol className="space-y-4 px-5 py-6 md:px-7">
-        {demand.map(([k, n], i) => (
-          <li key={k} data-d="line" className="grid grid-cols-[2rem_minmax(0,9rem)_1fr_2rem] items-center gap-3">
-            <Num className="text-xs text-mute">{pad(i + 1)}</Num>
-            <span className={`truncate text-sm ${mine.has(k.toLowerCase()) ? 'text-gold' : ''}`}>{k}</span>
-            <span className="h-1.5 bg-line">
-              <span data-d="bar" className={`block h-full ${i === 0 ? 'bg-gold' : 'bg-paper/40'}`} style={{ width: `${(n / max) * 100}%` }} />
-            </span>
-            <Num className="text-right text-sm">{n}</Num>
-          </li>
-        ))}
-      </ol>
-      <p data-d="line" className="border-t border-line px-5 py-4 text-sm text-mute md:px-7">Skills in gold are on your profile. Filter the people below by any of them.</p>
-    </article>
-  )
-}
-
-/* ---------- The listing: supporting, then ensemble ---------- */
+/* ---------- The listing: billed rows on the left, the open post on the right ---------- */
 
 type FlipState = ReturnType<typeof Flip.getState>
 
 function Listing({
   kind,
   billing,
-  leadId,
+  text,
+  onClearText,
+  initial,
   mine,
   fresh,
-  onOpen,
   onCompose,
 }: {
   kind: PostKind
   billing: Billed[]
-  leadId?: string
+  text: string
+  onClearText: () => void
+  initial?: string
   mine: BoardPost[]
   fresh: string | null
-  onOpen: (id: string) => void
   onCompose: () => void
 }) {
   const q = useQuery(billing)
   const { profile } = useStore()
+  const { postById } = useCatalog()
+  const wide = useWide()
   const mySkills = useMemo(() => profile?.skills ?? [], [profile?.skills])
-  const [text, setText] = useState('')
   const [cat, setCat] = useState<Category | null>(null)
-  const [commit, setCommit] = useState<Commitment | ''>('')
   const [fits, setFits] = useState(false)
   const [sort, setSort] = useState<'billing' | 'new' | 'closing'>('billing')
-  const filtered = !!(text || cat || commit || fits)
+  const filtered = !!(text || cat || fits)
   const root = useRef<HTMLDivElement>(null)
   const flip = useRef<FlipState | null>(null)
+  const [picked, setPicked] = useState<string | null>(initial ?? null)
+  const [sheet, setSheet] = useState(!!initial)
 
   /** Capture positions, then change: the layout effect below plays the re-billing. */
   const change = (fn: () => void) => {
@@ -525,9 +445,7 @@ function Listing({
   const list = useMemo(() => {
     const t = text.trim().toLowerCase()
     const out = (q.data ?? []).filter(({ post: p }) => {
-      if (p.id === leadId) return false
       if (cat && p.category !== cat) return false
-      if (commit && p.commitment !== commit) return false
       if (fits && !skillMatch(mySkills, p.skills).length) return false
       if (t && !`${p.title} ${p.body} ${p.skills.join(' ')}`.toLowerCase().includes(t)) return false
       return true
@@ -535,7 +453,7 @@ function Listing({
     if (sort === 'new') out.sort((a, b) => +b.post.posted - +a.post.posted)
     if (sort === 'closing') out.sort((a, b) => (a.post.closes ? +a.post.closes : Infinity) - (b.post.closes ? +b.post.closes : Infinity))
     return out
-  }, [q.data, text, cat, commit, fits, sort, mySkills, leadId])
+  }, [q.data, text, cat, fits, sort, mySkills])
 
   useLayoutEffect(() => {
     const state = flip.current
@@ -569,177 +487,142 @@ function Listing({
     { scope: root, dependencies: [q.status] },
   )
 
-  const supporting = sort === 'billing' && !filtered ? list.slice(0, 2) : []
-  const ensemble = sort === 'billing' && !filtered ? list.slice(2) : list
+  // On a wide screen the lead (billed 01) is open in the pane until you pick another.
+  const firstOpen = list.find((b) => !closing(b.post.closes)?.closed)?.post.id
+  const shownId = picked && (list.some((b) => b.post.id === picked) || mine.some((p) => p.id === picked)) ? picked : firstOpen
+  const shown = shownId ? postById(shownId) : undefined
+  const shownBilled = billing.find((b) => b.post.id === shownId)
+  const open = (id: string) => {
+    setPicked(id)
+    if (!wide) setSheet(true)
+  }
   const word = kind === 'seeking' ? 'asks' : 'offers'
+  const clear = () => change(() => { onClearText(); setCat(null); setFits(false) })
 
   return (
     <div ref={root}>
-      <div className="grid gap-3 md:grid-cols-[1fr_13rem_12rem] md:items-end">
-        <label className="relative block">
-          <span className="sr-only">Search {word}</span>
-          <Icon name="search" className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-mute" />
-          <input className="field pl-10" type="search" placeholder={kind === 'seeking' ? 'Try “ESP32”, “illustrator” or “pitch”' : 'What do you need help with?'} value={text} onChange={(e) => change(() => setText(e.target.value))} />
-        </label>
-        <label className="block">
-          <span className="sr-only">Commitment</span>
-          <select className="field" value={commit} onChange={(e) => change(() => setCommit(e.target.value as Commitment | ''))}>
-            <option value="">Any commitment</option>
-            {COMMITMENTS.map((c) => <option key={c}>{c}</option>)}
-          </select>
-        </label>
-        <label className="block">
+      <div className="flex flex-wrap items-center gap-2">
+        <div role="group" aria-label="Area" className="no-scrollbar -mx-1 flex min-w-0 flex-1 gap-2 overflow-x-auto px-1">
+          {mySkills.length > 0 && kind === 'seeking' && (
+            <button type="button" className="chip shrink-0" aria-pressed={fits} onClick={() => change(() => setFits(!fits))}>
+              <Icon name="check" className="h-3.5 w-3.5" /> Fits my skills
+            </button>
+          )}
+          <button type="button" className="chip shrink-0" aria-pressed={!cat} onClick={() => change(() => setCat(null))}>Every area</button>
+          {CATEGORIES.map((c) => (
+            <button key={c} type="button" className="chip shrink-0" aria-pressed={cat === c} onClick={() => change(() => setCat(cat === c ? null : c))}>{c}</button>
+          ))}
+        </div>
+        <label className="block w-full sm:w-56">
           <span className="sr-only">Order</span>
-          <select className="field" value={sort} onChange={(e) => change(() => setSort(e.target.value as typeof sort))}>
-            <option value="billing">Billing: needs you most</option>
+          <select className="field !min-h-9 text-sm" value={sort} onChange={(e) => change(() => setSort(e.target.value as typeof sort))}>
+            <option value="billing">Billed: needs you most</option>
             <option value="new">Newest first</option>
             {kind === 'seeking' && <option value="closing">Closing soon</option>}
           </select>
         </label>
       </div>
-      <div role="group" aria-label="Area" className="no-scrollbar mt-3 flex gap-2 overflow-x-auto">
-        {mySkills.length > 0 && kind === 'seeking' && (
-          <button type="button" className="chip shrink-0" aria-pressed={fits} onClick={() => change(() => setFits(!fits))}>
-            <Icon name="check" className="h-3.5 w-3.5" /> Fits my skills
-          </button>
-        )}
-        <button type="button" className="chip shrink-0" aria-pressed={!cat} onClick={() => change(() => setCat(null))}>Every area</button>
-        {CATEGORIES.map((c) => (
-          <button key={c} type="button" className="chip shrink-0" aria-pressed={cat === c} onClick={() => change(() => setCat(cat === c ? null : c))}>{c}</button>
-        ))}
+
+      <div className="mt-6 grid gap-8 lg:grid-cols-[minmax(0,1fr)_26rem] xl:grid-cols-[minmax(0,1fr)_30rem]">
+        <div className="min-w-0">
+          {mine.length > 0 && (
+            <section id="yours" aria-labelledby="yours-title" className="mb-10 scroll-mt-28">
+              <p id="yours-title" className="slate-no mb-3">Yours · {pad(mine.length)}</p>
+              <ul className="divide-y divide-line border-y border-line">
+                {mine.map((p) => (
+                  <li key={p.id} data-flip-id={p.id}>
+                    <PostRow post={p} label="You" selected={wide && shownId === p.id} fresh={fresh === p.id} onOpen={() => open(p.id)} />
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
+          {q.status === 'loading' ? (
+            <ListSkeleton rows={4} />
+          ) : q.status === 'error' ? (
+            <ErrorState onRetry={q.retry} />
+          ) : list.length ? (
+            <section aria-labelledby="billed">
+              <p id="billed" className="slate-no mb-3 !text-mute">
+                {filtered ? `${pad(list.length)} ${word} match` : sort === 'billing' ? `Billed for you · ${pad(list.length)}` : sort === 'new' ? 'Newest first' : 'Closing soonest first'}
+              </p>
+              <ul className="divide-y divide-line border-y border-line">
+                {list.map((b) => (
+                  <li key={b.post.id} data-flip-id={b.post.id} data-reveal>
+                    <PostRow post={b.post} billed={b} label={pad(b.rank)} selected={wide && shownId === b.post.id} onOpen={() => open(b.post.id)} />
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ) : filtered ? (
+            <EmptyState title={`No ${word} match`} body="Try a broader word, or clear the filters." action={<button type="button" className="btn" onClick={clear}>Clear filters</button>} />
+          ) : (
+            <EmptyState
+              title={kind === 'seeking' ? 'No asks yet' : 'No offers yet'}
+              body={kind === 'seeking' ? 'Say what you are building and who you need; it gets billed the moment you post.' : 'Put up what you are good at, and let a project find you.'}
+              action={profile ? <button type="button" className="btn btn-gold" onClick={onCompose}>{kind === 'seeking' ? 'Post an ask' : 'Offer your skills'}</button> : undefined}
+            />
+          )}
+        </div>
+
+        <aside className="hidden lg:block" aria-label="Selected post">
+          <div className="sticky top-24 h-[calc(100dvh-7.5rem)] border border-line-strong bg-slate-2">
+            {shown ? (
+              <PostSheet key={shown.id} post={shown} billed={shownBilled} total={billing.length} />
+            ) : (
+              <p className="p-7 text-sm text-mute">Pick a post to read it here.</p>
+            )}
+          </div>
+        </aside>
       </div>
 
-      {mine.length > 0 && (
-        <section id="yours" aria-labelledby="yours-title" className="mt-10 scroll-mt-28">
-          <SectionTitle id="yours-title" title="Yours" count={mine.length} />
-          <ul className="divide-y divide-line border-y border-line">
-            {mine.map((p) => (
-              <li key={p.id} data-flip-id={p.id}>
-                <EnsembleRow post={p} label="You" fresh={fresh === p.id} onOpen={() => onOpen(p.id)} />
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-
-      <div className="mt-10">
-        {q.status === 'loading' ? (
-          <ListSkeleton rows={4} />
-        ) : q.status === 'error' ? (
-          <ErrorState onRetry={q.retry} />
-        ) : list.length ? (
-          <>
-            {supporting.length > 0 && (
-              <section aria-labelledby="supporting">
-                <p id="supporting" className="slate-no mb-3">Supporting · billed {pad(supporting[0].rank)}–{pad(supporting[supporting.length - 1].rank)}</p>
-                <ul className="divide-y divide-line border-y border-line-strong">
-                  {supporting.map((b) => (
-                    <li key={b.post.id} data-flip-id={b.post.id} data-reveal>
-                      <SupportingRow b={b} onOpen={() => onOpen(b.post.id)} />
-                    </li>
-                  ))}
-                </ul>
-              </section>
-            )}
-            {ensemble.length > 0 && (
-              <section aria-labelledby="ensemble" className={supporting.length ? 'mt-12' : ''}>
-                <p id="ensemble" className="slate-no mb-3 !text-mute">{supporting.length ? 'Also on the board' : filtered ? `${pad(ensemble.length)} ${word} match` : sort === 'new' ? 'Newest first' : 'Closing soonest first'}</p>
-                <ul className="divide-y divide-line border-y border-line">
-                  {ensemble.map((b) => (
-                    <li key={b.post.id} data-flip-id={b.post.id} data-reveal>
-                      <EnsembleRow post={b.post} label={pad(b.rank)} onOpen={() => onOpen(b.post.id)} />
-                    </li>
-                  ))}
-                </ul>
-              </section>
-            )}
-          </>
-        ) : filtered ? (
-          <EmptyState
-            title={`No other ${word} match`}
-            body="Try a broader word, or clear the filters. The lead above is always shown."
-            action={<button type="button" className="btn" onClick={() => change(() => { setText(''); setCat(null); setCommit(''); setFits(false) })}>Clear filters</button>}
-          />
-        ) : (
-          <EmptyState
-            title={kind === 'seeking' ? 'Only one ask so far' : 'Only one offer so far'}
-            body={kind === 'seeking' ? 'Say what you are building and who you need; it gets billed the moment you post.' : 'Put up what you are good at, and let a project find you.'}
-            action={profile ? <button type="button" className="btn btn-gold" onClick={onCompose}>{kind === 'seeking' ? 'Post an ask' : 'Offer your skills'}</button> : undefined}
-          />
-        )}
-      </div>
+      <Dialog open={!wide && sheet && !!shown} onClose={() => setSheet(false)} variant="sheet" labelledBy="post-title">
+        {!wide && sheet && shown && <PostSheet post={shown} billed={shownBilled} total={billing.length} onClose={() => setSheet(false)} />}
+      </Dialog>
     </div>
   )
 }
 
-/** Billed 02–03: bigger type, the reasons spelled out. */
-function SupportingRow({ b, onOpen }: { b: Billed; onOpen: () => void }) {
-  const author = useAuthor()(b.post.authorId)
-  const { profile } = useStore()
-  const p = b.post
-  const c = closing(p.closes)
-  return (
-    <button type="button" onClick={onOpen} className="bill-row group grid w-full gap-x-8 gap-y-4 py-7 text-left md:grid-cols-[5.5rem_minmax(0,1fr)_17rem] md:py-9">
-      <span className="bill-rank num text-5xl md:text-6xl" aria-label={`Billed ${b.rank}`}>{pad(b.rank)}</span>
-      <span className="min-w-0">
-        <span className="bill-title block font-display text-[clamp(1.5rem,1.2rem+1vw,2.1rem)] leading-tight">{p.title}</span>
-        <span className="mt-2 block text-sm text-mute">{author ? `${author.name} · ${shortSchool(author.school)}` : 'A student'} · {ago(p.posted)}</span>
-        <span className="mt-3 line-clamp-2 block max-w-[62ch] text-sm leading-relaxed text-mute">{p.body}</span>
-        {b.reasons.length > 0 && (
-          <span className="mt-4 flex flex-wrap gap-x-5 gap-y-1 text-sm">
-            {b.reasons.map((r) => (
-              <span key={r} className="inline-flex items-baseline gap-2"><span aria-hidden className="h-px w-3 translate-y-[-0.25em] bg-gold" />{r}</span>
-            ))}
-          </span>
-        )}
-      </span>
-      <span className="min-w-0 space-y-4 md:border-l md:border-line md:pl-6">
-        <FitMeter skills={p.skills} fit={b.fit} kind={p.kind} hasSkills={!!profile?.skills.length} />
-        <span className="grid grid-cols-2 gap-3 text-xs">
-          <Fact k="Time" v={p.commitment} />
-          <Fact k={c ? 'Closes' : 'Where'} v={c ? c.label.replace('Closes ', '') : p.mode} hot={c?.soon} />
-        </span>
-      </span>
-    </button>
-  )
-}
-
-/** Billed 04+: one dense line each. */
-function EnsembleRow({ post: p, label, fresh = false, onOpen }: { post: BoardPost; label: string; fresh?: boolean; onOpen: () => void }) {
+/** One billed post. 01 is in gold; 01–03 spell out why they are billed there. */
+function PostRow({ post: p, billed, label, selected = false, fresh = false, onOpen }: { post: BoardPost; billed?: Billed; label: string; selected?: boolean; fresh?: boolean; onOpen: () => void }) {
   const author = useAuthor()(p.authorId)
   const { profile, hands } = useStore()
   const match = skillMatch(profile?.skills ?? [], p.skills)
   const c = closing(p.closes)
   const raised = p.hands.length + (hands[p.id] ? 1 : 0)
+  const top = billed && billed.rank <= 3
+  const lead = billed?.rank === 1
   return (
     <button
       type="button"
       onClick={onOpen}
-      className={`bill-row group grid w-full grid-cols-[2.5rem_minmax(0,1fr)_auto] items-center gap-x-4 gap-y-2 py-4 text-left md:grid-cols-[3rem_minmax(0,1fr)_minmax(0,14rem)_9rem_4.5rem] ${fresh ? 'bill-fresh' : ''} ${c?.closed ? 'opacity-55' : ''}`}
+      aria-current={selected ? 'true' : undefined}
+      className={`bill-row group relative grid w-full grid-cols-[3rem_minmax(0,1fr)_auto] gap-x-4 gap-y-2 py-5 pr-2 text-left transition-colors md:grid-cols-[3.75rem_minmax(0,1fr)_auto] ${selected ? 'bg-paper/[0.05]' : ''} ${fresh ? 'bill-fresh' : ''} ${c?.closed ? 'opacity-55' : ''}`}
     >
-      <span className={`bill-rank num text-sm ${label === 'You' ? 'text-gold' : ''}`}>{label}</span>
+      {selected && <span aria-hidden className="absolute inset-y-0 left-0 w-0.5 bg-gold" />}
+      <span className={`bill-rank num pl-3 leading-none ${top ? 'text-3xl md:text-4xl' : 'text-lg'} ${lead || label === 'You' ? '!text-gold' : ''}`} aria-label={billed ? `Billed ${billed.rank}` : label}>{label}</span>
       <span className="min-w-0">
-        <span className="bill-title block truncate text-[1.05rem]">{p.title}</span>
-        <span className="block truncate text-xs text-mute">{author?.name ?? 'A student'} · {p.category}</span>
+        <span className={`bill-title block font-display leading-snug ${top ? 'text-[clamp(1.3rem,1.1rem+0.6vw,1.7rem)]' : 'text-lg'}`}>{p.title}</span>
+        <span className="mt-1 block truncate text-xs text-mute">{author ? `${author.name} · ${shortSchool(author.school)}` : 'A student'} · {ago(p.posted)}</span>
+        <span className="mt-3 flex flex-wrap gap-1.5">
+          {p.skills.slice(0, 4).map((k) => <span key={k} className={match.includes(k) ? 'tag tag-gold' : 'tag'}>{k}</span>)}
+        </span>
+        {top && billed.reasons.length > 0 && (
+          <span className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-xs text-mute">
+            {billed.reasons.map((r) => (
+              <span key={r} className="inline-flex items-baseline gap-2"><span aria-hidden className="h-px w-3 translate-y-[-0.25em] bg-gold" />{r}</span>
+            ))}
+          </span>
+        )}
       </span>
-      <span className="col-start-2 row-start-2 flex min-w-0 flex-wrap gap-1.5 md:col-start-auto md:row-start-auto">
-        {p.skills.slice(0, 3).map((k) => <span key={k} className={match.includes(k) ? 'tag tag-gold' : 'tag'}>{k}</span>)}
-      </span>
-      <span className={`hidden text-xs md:block ${c?.soon ? 'text-gold' : 'text-mute'}`}>{c ? c.label : p.commitment}</span>
-      <span className="row-span-2 flex items-center justify-end gap-2 text-xs text-mute md:row-span-1">
-        <Hand className="h-4 w-4" /> <Num>{raised}</Num>
-        <Icon name="arrow" className="bill-arrow h-4 w-4" />
+      <span className="flex flex-col items-end justify-between gap-2 text-xs text-mute">
+        <span className={c?.soon ? 'text-gold' : ''}>{c ? c.label.replace('Closes ', '') : p.commitment}</span>
+        <span className="flex items-center gap-1.5"><Hand className="h-4 w-4" /> <Num>{raised}</Num><Icon name="arrow" className="bill-arrow ml-1 h-4 w-4" /></span>
       </span>
     </button>
   )
 }
-
-const Fact = ({ k, v, hot = false }: { k: string; v: string; hot?: boolean }) => (
-  <span className="min-w-0">
-    <span className="eyebrow block !text-[0.58rem]">{k}</span>
-    <span className={`mt-1 block truncate ${hot ? 'text-gold' : ''}`}>{v}</span>
-  </span>
-)
 
 /** A raised hand: the board's "I'm in". */
 const Hand = ({ className = 'h-5 w-5' }: { className?: string }) => (
@@ -752,7 +635,7 @@ const Hand = ({ className = 'h-5 w-5' }: { className?: string }) => (
 /* One post, in a sheet                                                */
 /* ------------------------------------------------------------------ */
 
-function PostSheet({ post: p, billed, total, onClose }: { post: BoardPost; billed?: Billed; total: number; onClose: () => void }) {
+function PostSheet({ post: p, billed, total, onClose }: { post: BoardPost; billed?: Billed; total: number; onClose?: () => void }) {
   const author = useAuthor()
   const a = author(p.authorId)
   const { profile, hands, raiseHand, lowerHand, deletePost } = useStore()
@@ -811,7 +694,7 @@ function PostSheet({ post: p, billed, total, onClose }: { post: BoardPost; bille
             {seeking ? `Seeking · ${p.spots} ${p.spots === 1 ? 'spot' : 'spots'}` : 'Offering'} · {p.category}
           </p>
         </div>
-        <button type="button" className="icon-btn" onClick={onClose} aria-label="Close"><Icon name="close" /></button>
+        {onClose && <button type="button" className="icon-btn" onClick={onClose} aria-label="Close"><Icon name="close" /></button>}
       </div>
 
       <div className="flex-1 overflow-y-auto px-5 py-6 md:px-7">
@@ -887,7 +770,7 @@ function PostSheet({ post: p, billed, total, onClose }: { post: BoardPost; bille
             <div className="flex flex-wrap items-center gap-3">
               <p className="flex-1 text-sm">Take this post down? Raised hands go with it.</p>
               <button type="button" className="btn btn-sm" onClick={() => setConfirmDelete(false)}>Keep it</button>
-              <button type="button" className="btn btn-sm border-[#e0795f] text-[#e0795f]" onClick={() => { deletePost(p.id); onClose() }}>Take down</button>
+              <button type="button" className="btn btn-sm border-[#e0795f] text-[#e0795f]" onClick={() => { deletePost(p.id); onClose?.() }}>Take down</button>
             </div>
           ) : (
             <div className="flex items-center justify-between gap-3">
@@ -1100,16 +983,12 @@ function Select({ label, id, value, options, onChange }: { label: string; id: st
 }
 
 /* ------------------------------------------------------------------ */
-
-/* ------------------------------------------------------------------ */
-/* The directory                                                       */
+/* The crew: a contact sheet                                           */
 /* ------------------------------------------------------------------ */
 
-function Directory({ students }: { students: Student[] }) {
+function Crew({ students, text, onClear }: { students: Student[]; text: string; onClear: () => void }) {
   const q = useQuery(students)
   const { profile } = useStore()
-  const { posts } = useCatalog()
-  const [text, setText] = useState('')
   const [school, setSchool] = useState<School | ''>('')
   const [cat, setCat] = useState<Category | null>(null)
   const [open, setOpen] = useState(false)
@@ -1119,16 +998,19 @@ function Directory({ students }: { students: Student[] }) {
     if (root.current && matchMedia(MOTION).matches) flip.current = Flip.getState(root.current.querySelectorAll('[data-flip-id]'))
     fn()
   }
+  const mySkills = profile?.skills ?? []
 
   const list = useMemo(() => {
     const t = text.trim().toLowerCase()
-    return (q.data ?? []).filter((s) => {
-      if (school && s.school !== school) return false
-      if (cat && !s.interests.includes(cat)) return false
-      if (open && !s.openToCollaborate) return false
-      if (t && !`${s.name} ${s.skills.join(' ')} ${s.bio}`.toLowerCase().includes(t)) return false
-      return true
-    })
+    return (q.data ?? [])
+      .filter((s) => {
+        if (school && s.school !== school) return false
+        if (cat && !s.interests.includes(cat)) return false
+        if (open && !s.openToCollaborate) return false
+        if (t && !`${s.name} ${s.skills.join(' ')} ${s.bio}`.toLowerCase().includes(t)) return false
+        return true
+      })
+      .sort((a, b) => Number(b.openToCollaborate) - Number(a.openToCollaborate))
   }, [q.data, text, school, cat, open])
 
   useLayoutEffect(() => {
@@ -1151,7 +1033,7 @@ function Directory({ students }: { students: Student[] }) {
       const mm = gsap.matchMedia()
       mm.add(MOTION, () => {
         const rows = gsap.utils.toArray<HTMLElement>('[data-reveal]')
-        gsap.set(rows, { opacity: 0, y: 20 })
+        gsap.set(rows, { opacity: 0, y: 24 })
         ScrollTrigger.batch(rows, { start: 'top 94%', once: true, onEnter: (b) => gsap.to(b, { opacity: 1, y: 0, duration: 0.8, stagger: 0.05, ease: 'expo.out', overwrite: true }) })
       })
     },
@@ -1162,68 +1044,46 @@ function Directory({ students }: { students: Student[] }) {
     <div ref={root}>
       {profile && !profile.skills.length && (
         <p className="mb-5 border-l-2 border-gold pl-4 text-sm text-mute">
-          Add your skills under <a className="hover-gold text-paper underline underline-offset-4" href={href('profile')}>You</a> so the asks that fit you get billed first.
+          Add your skills under <a className="hover-gold text-paper underline underline-offset-4" href={href('profile')}>Your profile</a> so the asks that fit you get billed first.
         </p>
       )}
-      <div className="grid gap-3 md:grid-cols-[1fr_16rem_auto] md:items-end">
-        <label className="relative block">
-          <span className="sr-only">Search people</span>
-          <Icon name="search" className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-mute" />
-          <input className="field pl-10" type="search" placeholder="Try “React”, “Figma” or a name" value={text} onChange={(e) => change(() => setText(e.target.value))} />
-        </label>
-        <label className="block">
+      <div className="flex flex-wrap items-center gap-2">
+        <button type="button" className="chip shrink-0" aria-pressed={open} onClick={() => change(() => setOpen(!open))}>
+          <span aria-hidden className="h-2 w-2 bg-teal-bright" /> Open to collaborate
+        </button>
+        <div role="group" aria-label="Interest" className="no-scrollbar -mx-1 flex min-w-0 flex-1 gap-2 overflow-x-auto px-1">
+          <button type="button" className="chip shrink-0" aria-pressed={!cat} onClick={() => change(() => setCat(null))}>Any interest</button>
+          {CATEGORIES.map((c) => (
+            <button key={c} type="button" className="chip shrink-0" aria-pressed={cat === c} onClick={() => change(() => setCat(cat === c ? null : c))}>{c}</button>
+          ))}
+        </div>
+        <label className="block w-full sm:w-56">
           <span className="sr-only">School</span>
-          <select className="field" value={school} onChange={(e) => change(() => setSchool(e.target.value as School | ''))}>
+          <select className="field !min-h-9 text-sm" value={school} onChange={(e) => change(() => setSchool(e.target.value as School | ''))}>
             <option value="">Every school</option>
-            {SCHOOLS.map((s) => <option key={s}>{s}</option>)}
+            {SCHOOLS.map((s) => <option key={s} value={s}>{shortSchool(s)}</option>)}
           </select>
         </label>
-        <button type="button" className="chip h-11" aria-pressed={open} onClick={() => change(() => setOpen(!open))}>Open to collaborate</button>
-      </div>
-      <div role="group" aria-label="Interest" className="no-scrollbar mt-3 flex gap-2 overflow-x-auto">
-        <button type="button" className="chip shrink-0" aria-pressed={!cat} onClick={() => change(() => setCat(null))}>Any interest</button>
-        {CATEGORIES.map((c) => (
-          <button key={c} type="button" className="chip shrink-0" aria-pressed={cat === c} onClick={() => change(() => setCat(cat === c ? null : c))}>{c}</button>
-        ))}
       </div>
 
-      <div className="mt-8">
+      <div className="mt-6">
         {q.status === 'loading' ? (
           <ListSkeleton rows={5} />
         ) : q.status === 'error' ? (
           <ErrorState onRetry={q.retry} />
         ) : list.length ? (
-          <ul className="divide-y divide-line border-y border-line">
-            {list.map((s) => {
-              const hit = text ? skillMatch([text.trim()], s.skills) : []
-              const live = posts.filter((p) => p.authorId === s.id).length
-              return (
-                <li key={s.id} data-flip-id={s.id} data-reveal>
-                  <a href={href(`people/${s.id}`)} className="bill-row group grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-4 gap-y-2 py-4 md:grid-cols-[auto_minmax(0,16rem)_minmax(0,1fr)_minmax(0,16rem)_auto]">
-                    <Monogram text={s.name} size="sm" />
-                    <span className="min-w-0">
-                      <span className="bill-title block truncate font-display text-lg">{s.name}</span>
-                      <span className="block truncate text-xs text-mute">Year <Num>{s.year}</Num> · {shortSchool(s.school)}</span>
-                    </span>
-                    <span className="hidden truncate text-sm text-mute md:block">{s.bio}</span>
-                    <span className="col-span-2 col-start-2 flex min-w-0 flex-wrap gap-1.5 md:col-span-1 md:col-start-auto">
-                      {s.skills.slice(0, 3).map((k) => <span key={k} className={hit.includes(k) ? 'tag tag-gold' : 'tag'}>{k}</span>)}
-                    </span>
-                    <span className="row-start-1 col-start-3 flex items-center gap-2 md:col-start-auto">
-                      {live > 0 && <span className="tag border-gold text-gold">On the board</span>}
-                      {s.openToCollaborate && <span className="tag tag-teal">Open</span>}
-                      <Icon name="arrow" className="bill-arrow h-4 w-4 text-mute" />
-                    </span>
-                  </a>
-                </li>
-              )
-            })}
+          <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
+            {list.map((s) => (
+              <li key={s.id} data-flip-id={s.id} data-reveal className="min-w-0">
+                <CrewCard s={s} hit={text ? skillMatch([text.trim()], s.skills) : []} shared={s.id === 'me' ? [] : skillMatch(mySkills, s.skills)} />
+              </li>
+            ))}
           </ul>
         ) : (
           <EmptyState
             title="No one matches"
             body="Try a broader skill, or clear the filters."
-            action={<button type="button" className="btn" onClick={() => change(() => { setText(''); setSchool(''); setCat(null); setOpen(false) })}>Clear filters</button>}
+            action={<button type="button" className="btn" onClick={() => change(() => { onClear(); setSchool(''); setCat(null); setOpen(false) })}>Clear filters</button>}
           />
         )}
       </div>
@@ -1231,12 +1091,45 @@ function Directory({ students }: { students: Student[] }) {
   )
 }
 
+const monogram = (name: string) => name.split(/\s+/).map((w) => w[0]).join('').slice(0, 2).toUpperCase()
+
+/** A crew card: a drawn portrait plate (teal when open to collaborate), then the facts. */
+function CrewCard({ s, hit, shared }: { s: Student; hit: string[]; shared: string[] }) {
+  const { posts } = useCatalog()
+  const live = posts.filter((p) => p.authorId === s.id).length
+  const me = s.id === 'me'
+  return (
+    <a href={href(`people/${s.id}`)} className="group flex h-full flex-col border border-line bg-slate-2/70 transition-colors hover:border-line-strong">
+      <div className="club-plate aspect-[2/1] !border-0" data-tone={s.openToCollaborate ? 'teal' : undefined}>
+        <span className="absolute top-3 left-3 eyebrow !text-[0.6rem]">Year <Num>{s.year}</Num></span>
+        {s.openToCollaborate && <span className="tag tag-teal absolute top-3 right-3">Open</span>}
+        <span className="grid h-full place-items-center">
+          <span className="club-plate__mono text-[clamp(4rem,3rem+3vw,5.5rem)]">{monogram(s.name)}</span>
+        </span>
+      </div>
+      <div className="flex flex-1 flex-col p-4">
+        <span className="block truncate font-display text-xl transition-colors group-hover:text-gold">{s.name}</span>
+        <span className="mt-0.5 block truncate text-xs text-mute">{shortSchool(s.school)}</span>
+        {s.bio && <span className="mt-3 line-clamp-2 text-sm leading-relaxed text-mute">{s.bio}</span>}
+        <span className="mt-4 flex flex-wrap gap-1.5">
+          {s.skills.slice(0, 4).map((k) => <span key={k} className={hit.includes(k) ? 'tag tag-gold' : shared.includes(k) ? 'tag border-gold/60 text-paper' : 'tag'}>{k}</span>)}
+        </span>
+        <span className="mt-auto flex items-center justify-between gap-3 border-t border-line pt-3 text-xs text-mute [margin-top:max(1rem,auto)]">
+          <span>{me ? 'You' : live ? <><Num className="text-paper">{live}</Num> on the board</> : shared.length ? <><Num className="text-paper">{shared.length}</Num> {shared.length === 1 ? 'skill' : 'skills'} in common</> : 'Not posting'}</span>
+          <Icon name="arrow" className="bill-arrow h-4 w-4 transition-transform group-hover:translate-x-1 group-hover:text-gold" />
+        </span>
+      </div>
+    </a>
+  )
+}
+
 /* ------------------------------------------------------------------ */
-/* One person                                                          */
+/* One person: a profile with a cover plate                            */
 /* ------------------------------------------------------------------ */
 
 function Person({ s }: { s: Student }) {
   const { projects, clubById, posts } = useCatalog()
+  const { profile } = useStore()
   const asks = useBilling('seeking')
   const offers = useBilling('offering')
   const work = projects.filter((p) => p.team.some((m) => m.studentId === s.id))
@@ -1244,6 +1137,8 @@ function Person({ s }: { s: Student }) {
   const [open, setOpen] = useState<string | null>(null)
   const openPost = theirs.find((p) => p.id === open)
   const billedOf = (id: string) => [...asks, ...offers].find((b) => b.post.id === id)
+  const shared = skillMatch(profile?.skills ?? [], s.skills)
+  const isMe = s.id === 'me'
   const links = [
     s.links.github && { icon: 'github' as const, label: 'GitHub', url: s.links.github },
     s.links.linkedin && { icon: 'linkedin' as const, label: 'LinkedIn', url: s.links.linkedin },
@@ -1254,75 +1149,66 @@ function Person({ s }: { s: Student }) {
     <article className="pb-16">
       <div className="pt-6">
         <a href={href('people')} className="hover-gold inline-flex items-center gap-2 text-sm text-mute">
-          <Icon name="arrow-left" /> The board
+          <Icon name="arrow-left" /> People
         </a>
       </div>
-      <PageHeader scene="06" eyebrow={`Year ${s.year} · ${s.school}`} title={s.name} aside={<Monogram text={s.name} size="lg" gold />}>
-        {s.bio || 'No bio yet.'}
-      </PageHeader>
 
-      <div className="mt-10 grid gap-12 lg:grid-cols-[minmax(0,1fr)_20rem]">
-        <div className="min-w-0 space-y-12">
-          {theirs.length > 0 && (
-            <section aria-labelledby="board">
-              <SectionTitle id="board" title="On the board" count={theirs.length} />
-              <ul className="divide-y divide-line border-y border-line">
-                {theirs.map((p) => {
-                  const b = billedOf(p.id)
-                  return (
-                    <li key={p.id}>
-                      <EnsembleRow post={p} label={b ? pad(b.rank) : '—'} onOpen={() => setOpen(p.id)} />
-                    </li>
-                  )
-                })}
-              </ul>
-            </section>
-          )}
-          <section aria-labelledby="skills">
-            <SectionTitle id="skills" title="Skills" count={s.skills.length} />
-            {s.skills.length ? <p className="flex flex-wrap gap-2">{s.skills.map((k) => <span key={k} className="tag">{k}</span>)}</p> : <p className="text-mute">No skills listed yet.</p>}
-          </section>
-          <section aria-labelledby="work">
-            <SectionTitle id="work" title="Projects" count={work.length} />
-            {work.length ? (
-              <ul className="border-t border-line">
-                {work.map((p) => (
-                  <li key={p.id} className="border-b border-line">
-                    <a href={href(`projects/${p.id}`)} className="row-hover flex items-center justify-between gap-4 py-4">
-                      <span className="min-w-0">
-                        <span className="block truncate font-display text-xl">{p.name}</span>
-                        <span className="block text-sm text-mute">{p.team.find((m) => m.studentId === s.id)?.role}</span>
-                      </span>
-                      <Icon name="arrow" />
+      <header className="club-plate mt-4" data-tone={s.openToCollaborate ? 'teal' : undefined}>
+        <div className="grid gap-6 p-6 md:grid-cols-[auto_minmax(0,1fr)_auto] md:items-end md:gap-10 md:p-10">
+          <span className="club-plate__mono text-[clamp(5rem,3rem+7vw,10rem)]" aria-hidden>{monogram(s.name)}</span>
+          <div className="min-w-0">
+            <p className="slate-no">Sc. 06 · Year {s.year} · {shortSchool(s.school)}</p>
+            <h1 className="mt-3 text-[clamp(2.2rem,1.6rem+2.6vw,4rem)] leading-[1.02]">{s.name}</h1>
+            <p className="mt-4 max-w-[58ch] leading-relaxed text-mute">{s.bio || 'No bio yet.'}</p>
+          </div>
+          <div className="flex flex-wrap gap-2 md:flex-col md:items-stretch">
+            {s.openToCollaborate && <span className="tag tag-teal justify-center">Open to collaborate</span>}
+            {isMe ? (
+              <a className="btn" href={href('profile')}><Icon name="edit" className="h-4 w-4" /> Edit profile</a>
+            ) : (
+              links.slice(0, 1).map((l) => (
+                <a key={l.label} className="btn btn-gold" href={l.url} target="_blank" rel="noreferrer"><Icon name={l.icon} /> {l.label}</a>
+              ))
+            )}
+          </div>
+        </div>
+      </header>
+
+      <div className="mt-10 grid gap-12 lg:grid-cols-[17rem_minmax(0,1fr)]">
+        <aside className="space-y-8 lg:sticky lg:top-24 lg:self-start">
+          <dl className="divide-y divide-line border-y border-line text-sm">
+            {(
+              [
+                ['Year', <Num key="y">{s.year}</Num>],
+                ['School', shortSchool(s.school)],
+                ['Clubs', <Num key="c">{s.clubs.length}</Num>],
+                ['Projects', <Num key="p">{work.length}</Num>],
+              ] as const
+            ).map(([k, v]) => (
+              <div key={k} className="flex items-baseline justify-between gap-4 py-2.5">
+                <dt className="text-mute">{k}</dt>
+                <dd className="text-right">{v}</dd>
+              </div>
+            ))}
+          </dl>
+          {links.length > 0 && (
+            <div>
+              <p className="eyebrow">Elsewhere</p>
+              <ul className="mt-3 space-y-1">
+                {links.map((l) => (
+                  <li key={l.label}>
+                    <a className="hover-gold flex items-center gap-2.5 py-1 text-sm" href={l.url} target="_blank" rel="noreferrer">
+                      <Icon name={l.icon} className="h-4 w-4" /> {l.label} <Icon name="external" className="ml-auto h-3.5 w-3.5 text-mute" />
                     </a>
                   </li>
                 ))}
               </ul>
-            ) : (
-              <p className="text-mute">Not on a listed project yet.</p>
-            )}
-          </section>
-        </div>
-        <aside className="space-y-8">
-          {s.openToCollaborate && (
-            <p className="border-l-2 border-teal-bright pl-4 text-sm">
-              <span className="tag tag-teal">Open to collaborate</span>
-              <span className="mt-2 block text-mute">Happy to hear about new projects.</span>
-            </p>
-          )}
-          {links.length > 0 && (
-            <div className="flex flex-col gap-2">
-              {links.map((l) => (
-                <a key={l.label} className="btn" href={l.url} target="_blank" rel="noreferrer">
-                  <Icon name={l.icon} /> {l.label} <Icon name="external" />
-                </a>
-              ))}
             </div>
           )}
           {s.clubs.length > 0 && (
             <div>
               <p className="eyebrow">Clubs</p>
-              <ul className="mt-3 space-y-2">
+              <ul className="mt-3 space-y-1.5 text-sm">
                 {s.clubs.map((c) => {
                   const club = clubById(c)
                   return club ? <li key={c}><a className="hover-gold" href={href(`clubs/${c}`)}>{club.name}</a></li> : null
@@ -1335,6 +1221,52 @@ function Person({ s }: { s: Student }) {
             <p className="mt-3 flex flex-wrap gap-1.5">{s.interests.map((c) => <span key={c} className="tag">{c}</span>)}</p>
           </div>
         </aside>
+
+        <div className="min-w-0 space-y-12">
+          <section aria-labelledby="skills">
+            <SectionTitle id="skills" title="Skills" count={s.skills.length} action={!isMe && shared.length ? <span className="text-xs text-mute"><Num className="text-gold">{shared.length}</Num> in common with you</span> : undefined} />
+            {s.skills.length ? (
+              <p className="flex flex-wrap gap-2">{s.skills.map((k) => <span key={k} className={!isMe && shared.includes(k) ? 'tag tag-gold' : 'tag'}>{k}</span>)}</p>
+            ) : (
+              <p className="text-mute">No skills listed yet.</p>
+            )}
+          </section>
+          {theirs.length > 0 && (
+            <section aria-labelledby="board">
+              <SectionTitle id="board" title="On the board" count={theirs.length} />
+              <ul className="divide-y divide-line border-y border-line">
+                {theirs.map((p) => {
+                  const b = billedOf(p.id)
+                  return (
+                    <li key={p.id}>
+                      <PostRow post={p} label={b ? pad(b.rank) : '—'} onOpen={() => setOpen(p.id)} />
+                    </li>
+                  )
+                })}
+              </ul>
+            </section>
+          )}
+          <section aria-labelledby="work">
+            <SectionTitle id="work" title="Projects" count={work.length} />
+            {work.length ? (
+              <ul className="divide-y divide-line border-y border-line">
+                {work.map((p) => (
+                  <li key={p.id}>
+                    <a href={href(`projects/${p.id}`)} className="row-hover group flex items-center justify-between gap-4 py-4">
+                      <span className="min-w-0">
+                        <span className="block truncate font-display text-xl transition-colors group-hover:text-gold">{p.name}</span>
+                        <span className="block text-sm text-mute">{p.team.find((m) => m.studentId === s.id)?.role} · {p.status}</span>
+                      </span>
+                      <Icon name="arrow" />
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-mute">Not on a listed project yet.</p>
+            )}
+          </section>
+        </div>
       </div>
       <Dialog open={!!openPost} onClose={() => setOpen(null)} variant="sheet" labelledBy="post-title">
         {openPost && (

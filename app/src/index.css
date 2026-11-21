@@ -454,37 +454,46 @@ html.ink-vt::view-transition-group(root) { animation-duration: var(--ink-duratio
   75% { transform: translate(-2%, -1%); }
 }
 
-/* ---------- The stage (every signed-in page) ----------
+/* ---------- The stage (every signed-in page, components/Stage.tsx) ----------
    Brand palette only (Brand guidelines March 2026, §11): RV Black is the base,
    Dark Slate is the brand's colour for "corporate backgrounds, high-depth
    contrast", Deep Teal its colour for "environmental graphics". Gold stays off
    the backdrop so it can keep lighting the one thing that matters.
-   Layers: a slate key light from the top left (where the copy sits), a teal
-   floor at the bottom right, set-rigging hairlines on the .wrap columns, grain.
-   Fixed and painted once: nothing here animates except the grain. */
+   A sound stage: slate key light, two follow-spots, a teal-ruled floor that
+   recedes to a horizon, rigging on the .wrap columns, the scene's name painted
+   huge and cropped at the right edge, grain on top. Transform/opacity motion only. */
 :root {
-  --stage-key: color-mix(in srgb, #233039 92%, transparent);
-  --stage-fill: color-mix(in srgb, #233039 38%, transparent);
-  --stage-floor: color-mix(in srgb, #004854 46%, transparent);
-  --stage-rig: rgb(242 237 227 / 0.045);
-  --stage-grain: 0.06;
+  --stage-key: color-mix(in srgb, #233039 100%, transparent);
+  --stage-fill: color-mix(in srgb, #233039 45%, transparent);
+  --stage-floor: color-mix(in srgb, #004854 62%, transparent);
+  --stage-floor-line: rgb(61 143 155 / 0.26);
+  --stage-beam: rgb(242 237 227 / 0.1);
+  --stage-rig: rgb(242 237 227 / 0.05);
+  --stage-word: rgb(242 237 227 / 0.13);
+  --stage-word-fill: rgb(242 237 227 / 0.018);
+  --stage-grain: 0.07;
 }
 :root[data-theme="light"] {
-  --stage-key: rgb(255 255 255 / 0.85);
-  --stage-fill: color-mix(in srgb, #233039 7%, transparent);
-  --stage-floor: color-mix(in srgb, #004854 11%, transparent);
-  --stage-rig: rgb(35 48 57 / 0.06);
-  --stage-grain: 0.035;
+  --stage-key: rgb(255 255 255 / 0.9);
+  --stage-fill: color-mix(in srgb, #233039 8%, transparent);
+  --stage-floor: color-mix(in srgb, #004854 16%, transparent);
+  --stage-floor-line: rgb(0 72 84 / 0.16);
+  --stage-beam: rgb(255 255 255 / 0.75);
+  --stage-rig: rgb(35 48 57 / 0.07);
+  --stage-word: rgb(35 48 57 / 0.13);
+  --stage-word-fill: rgb(35 48 57 / 0.02);
+  --stage-grain: 0.04;
 }
 .stage-bg {
   position: fixed;
   inset: 0;
   z-index: -1;
+  overflow: hidden;
   pointer-events: none;
   background:
-    radial-gradient(70% 55% at 12% -8%, var(--stage-key), transparent 70%),
-    radial-gradient(60% 50% at 96% 108%, var(--stage-floor), transparent 72%),
-    linear-gradient(180deg, var(--stage-fill), transparent 42%, transparent 70%, var(--stage-fill)),
+    radial-gradient(75% 60% at 10% -10%, var(--stage-key), transparent 70%),
+    radial-gradient(70% 55% at 95% 110%, var(--stage-floor), transparent 72%),
+    linear-gradient(180deg, var(--stage-fill), transparent 40%, transparent 62%, var(--stage-fill)),
     var(--color-ink);
 }
 /* Rigging: one hairline per column of the 90rem frame, fading towards the floor */
@@ -493,25 +502,110 @@ html.ink-vt::view-transition-group(root) { animation-duration: var(--ink-duratio
   position: absolute;
   inset: 0 max(clamp(1rem, 0.6rem + 2vw, 2.5rem), calc((100% - 90rem) / 2 + 2.5rem));
   background:
-    linear-gradient(90deg, var(--stage-rig) 1px, transparent 1px) 0 0 / calc(100% / 12) 100%,
+    linear-gradient(90deg, var(--stage-rig) 1px, transparent 1px) 0 0 / calc(100% / 4) 100%,
     linear-gradient(270deg, var(--stage-rig) 1px, transparent 1px);
-  mask-image: linear-gradient(180deg, black, rgb(0 0 0 / 0.5) 45%, transparent 92%);
-}
-.stage-bg::after {
-  content: "";
-  position: absolute;
-  inset: -50%;
-  opacity: var(--stage-grain);
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  mask-image: linear-gradient(180deg, black, rgb(0 0 0 / 0.5) 45%, transparent 80%);
 }
 @media (min-width: 768px) {
   .stage-bg::before { background-size: calc(100% / 12) 100%, 100% 100%; }
 }
-@media (max-width: 767px) {
-  .stage-bg::before { background-size: calc(100% / 4) 100%, 100% 100%; }
+/* Grain sits over every layer */
+.stage-bg::after {
+  content: "";
+  position: absolute;
+  inset: -50%;
+  z-index: 5;
+  opacity: var(--stage-grain);
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
 }
+
+/* Follow-spots: soft cones from the rig, crossing over the content */
+.stage-beam {
+  position: absolute;
+  top: -6%;
+  width: 70vmax;
+  height: 120%;
+  transform-origin: 50% 0;
+  background: conic-gradient(from 180deg at 50% 0, transparent 0deg 166deg, var(--stage-beam) 173deg 187deg, transparent 194deg 360deg);
+  mask-image: linear-gradient(180deg, black 0%, rgb(0 0 0 / 0.6) 40%, transparent 85%);
+}
+.stage-beam--a { left: calc(14% - 35vmax); transform: rotate(-16deg); }
+.stage-beam--b { left: calc(82% - 35vmax); transform: rotate(19deg); opacity: 0.7; }
+
+/* Floor: a ruled stage floor tipped back to a horizon */
+.stage-floor {
+  position: absolute;
+  left: -30%;
+  right: -30%;
+  bottom: 0;
+  height: 42vh;
+  perspective: 34vh;
+  perspective-origin: 50% 0%;
+  mask-image: linear-gradient(0deg, black 0%, rgb(0 0 0 / 0.7) 35%, transparent 92%);
+}
+.stage-floor__grid {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 200%;
+  transform-origin: 50% 100%;
+  transform: rotateX(72deg);
+  background:
+    repeating-linear-gradient(90deg, var(--stage-floor-line) 0 1px, transparent 1px 5rem),
+    repeating-linear-gradient(0deg, var(--stage-floor-line) 0 1px, transparent 1px 5rem);
+}
+
+/* The scene's name, painted on the cyclorama and cropped by the frame */
+.stage-title {
+  position: absolute;
+  right: -0.06em;
+  bottom: 6vh;
+  font-size: clamp(6rem, 3rem + 15vw, 21rem);
+  line-height: 0.8;
+  white-space: nowrap;
+}
+.stage-title__word {
+  font-family: var(--font-display);
+  font-style: italic;
+  letter-spacing: -0.04em;
+  color: var(--stage-word-fill);
+  -webkit-text-stroke: 1px var(--stage-word);
+}
+
 @media (prefers-reduced-motion: no-preference) {
   .stage-bg::after { animation: grain 0.9s steps(4) infinite; }
+  .stage-beam--a { animation: beam-a 17s ease-in-out infinite alternate; }
+  .stage-beam--b { animation: beam-b 21s ease-in-out infinite alternate; }
+  .stage-title { animation: stage-title-in 1.4s var(--ease-dolly) both; }
+  @supports (animation-timeline: scroll()) {
+    .stage-title__word { animation: stage-drift linear both; animation-timeline: scroll(root); }
+  }
+}
+@keyframes beam-a { from { transform: rotate(-21deg); } to { transform: rotate(-9deg); } }
+@keyframes beam-b { from { transform: rotate(23deg); } to { transform: rotate(12deg); } }
+@keyframes stage-title-in { from { opacity: 0; transform: translateX(6%); } }
+@keyframes stage-drift { to { transform: translateX(-12%); } }
+
+/* ---------- You menu (native popover under the monogram) ---------- */
+.you-menu {
+  position: fixed;
+  inset: auto;
+  top: 4.5rem;
+  right: max(clamp(1rem, 0.6rem + 2vw, 2.5rem), calc((100vw - 90rem) / 2 + 2.5rem));
+  margin: 0;
+  width: min(20rem, calc(100vw - 2rem));
+  padding: 0;
+  background: var(--color-slate-2);
+  border: 1px solid var(--color-line-strong);
+  color: var(--color-paper);
+  box-shadow: 0 24px 60px -20px rgb(0 0 0 / 0.6);
+}
+@media (min-width: 768px) { .you-menu { top: 5rem; } }
+@media (prefers-reduced-motion: no-preference) {
+  .you-menu { transition: opacity 0.25s, transform 0.35s var(--ease-dolly), overlay 0.35s allow-discrete, display 0.35s allow-discrete; }
+  .you-menu:popover-open { opacity: 1; transform: none; }
+  @starting-style { .you-menu:popover-open { opacity: 0; transform: translateY(-8px); } }
 }
 
 /* ---------- Layout helpers ---------- */

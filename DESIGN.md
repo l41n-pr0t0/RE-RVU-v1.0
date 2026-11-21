@@ -14,12 +14,20 @@ grain, and RV Gold is used like a key light: on the one thing that matters most
 in the frame, nowhere else. Square corners everywhere. Hierarchy is shown by
 order, size and light, never by decoration.
 
-**The stage** (`.stage-bg`, mounted once in Shell): RV Black base, a Dark Slate
-key light from the top left, a Deep Teal floor at the bottom right, hairline
-"rigging" on the 12 columns of the `.wrap` frame, and grain. Slate and teal are
-used in the roles the brand book gives them (corporate backgrounds; environmental
-graphics). Gold never touches the backdrop. Sections sit straight on the stage;
-use `divide-*` hairlines, not opaque `bg-ink` cells, so the stage shows through.
+**The stage** (`components/Stage.tsx`, mounted once in Shell): a sound stage.
+Dark Slate key light from the top left, two slow follow-spots, a Deep Teal floor
+ruled in perspective to a horizon, hairline rigging on the 12 columns of the
+`.wrap` frame, grain, and the scene's name (Today, Events, People…) painted huge
+in outlined Playfair italic and cropped at the right edge, so the backdrop says
+where you are. Slate and teal are used in the roles the brand book gives them
+(corporate backgrounds; environmental graphics). Gold never touches the backdrop.
+Sections sit straight on the stage; use `divide-*` hairlines, not opaque
+`bg-ink` cells.
+
+**Navigation**: five sections (Today, Events, Clubs, Projects, People) are the
+whole primary nav, identical in the desktop bar and the phone tab bar. Search
+and alerts sit beside them. Everything personal (profile, saved, calendar,
+notices, host dashboard, theme) is behind the monogram's menu (native popover).
 
 ## 1b. Signature element (exactly one)
 **Billing order: everything is credited in order of importance, and moves in that order.**
@@ -30,8 +38,9 @@ It comes from this product (a campus of people, clubs and events competing for
 attention) and the app's existing film language, not from an effects catalogue.
 Sustained in: the slate numbers on every page header, the gold line on Home
 (events billed along the week), and the People board, where every ask is ranked
-by how much it needs *you* (skill fit, deadline, urgency, open spots), shown as
-Lead (01) → Supporting (02–03) → Ensemble (04+), and re-ranked live with Flip.
+by how much it needs *you* (skill fit, deadline, urgency, open spots). It reads
+like a job board: billed rows on the left (01 in gold, 01–03 set larger with
+their reasons), the selected post open beside them, re-ranked live with Flip.
 
 ## 2. Palette and roles
 - **RV Black** (#000000) — the stage. Brand primary; used instead of off-black by brand rule.

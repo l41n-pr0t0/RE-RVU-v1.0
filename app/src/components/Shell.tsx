@@ -7,6 +7,7 @@ import { initials } from '../lib/identity'
 import { go, href, type Route } from '../lib/router'
 import { useStore } from '../lib/store'
 import { useOpenEvent } from './EventBits'
+import { Stage } from './Stage'
 import { ThemeToggle } from './ThemeToggle'
 import { Dialog, Icon, Logo, Num, type IconName } from './ui'
 
@@ -18,17 +19,16 @@ const NAV: { key: Route['name']; label: string; icon: IconName }[] = [
   { key: 'people', label: 'People', icon: 'user' },
 ]
 
-// Phones: five thumb-reachable tabs
-const TABS: { key: Route['name']; label: string; icon: IconName }[] = [
-  { key: 'home', label: 'Today', icon: 'home' },
-  { key: 'events', label: 'Events', icon: 'calendar' },
-  { key: 'clubs', label: 'Clubs', icon: 'users' },
-  { key: 'projects', label: 'Projects', icon: 'layers' },
-  { key: 'profile', label: 'You', icon: 'user' },
+/** Everything personal lives behind your monogram, the same on every screen size. */
+const YOU: { key: Route['name']; label: string; meta: string; icon: IconName }[] = [
+  { key: 'profile', label: 'Your profile', meta: 'Skills, links, what you have been to', icon: 'user' },
+  { key: 'saved', label: 'Saved', meta: 'Events, notices and projects you kept', icon: 'bookmark' },
+  { key: 'calendar', label: 'Your calendar', meta: 'Everything you said yes to', icon: 'calendar' },
+  { key: 'notices', label: 'Notices', meta: 'From university offices', icon: 'bell' },
+  { key: 'host', label: 'Host dashboard', meta: 'For approved club cores', icon: 'settings' },
 ]
-
-// Pages reached from the header icons and the You tab, highlighted under "You" on phones
-const UNDER_YOU: Route['name'][] = ['profile', 'saved', 'calendar', 'people', 'host', 'notices']
+const UNDER_YOU = YOU.map((y) => y.key)
+const YOU_MENU = 'you-menu'
 
 export function Shell({ route, children }: { route: Route; children: ReactNode }) {
   const [paletteOpen, setPaletteOpen] = useState(false)
@@ -38,6 +38,7 @@ export function Shell({ route, children }: { route: Route; children: ReactNode }
   const unreadNotices = notices.filter((n) => n.priority === 'High' && !readNotices.includes(n.id)).length
   const { unseen } = useNotifications()
   const totalAlerts = unseen + unreadNotices
+  const youActive = UNDER_YOU.includes(route.name)
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -51,24 +52,28 @@ export function Shell({ route, children }: { route: Route; children: ReactNode }
     return () => window.removeEventListener('keydown', onKey)
   }, [])
 
+  // A new page closes the menu.
+  useEffect(() => {
+    const m = document.getElementById(YOU_MENU) as HTMLElement & { hidePopover?: () => void }
+    if (m?.matches?.(':popover-open')) m.hidePopover?.()
+  }, [route])
+
   return (
     <div className="relative isolate flex min-h-[100dvh] flex-col">
-      <div className="stage-bg" aria-hidden />
+      <Stage route={route} />
       <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[70] focus:bg-gold focus:px-3 focus:py-2 focus:text-black">
         Skip to content
       </a>
 
-      <header className="sticky top-0 z-40 border-b border-line-strong bg-ink/95 backdrop-blur-md">
-        <div className="wrap flex h-16 items-center justify-between gap-2 md:h-20 md:gap-4 lg:gap-6">
-          {/* Logo & Brand */}
+      <header className="sticky top-0 z-40 border-b border-line-strong bg-ink/85 backdrop-blur-md">
+        <div className="wrap flex h-16 items-center gap-4 md:h-[4.5rem] lg:gap-8">
           <a href={href('home')} aria-label="RVU Connect, today" className="flex shrink-0 items-center gap-3">
-            <Logo className="h-10 md:h-13" />
+            <Logo className="h-10 md:h-12" />
             <span className="hidden h-6 w-px bg-line-strong xl:block" aria-hidden />
             <span className="hidden font-display text-lg italic xl:block">Connect</span>
           </a>
 
-          {/* Primary Navigation - Balanced and Spacious */}
-          <nav aria-label="Main" className="hidden h-full items-stretch lg:flex lg:gap-0.5 xl:gap-1">
+          <nav aria-label="Main" className="hidden h-full items-stretch lg:flex">
             {NAV.map((n) => {
               const active = route.name === n.key
               return (
@@ -76,94 +81,57 @@ export function Shell({ route, children }: { route: Route; children: ReactNode }
                   key={n.key}
                   href={href(n.key)}
                   aria-current={active ? 'page' : undefined}
-                  className={`relative flex items-center px-2.5 text-[0.7rem] font-bold tracking-[0.14em] uppercase transition-colors xl:px-3.5 ${
-                    active ? 'text-gold' : 'text-mute hover:text-paper'
-                  }`}
+                  className={`relative flex items-center px-3 text-[0.7rem] font-bold tracking-[0.14em] uppercase transition-colors xl:px-4 ${active ? 'text-gold' : 'text-mute hover:text-paper'}`}
                 >
-                  <span className="relative z-10">{n.label}</span>
+                  {n.label}
                   {active && (
-                    <motion.span
-                      layoutId="nav-gold-line"
-                      className="absolute inset-x-1.5 bottom-0 h-[2.5px] bg-gold"
-                      transition={{ type: 'spring', stiffness: 500, damping: 38 }}
-                      aria-hidden
-                    />
+                    <motion.span layoutId="nav-gold-line" className="absolute inset-x-2 bottom-0 h-[2.5px] bg-gold" transition={{ type: 'spring', stiffness: 500, damping: 38 }} aria-hidden />
                   )}
                 </a>
               )
             })}
           </nav>
 
-          {/* Utility Controls Cluster */}
-          <div className="flex items-center gap-2 md:gap-3">
-            {/* Quick Search Trigger */}
+          <div className="ml-auto flex items-center gap-2">
             <button
               type="button"
               onClick={() => setPaletteOpen(true)}
-              aria-label="Search everything (Ctrl K)"
-              className="group flex h-9.5 items-center gap-2 border border-line bg-paper/[0.03] px-2.5 text-xs text-mute transition-colors hover:border-gold hover:text-paper md:h-10 xl:w-44 2xl:w-52"
+              aria-label="Search everything (Ctrl K or /)"
+              className="group flex h-10 items-center gap-2.5 border border-line px-3 text-sm text-mute transition-colors hover:border-gold hover:text-paper md:w-56 xl:w-72"
             >
-              <Icon name="search" className="h-4 w-4 shrink-0 text-mute transition-colors group-hover:text-gold" />
-              <span className="hidden xl:inline font-sans text-xs">Search...</span>
-              <kbd className="num ml-auto hidden border border-line px-1.5 py-0.5 text-[0.6rem] text-mute transition-colors group-hover:border-gold/50 xl:inline">
-                Ctrl K
-              </kbd>
+              <Icon name="search" className="h-4 w-4 shrink-0 transition-colors group-hover:text-gold" />
+              <span className="hidden md:inline">Search people, events, clubs</span>
+              <kbd className="num ml-auto hidden border border-line px-1.5 py-0.5 text-[0.6rem] xl:inline">/</kbd>
             </button>
-
-            {/* Architectural Control Strip */}
-            <div className="flex h-9.5 items-center border border-line divide-x divide-line bg-paper/[0.03] md:h-10">
-              <a
-                href={href('saved')}
-                aria-label="Saved items"
-                aria-current={route.name === 'saved' ? 'page' : undefined}
-                className={`hidden xl:grid h-full w-9.5 md:w-10 place-items-center text-mute transition-colors hover:text-gold hover:bg-paper/[0.04] ${
-                  route.name === 'saved' ? 'text-gold bg-gold/10' : ''
-                }`}
-              >
-                <Icon name="bookmark" className="h-4 w-4" />
-              </a>
-              <a
-                href={href('calendar')}
-                aria-label="Your calendar"
-                aria-current={route.name === 'calendar' ? 'page' : undefined}
-                className={`hidden xl:grid h-full w-9.5 md:w-10 place-items-center text-mute transition-colors hover:text-gold hover:bg-paper/[0.04] ${
-                  route.name === 'calendar' ? 'text-gold bg-gold/10' : ''
-                }`}
-              >
-                <Icon name="calendar" className="h-4 w-4" />
-              </a>
-              <button
-                type="button"
-                onClick={() => setNotifOpen(true)}
-                aria-label={`Notifications and notices${totalAlerts ? `, ${totalAlerts} unread` : ''}`}
-                className="relative grid h-full w-9.5 md:w-10 place-items-center text-mute transition-colors hover:text-gold hover:bg-paper/[0.04]"
-              >
-                <Icon name="bell" className="h-4 w-4" />
-                {totalAlerts > 0 && (
-                  <span className="num absolute top-1.5 right-1.5 flex h-3.5 min-w-[0.875rem] items-center justify-center bg-gold px-0.5 text-[0.55rem] font-bold text-black leading-none">
-                    {totalAlerts > 9 ? '9+' : totalAlerts}
-                  </span>
-                )}
-              </button>
-              <ThemeToggle className="!h-full !w-9.5 md:!w-10 !border-0 text-mute hover:text-gold hover:bg-paper/[0.04]" />
-            </div>
-
-            {/* Monogram Profile */}
-            <a
-              href={href('profile')}
-              aria-label="Your profile"
-              aria-current={route.name === 'profile' ? 'page' : undefined}
-              className={`flex h-9.5 min-w-9.5 items-center justify-center border px-2.5 font-display text-xs italic transition-colors md:h-10 md:min-w-10 md:text-sm ${
-                route.name === 'profile'
-                  ? 'border-gold bg-gold text-black font-semibold'
-                  : 'border-line text-paper hover:border-gold hover:text-gold bg-paper/[0.03]'
+            <button
+              type="button"
+              onClick={() => setNotifOpen(true)}
+              aria-label={`Notifications${totalAlerts ? `, ${totalAlerts} unread` : ''}`}
+              className="relative grid h-10 w-10 place-items-center border border-line text-mute transition-colors hover:border-gold hover:text-gold"
+            >
+              <Icon name="bell" className="h-4 w-4" />
+              {totalAlerts > 0 && (
+                <span className="num absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center bg-gold px-1 text-[0.6rem] font-bold leading-none text-black">
+                  {totalAlerts > 9 ? '9+' : totalAlerts}
+                </span>
+              )}
+            </button>
+            <button
+              type="button"
+              popoverTarget={YOU_MENU}
+              aria-label="You: profile, saved, calendar, settings"
+              className={`flex h-10 min-w-10 items-center justify-center gap-2 border px-2.5 font-display text-sm italic transition-colors ${
+                youActive ? 'border-gold bg-gold text-black' : 'border-line hover:border-gold hover:text-gold'
               }`}
             >
               {profile ? initials(profile.name) : 'You'}
-            </a>
+              <Icon name="down" className="hidden h-3.5 w-3.5 not-italic md:block" />
+            </button>
           </div>
         </div>
       </header>
+
+      <YouMenu route={route} />
 
       <main id="main" className="wrap flex-1">
         {children}
@@ -183,32 +151,62 @@ export function Shell({ route, children }: { route: Route; children: ReactNode }
   )
 }
 
-/** Phone tab bar: thumb-reachable, signature gold indicator, zero congestion */
+/** The monogram's menu: native popover, so Escape, outside click and focus come free. */
+function YouMenu({ route }: { route: Route }) {
+  const { profile } = useStore()
+  const close = () => (document.getElementById(YOU_MENU) as HTMLElement & { hidePopover?: () => void })?.hidePopover?.()
+  return (
+    <div id={YOU_MENU} popover="auto" className="you-menu">
+      {profile && (
+        <div className="flex items-center gap-3 border-b border-line px-4 py-4">
+          <span className="grid h-10 w-10 shrink-0 place-items-center border border-gold font-display italic text-gold">{initials(profile.name)}</span>
+          <span className="min-w-0">
+            <span className="block truncate">{profile.name}</span>
+            <span className="block truncate text-xs text-mute">{profile.year ? <>Year <Num>{profile.year}</Num> · </> : null}{profile.school.replace('School of ', '')}</span>
+          </span>
+        </div>
+      )}
+      <ul className="py-1.5">
+        {YOU.map((y) => {
+          const active = route.name === y.key
+          return (
+            <li key={y.key}>
+              <a href={href(y.key)} onClick={close} aria-current={active ? 'page' : undefined} className={`flex items-center gap-3 px-4 py-2.5 transition-colors ${active ? 'text-gold' : 'hover:bg-paper/[0.05] hover:text-gold'}`}>
+                <Icon name={y.icon} className="h-4 w-4 shrink-0" />
+                <span className="min-w-0">
+                  <span className="block text-sm">{y.label}</span>
+                  <span className="block truncate text-xs text-mute">{y.meta}</span>
+                </span>
+              </a>
+            </li>
+          )
+        })}
+      </ul>
+      <div className="flex items-center justify-between gap-3 border-t border-line px-4 py-3">
+        <span className="text-sm">Theme <kbd className="num ml-1.5 border border-line px-1.5 py-0.5 text-[0.6rem] text-mute">T</kbd></span>
+        <ThemeToggle className="!h-9 !w-9" />
+      </div>
+    </div>
+  )
+}
+
+/** Phone tab bar: the same five sections as the desktop bar. You lives on the monogram up top. */
 function MobileTabs({ route }: { route: Route }) {
   return (
-    <nav aria-label="Main" className="fixed inset-x-0 bottom-0 z-40 border-t border-line-strong bg-ink/95 backdrop-blur-md pb-[env(safe-area-inset-bottom)] lg:hidden">
+    <nav aria-label="Main" className="fixed inset-x-0 bottom-0 z-40 border-t border-line-strong bg-ink/90 backdrop-blur-md pb-[env(safe-area-inset-bottom)] lg:hidden">
       <ul className="flex">
-        {TABS.map((t) => {
-          const active = route.name === t.key || (t.key === 'profile' && UNDER_YOU.includes(route.name))
+        {NAV.map((t) => {
+          const active = route.name === t.key
           return (
             <li key={t.key} className="flex-1">
               <a
                 href={href(t.key)}
                 aria-current={active ? 'page' : undefined}
-                className={`relative flex min-h-[3.75rem] flex-col items-center justify-center gap-1.5 py-1 text-[0.64rem] font-bold tracking-[0.1em] uppercase transition-colors ${
-                  active ? 'text-gold' : 'text-mute hover:text-paper'
-                }`}
+                className={`relative flex min-h-[3.75rem] flex-col items-center justify-center gap-1.5 py-1 text-[0.62rem] font-bold tracking-[0.1em] uppercase transition-colors ${active ? 'text-gold' : 'text-mute hover:text-paper'}`}
               >
-                {active && (
-                  <motion.span
-                    layoutId="mobile-tab-line"
-                    className="absolute top-0 inset-x-4 h-[2.5px] bg-gold"
-                    transition={{ type: 'spring', stiffness: 500, damping: 40 }}
-                    aria-hidden
-                  />
-                )}
-                <Icon name={t.icon} className="relative h-5 w-5" />
-                <span className="relative">{t.label}</span>
+                {active && <motion.span layoutId="mobile-tab-line" className="absolute top-0 inset-x-4 h-[2.5px] bg-gold" transition={{ type: 'spring', stiffness: 500, damping: 40 }} aria-hidden />}
+                <Icon name={t.icon} className="h-5 w-5" />
+                <span>{t.label}</span>
               </a>
             </li>
           )
@@ -242,10 +240,7 @@ function PaletteBody({ titleId, onClose }: { titleId: string; onClose: () => voi
     const s = q.trim().toLowerCase()
     const nav: Hit[] = [
       ...NAV.map((n) => ({ kind: 'Go to' as const, label: n.label, meta: 'Page', run: () => go(n.key) })),
-      { kind: 'Go to', label: 'Your profile', meta: 'Page', run: () => go('profile') },
-      { kind: 'Go to', label: 'Saved', meta: 'Events, notices and projects you kept', run: () => go('saved') },
-      { kind: 'Go to', label: 'Your calendar', meta: 'Everything you said yes to', run: () => go('calendar') },
-      { kind: 'Go to', label: 'Host dashboard', meta: 'For approved club cores', run: () => go('host') },
+      ...YOU.map((y) => ({ kind: 'Go to' as const, label: y.label, meta: y.meta, run: () => go(y.key) })),
     ]
     const all: Hit[] = [
       ...events.map((e) => ({ kind: 'Event' as const, label: e.title, meta: `${relativeDay(e.start)} · ${e.hostName}`, run: () => openEvent(e.id) })),
