@@ -49,3 +49,17 @@ export const CLUB_HOME: Record<Category, Place> = {
   'Social impact': C,
   Media: B,
 }
+
+export const CAMPUS_VENUES: { place: Place; category: 'Academic' | 'Labs & Studios' | 'Administration' | 'Outdoors'; description: string }[] = [
+  { place: INNOVATION, category: 'Labs & Studios', description: 'Tech clubs, hackathons, and high-performance compute labs.' },
+  { place: A, category: 'Academic', description: 'School of Business, Economics & Public Policy, Seminar Hall 1.' },
+  { place: B, category: 'Academic', description: 'School of Film & Creative Arts, Media Labs, Reading Rooms.' },
+  { place: C, category: 'Academic', description: 'School of Liberal Arts & Sciences, Social Impact Hub.' },
+  { place: DESIGN, category: 'Labs & Studios', description: 'School of Design & Innovation, prototyping studios, workshops.' },
+  { place: ECE, category: 'Labs & Studios', description: 'Electronics Block, Robotics, ChipTech, RVOLT workspace.' },
+  { place: ADMIN, category: 'Administration', description: 'Central Auditorium, Vice Chancellor & Student Affairs offices.' },
+  { place: QUAD, category: 'Outdoors', description: 'Main Quadrangle, club recruitment fairs, central student walk.' },
+  { place: AMPHI, category: 'Outdoors', description: 'Open-air Amphitheatre lawn, music & cultural performances.' },
+  { place: LAWN, category: 'Outdoors', description: 'Central Lawn, peaceful study spots, outdoor gatherings.' },
+  { place: GROUND, category: 'Outdoors', description: 'Football, cricket pitch, track, athletics.' },
+]

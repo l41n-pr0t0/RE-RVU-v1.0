@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
-import type { CampusEvent, Category, ClubPage, Links, Photo, Profile, Project } from '../data/types'
+import type { BoardPost, CampusEvent, Category, ClubPage, Links, Photo, Profile, Project } from '../data/types'
 
 /**
  * Local, persistent state. Fixes F4 (onboarding not remembered):
@@ -48,6 +48,10 @@ interface State {
   checkins: Record<string, string[]>
   eventPhotos: Record<string, Photo[]>
   myProjects: Project[]
+  /** The board */
+  myPosts: BoardPost[]
+  /** postId -> your raised hand */
+  hands: Record<string, { at: string; note: string }>
 }
 
 const KEY = 'rvu-connect:v3'
@@ -73,9 +77,11 @@ const empty: State = {
   checkins: {},
   eventPhotos: {},
   myProjects: [],
+  myPosts: [],
+  hands: {},
 }
 
-const DATE_KEYS = new Set(['start', 'end', 'closes', 'updated'])
+const DATE_KEYS = new Set(['start', 'end', 'closes', 'updated', 'posted'])
 const ISO = /^\d{4}-\d{2}-\d{2}T/
 
 function load(): State {
@@ -151,6 +157,10 @@ function useActions(set: React.Dispatch<React.SetStateAction<State>>) {
         patch((x) => ({ eventPhotos: { ...x.eventPhotos, [eventId]: (x.eventPhotos[eventId] ?? []).filter((p) => p.id !== photoId) } })),
       publishProject: (p: Project) => patch((x) => ({ myProjects: [...x.myProjects.filter((m) => m.id !== p.id), p] })),
       deleteProject: (id: string) => patch((x) => ({ myProjects: x.myProjects.filter((m) => m.id !== id) })),
+      publishPost: (p: BoardPost) => patch((x) => ({ myPosts: [p, ...x.myPosts.filter((m) => m.id !== p.id)] })),
+      deletePost: (id: string) => patch((x) => ({ myPosts: x.myPosts.filter((m) => m.id !== id) })),
+      raiseHand: (postId: string, note = '') => patch((x) => ({ hands: { ...x.hands, [postId]: { at: new Date().toISOString(), note } } })),
+      lowerHand: (postId: string) => patch((x) => ({ hands: without(x.hands, postId) })),
       reset: () => set(empty),
     }
   }, [set])

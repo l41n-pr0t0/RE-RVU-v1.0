@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
-import { clubs, defaultClubPage, events as baseEvents, notices, pastEvents as basePast, projects as baseProjects, students as baseStudents } from '../data/mock'
-import type { CampusEvent, Club, ClubPage, Profile, Project, Student } from '../data/types'
+import { clubs, defaultClubPage, events as baseEvents, notices, pastEvents as basePast, posts as basePosts, projects as baseProjects, students as baseStudents } from '../data/mock'
+import type { BoardPost, CampusEvent, Club, ClubPage, Profile, Project, Student } from '../data/types'
 import { useStore } from './store'
 
 /**
@@ -9,7 +9,7 @@ import { useStore } from './store'
  * In production this is the API response; components never import mock data directly.
  */
 export function useCatalog() {
-  const { hostedEvents, clubPages, eventPhotos, myProjects, registered, profile } = useStore()
+  const { hostedEvents, clubPages, eventPhotos, myProjects, registered, profile, myPosts } = useStore()
 
   return useMemo(() => {
     const now = new Date()
@@ -36,7 +36,11 @@ export function useCatalog() {
     const me = profile && profile.email && profile.openToCollaborate ? meAsStudent(profile) : null
     const students: Student[] = me ? [me, ...baseStudents] : baseStudents
 
+    const posts: BoardPost[] = [...myPosts, ...basePosts].sort((a, b) => +b.posted - +a.posted)
+
     return {
+      posts,
+      postById: (id: string) => posts.find((p) => p.id === id),
       clubs: liveClubs,
       clubById: (id: string) => liveClubs.find((c) => c.id === id),
       clubPage: page,
@@ -51,7 +55,7 @@ export function useCatalog() {
       studentById: (id: string) => students.find((s) => s.id === id),
       notices,
     }
-  }, [hostedEvents, clubPages, eventPhotos, myProjects, registered, profile])
+  }, [hostedEvents, clubPages, eventPhotos, myProjects, registered, profile, myPosts])
 }
 
 export type Catalog = ReturnType<typeof useCatalog>

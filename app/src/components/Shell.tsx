@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion'
 import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react'
+import { CAMPUS_VENUES } from '../campus/venues'
 import { useCatalog } from '../lib/catalog'
 import { relativeDay } from '../lib/format'
 import { NotificationsPanel, useNotifications } from './Notifications'
@@ -15,15 +16,22 @@ const NAV: { key: Route['name']; label: string; icon: IconName }[] = [
   { key: 'events', label: 'Events', icon: 'calendar' },
   { key: 'clubs', label: 'Clubs', icon: 'users' },
   { key: 'projects', label: 'Projects', icon: 'layers' },
+  { key: 'map', label: 'Map', icon: 'map' },
   { key: 'people', label: 'People', icon: 'user' },
   { key: 'notices', label: 'Notices', icon: 'bell' },
 ]
-// Phones: five thumb-reachable tabs. Notices move to the bell in the header.
-const TABS: { key: Route['name']; label: string; icon: IconName }[] = [...NAV.slice(0, 4), { key: 'profile', label: 'You', icon: 'user' }]
-// Pages reached from the header icons and the You tab, highlighted under "You" on phones
-const UNDER_YOU: Route['name'][] = ['profile', 'saved', 'calendar', 'people', 'host', 'notices']
 
-const SLAB = 'polygon(6% 0, 100% 0, 94% 100%, 0 100%)'
+// Phones: five thumb-reachable tabs with Map for instant campus wayfinding
+const TABS: { key: Route['name']; label: string; icon: IconName }[] = [
+  { key: 'home', label: 'Today', icon: 'home' },
+  { key: 'events', label: 'Events', icon: 'calendar' },
+  { key: 'map', label: 'Map', icon: 'map' },
+  { key: 'clubs', label: 'Clubs', icon: 'users' },
+  { key: 'profile', label: 'You', icon: 'user' },
+]
+
+// Pages reached from the header icons and the You tab, highlighted under "You" on phones
+const UNDER_YOU: Route['name'][] = ['profile', 'saved', 'calendar', 'projects', 'people', 'host', 'notices']
 
 export function Shell({ route, children }: { route: Route; children: ReactNode }) {
   const [paletteOpen, setPaletteOpen] = useState(false)
@@ -59,7 +67,7 @@ export function Shell({ route, children }: { route: Route; children: ReactNode }
             <span className="hidden font-display text-xl italic xl:block">Connect</span>
           </a>
 
-          <nav aria-label="Main" className="ml-2 hidden h-full items-stretch md:flex lg:ml-6">
+          <nav aria-label="Main" className="ml-2 hidden h-full items-stretch lg:flex lg:ml-4 xl:ml-6">
             {NAV.map((n) => {
               const active = route.name === n.key
               return (
@@ -67,53 +75,91 @@ export function Shell({ route, children }: { route: Route; children: ReactNode }
                   key={n.key}
                   href={href(n.key)}
                   aria-current={active ? 'page' : undefined}
-                  className={`relative flex items-center px-3 text-[0.72rem] font-bold tracking-[0.14em] uppercase transition-colors lg:px-4 ${active ? 'text-black' : 'hover-gold text-mute'}`}
+                  className={`relative flex items-center px-3 text-[0.72rem] font-bold tracking-[0.14em] uppercase transition-colors lg:px-3.5 xl:px-4 ${
+                    active ? 'text-gold' : 'text-mute hover:text-paper'
+                  }`}
                 >
+                  <span className="relative z-10">{n.label}</span>
                   {active && (
                     <motion.span
-                      layoutId="nav-slab"
-                      className="absolute inset-x-0 inset-y-3 bg-gold"
-                      style={{ clipPath: SLAB }}
-                      transition={{ type: 'spring', stiffness: 520, damping: 40 }}
+                      layoutId="nav-gold-line"
+                      className="absolute inset-x-2 bottom-0 h-[2.5px] bg-gold"
+                      transition={{ type: 'spring', stiffness: 500, damping: 38 }}
                       aria-hidden
                     />
                   )}
-                  <span className="relative">{n.label}</span>
                   {n.key === 'notices' && unread > 0 && (
-                    <span className={`num relative ml-1.5 px-1 text-[0.62rem] ${active ? 'bg-black text-gold' : 'bg-gold text-black'}`}>{unread}</span>
+                    <span className="num relative ml-1.5 bg-gold px-1 py-0.5 text-[0.62rem] font-bold text-black leading-none">
+                      {unread}
+                    </span>
                   )}
                 </a>
               )
             })}
           </nav>
 
-          <div className="ml-auto flex items-center gap-2">
+          <div className="ml-auto flex items-center gap-2.5">
+            {/* Quick Search */}
             <button
+              type="button"
               onClick={() => setPaletteOpen(true)}
               aria-label="Search everything (Ctrl K)"
-              className="icon-btn lg:flex lg:w-56 lg:items-center lg:gap-3 lg:px-3"
+              className="group flex h-10 items-center gap-2.5 border border-line bg-paper/[0.03] px-3 text-xs text-mute transition-colors hover:border-gold hover:text-paper xl:w-52"
             >
-              <Icon name="search" className="h-[18px] w-[18px]" />
-              <span className="hidden text-sm text-mute lg:inline">Search</span>
-              <kbd className="num ml-auto hidden border border-line px-1.5 text-[0.64rem] text-mute lg:inline">Ctrl K</kbd>
+              <Icon name="search" className="h-4 w-4 shrink-0 text-mute transition-colors group-hover:text-gold" />
+              <span className="hidden xl:inline font-sans text-xs">Search...</span>
+              <kbd className="num ml-auto hidden border border-line px-1.5 py-0.5 text-[0.62rem] text-mute transition-colors group-hover:border-gold/50 xl:inline">
+                Ctrl K
+              </kbd>
             </button>
-            <a href={href('saved')} aria-label="Saved" aria-current={route.name === 'saved' ? 'page' : undefined} className="icon-btn hidden md:grid" aria-pressed={route.name === 'saved'}>
-              <Icon name="bookmark" className="h-[18px] w-[18px]" />
-            </a>
-            <a href={href('calendar')} aria-label="Your calendar" aria-current={route.name === 'calendar' ? 'page' : undefined} className="icon-btn hidden md:grid" aria-pressed={route.name === 'calendar'}>
-              <Icon name="calendar" className="h-[18px] w-[18px]" />
-            </a>
-            <button onClick={() => setNotifOpen(true)} aria-label={`Notifications${unseen ? `, ${unseen} new` : ''}`} className="icon-btn relative">
-              <Icon name="bell" className="h-[18px] w-[18px]" />
-              {unseen > 0 && <span className="num absolute -top-1 -right-1 bg-gold px-1 text-[0.6rem] font-semibold text-black">{unseen > 9 ? '9+' : unseen}</span>}
-            </button>
-            <ThemeToggle />
+
+            {/* Segmented Architectural Control Bar */}
+            <div className="flex h-10 items-center border border-line divide-x divide-line bg-paper/[0.03]">
+              <a
+                href={href('saved')}
+                aria-label="Saved"
+                aria-current={route.name === 'saved' ? 'page' : undefined}
+                className={`hidden 2xl:grid h-full w-10 place-items-center text-mute transition-colors hover:text-gold hover:bg-paper/[0.04] ${
+                  route.name === 'saved' ? 'text-gold bg-gold/10' : ''
+                }`}
+              >
+                <Icon name="bookmark" className="h-4 w-4" />
+              </a>
+              <a
+                href={href('calendar')}
+                aria-label="Your calendar"
+                aria-current={route.name === 'calendar' ? 'page' : undefined}
+                className={`hidden 2xl:grid h-full w-10 place-items-center text-mute transition-colors hover:text-gold hover:bg-paper/[0.04] ${
+                  route.name === 'calendar' ? 'text-gold bg-gold/10' : ''
+                }`}
+              >
+                <Icon name="calendar" className="h-4 w-4" />
+              </a>
+              <button
+                type="button"
+                onClick={() => setNotifOpen(true)}
+                aria-label={`Notifications${unseen ? `, ${unseen} new` : ''}`}
+                className="relative grid h-full w-10 place-items-center text-mute transition-colors hover:text-gold hover:bg-paper/[0.04]"
+              >
+                <Icon name="bell" className="h-4 w-4" />
+                {unseen > 0 && (
+                  <span className="num absolute top-1.5 right-1.5 flex h-3.5 min-w-[0.875rem] items-center justify-center bg-gold px-0.5 text-[0.55rem] font-bold text-black leading-none">
+                    {unseen > 9 ? '9+' : unseen}
+                  </span>
+                )}
+              </button>
+              <ThemeToggle className="!h-full !w-10 !border-0 text-mute hover:text-gold hover:bg-paper/[0.04]" />
+            </div>
+
+            {/* Monogram Profile */}
             <a
               href={href('profile')}
               aria-label="Your profile"
               aria-current={route.name === 'profile' ? 'page' : undefined}
-              className={`hidden h-10 min-w-10 place-items-center border px-2 font-display text-sm italic md:grid ${
-                route.name === 'profile' ? 'border-gold bg-gold text-black' : 'hover-gold border-line-strong'
+              className={`hidden h-10 min-w-10 items-center justify-center border px-3 font-display text-sm italic transition-colors md:flex ${
+                route.name === 'profile'
+                  ? 'border-gold bg-gold text-black font-semibold'
+                  : 'border-line text-paper hover:border-gold hover:text-gold bg-paper/[0.03]'
               }`}
             >
               {profile ? initials(profile.name) : 'You'}
@@ -143,7 +189,7 @@ export function Shell({ route, children }: { route: Route; children: ReactNode }
 /** Phone tab bar after MNEMOS-ZERO: square cells, the active one inverted. */
 function MobileTabs({ route }: { route: Route }) {
   return (
-    <nav aria-label="Main" className="fixed inset-x-0 bottom-0 z-40 border-t border-line-strong bg-ink pb-[env(safe-area-inset-bottom)] md:hidden">
+    <nav aria-label="Main" className="fixed inset-x-0 bottom-0 z-40 border-t border-line-strong bg-ink pb-[env(safe-area-inset-bottom)] lg:hidden">
       <ul className="flex">
         {TABS.map((t) => {
           const active = route.name === t.key || (t.key === 'profile' && UNDER_YOU.includes(route.name))
@@ -168,7 +214,7 @@ function MobileTabs({ route }: { route: Route }) {
 
 /* ---------- Command palette: one search across everything (F10) ---------- */
 
-type Hit = { kind: 'Event' | 'Past' | 'Club' | 'Project' | 'Person' | 'Notice' | 'Go to'; label: string; meta: string; run: () => void }
+type Hit = { kind: 'Event' | 'Past' | 'Club' | 'Project' | 'Person' | 'Notice' | 'Venue' | 'Go to'; label: string; meta: string; run: () => void }
 
 function CommandPalette({ open, onClose }: { open: boolean; onClose: () => void }) {
   const titleId = useId()
@@ -190,6 +236,7 @@ function PaletteBody({ titleId, onClose }: { titleId: string; onClose: () => voi
     const s = q.trim().toLowerCase()
     const nav: Hit[] = [
       ...NAV.map((n) => ({ kind: 'Go to' as const, label: n.label, meta: 'Page', run: () => go(n.key) })),
+      { kind: 'Go to', label: 'Campus Map & Wayfinder', meta: 'Interactive 3D campus & building guide', run: () => go('map') },
       { kind: 'Go to', label: 'Your profile', meta: 'Page', run: () => go('profile') },
       { kind: 'Go to', label: 'Saved', meta: 'Events, notices and projects you kept', run: () => go('saved') },
       { kind: 'Go to', label: 'Your calendar', meta: 'Everything you said yes to', run: () => go('calendar') },
@@ -199,6 +246,7 @@ function PaletteBody({ titleId, onClose }: { titleId: string; onClose: () => voi
       ...events.map((e) => ({ kind: 'Event' as const, label: e.title, meta: `${relativeDay(e.start)} · ${e.hostName}`, run: () => openEvent(e.id) })),
       ...clubs.map((c) => ({ kind: 'Club' as const, label: c.name, meta: `${c.category} · ${c.tagline}`, run: () => go(`clubs/${c.id}`) })),
       ...projects.map((p) => ({ kind: 'Project' as const, label: p.name, meta: [p.status, ...p.stack, ...p.openings.map((o) => o.role)].join(', '), run: () => go(`projects/${p.id}`) })),
+      ...CAMPUS_VENUES.map((v) => ({ kind: 'Venue' as const, label: v.place.name, meta: `${v.category} · ${v.description}`, run: () => go('map') })),
       ...students.map((p) => ({ kind: 'Person' as const, label: p.name, meta: p.skills.join(', '), run: () => go(`people/${p.id}`) })),
       ...pastEvents.map((e) => ({ kind: 'Past' as const, label: e.title, meta: `${e.hostName} · archive`, run: () => openEvent(e.id) })),
       ...notices.map((n) => ({ kind: 'Notice' as const, label: n.title, meta: n.from, run: () => go('notices') })),

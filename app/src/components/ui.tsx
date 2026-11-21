@@ -162,7 +162,7 @@ export function Dialog({
 export type IconName =
   | 'search' | 'close' | 'bookmark' | 'bookmark-fill' | 'calendar' | 'pin' | 'arrow' | 'arrow-left' | 'check' | 'clock'
   | 'users' | 'home' | 'layers' | 'user' | 'bell' | 'github' | 'linkedin' | 'link' | 'play' | 'pause' | 'plus' | 'external' | 'ticket'
-  | 'share' | 'qr' | 'camera' | 'edit' | 'mail' | 'globe' | 'chat' | 'image' | 'trash' | 'eye' | 'eye-off' | 'settings' | 'up' | 'down' | 'archive' | 'filter'
+  | 'share' | 'qr' | 'camera' | 'edit' | 'mail' | 'globe' | 'chat' | 'image' | 'trash' | 'eye' | 'eye-off' | 'settings' | 'up' | 'down' | 'archive' | 'filter' | 'map'
 
 export function Icon({ name, className = 'h-5 w-5' }: { name: IconName; className?: string }) {
   const p = { fill: 'none', stroke: 'currentColor', strokeWidth: 1.5, strokeLinecap: 'square' as const, strokeLinejoin: 'miter' as const }
@@ -206,6 +206,7 @@ export function Icon({ name, className = 'h-5 w-5' }: { name: IconName; classNam
     down: <path d="m6 9 6 6 6-6" {...p} />,
     archive: <><path d="M3 4h18v4H3zM5 8v12h14V8" {...p} /><path d="M10 12h4" {...p} /></>,
     filter: <path d="M4 5h16l-6 8v6l-4-2v-4z" {...p} />,
+    map: <><path d="M9 18l-6 3V6l6-3 6 3 6-3v15l-6 3-6-3z" {...p} /><path d="M9 3v15M15 6v15" {...p} /></>,
   }
   return (
     <svg viewBox="0 0 24 24" className={className} aria-hidden>

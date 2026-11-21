@@ -200,3 +200,38 @@ export interface Photo {
 
 /** What a club asks for in a join request */
 export type Ask = 'GitHub' | 'LinkedIn' | 'Portfolio'
+
+/* ---------- The board: asks and offers between students ---------- */
+
+/** `seeking`: I need a hand. `offering`: I can lend one. */
+export type PostKind = 'seeking' | 'offering'
+export type Commitment = 'A few hours' | 'A weekend' | 'Two to four weeks' | 'A semester'
+export const COMMITMENTS: Commitment[] = ['A few hours', 'A weekend', 'Two to four weeks', 'A semester']
+export type WorkMode = 'On campus' | 'Remote' | 'Either'
+export const WORK_MODES: WorkMode[] = ['On campus', 'Remote', 'Either']
+/** What the helper gets out of it. Stated up front, like a job post. */
+export type Reward = 'Credit on the project' | 'Stipend' | 'Co-author' | 'Mentorship' | 'Skill swap' | 'Certificate' | 'Just for fun'
+export const REWARDS: Reward[] = ['Credit on the project', 'Stipend', 'Co-author', 'Mentorship', 'Skill swap', 'Certificate', 'Just for fun']
+
+export interface BoardPost {
+  id: string
+  kind: PostKind
+  /** Student directory id, or 'me' */
+  authorId: string
+  title: string
+  body: string
+  skills: string[]
+  category: Category
+  commitment: Commitment
+  mode: WorkMode
+  rewards: Reward[]
+  /** How many people are wanted; offers use 1 */
+  spots: number
+  posted: Date
+  closes?: Date
+  /** Linked showcase project, when there is one */
+  projectId?: string
+  urgent?: boolean
+  /** Student ids who raised a hand (seeded) */
+  hands: string[]
+}
