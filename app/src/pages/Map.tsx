@@ -195,28 +195,6 @@ export default function MapPage({ id }: { id?: string }) {
             </ul>
           </div>
         </div>
-
-        {/* Right: 3D Campus Stage */}
-        <div className="sticky top-24 h-[65vh] min-h-[28rem] lg:h-[75vh] border border-line bg-ink overflow-hidden relative">
-          <div className="absolute inset-0 z-0">
-            <Suspense
-              fallback={
-                <div className="h-full w-full flex items-center justify-center text-sm text-mute">
-                  Loading 3D Campus Stage...
-                </div>
-              }
-            >
-              <CampusStage focus={selectedPlace} paused={paused} />
-            </Suspense>
-          </div>
-          {/* Subtle frame corner brackets */}
-          <div className="pointer-events-none absolute top-3 left-3 text-[0.65rem] font-mono text-mute/70 bg-ink/70 px-2 py-1 backdrop-blur-sm border border-line">
-            LAT 12.9225° N · LON 77.5017° E
-          </div>
-          <div className="pointer-events-none absolute bottom-3 right-3 text-[0.65rem] font-mono text-mute/70 bg-ink/70 px-2 py-1 backdrop-blur-sm border border-line">
-            RVU ATLAS v1.0
-          </div>
-        </div>
       </div>
     </div>
   )

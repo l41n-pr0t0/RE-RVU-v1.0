@@ -70,28 +70,28 @@ export default function Home() {
         )}
       </PageHeader>
 
-      {/* Next up + due: the two things a student opens the app for */}
-      <div className="grid gap-px border-b border-line bg-line md:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]">
+      {/* Next up + due: spacious editorial presentation */}
+      <div className={`grid gap-px border-b border-line bg-line ${due.length > 0 ? 'md:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]' : 'grid-cols-1'}`}>
         {next && (
-          <Reveal as="section" className="bg-ink py-7 md:py-10 md:pr-10">
+          <Reveal as="section" className="bg-ink py-8 md:py-12 md:pr-10">
             <p className="eyebrow">{mine[0] ? 'Your next event' : 'Next on campus'}</p>
-            <div className="mt-4 flex items-start gap-5">
-              <div className="shrink-0 border border-gold px-3 py-2 text-center">
-                <Num className="block text-3xl font-semibold text-gold md:text-4xl">{next.start.getDate()}</Num>
-                <span className="eyebrow !text-[0.6rem]">{next.start.toLocaleString('en-GB', { month: 'short' })}</span>
+            <div className="mt-5 flex items-start gap-5 md:gap-7">
+              <div className="shrink-0 border border-gold px-3.5 py-2.5 text-center">
+                <Num className="block text-3xl font-semibold text-gold md:text-5xl">{next.start.getDate()}</Num>
+                <span className="eyebrow !text-[0.62rem]">{next.start.toLocaleString('en-GB', { month: 'short' })}</span>
               </div>
-              <div className="min-w-0">
-                <h2 className="text-[clamp(1.6rem,1.2rem+1.6vw,2.6rem)] leading-[1.05]">
-                  <button className="hover-gold text-left" onClick={() => openEvent(next.id)}>{next.title}</button>
+              <div className="min-w-0 flex-1">
+                <h2 className="text-[clamp(1.6rem,1.3rem+1.8vw,2.8rem)] leading-[1.08]">
+                  <button className="hover-gold text-left font-display" onClick={() => openEvent(next.id)}>{next.title}</button>
                 </h2>
-                <p className="mt-2 text-mute">
-                  <Num>{time(next.start)}</Num> · {next.venue} · {next.hostName}
+                <p className="mt-2.5 text-mute text-sm md:text-base">
+                  <Num>{time(next.start)}</Num> · {next.venue} · <span className="text-gold/90">{next.hostName}</span>
                 </p>
                 <div className="mt-4 flex flex-wrap items-center gap-3">
-                  <span className="num border border-line-strong px-2 py-1 text-xs">{next.start <= now ? 'On now' : `Starts ${countdown(next.start, now)}`}</span>
+                  <span className="num border border-line-strong px-2.5 py-1 text-xs">{next.start <= now ? 'On now' : `Starts ${countdown(next.start, now)}`}</span>
                   {registered.includes(next.id) ? <span className="tag tag-gold">Going</span> : <StatusTag e={next} />}
                 </div>
-                <div className="mt-5 max-w-xs">
+                <div className="mt-5 max-w-sm">
                   <SeatMeter e={next} />
                 </div>
               </div>
@@ -99,12 +99,10 @@ export default function Home() {
           </Reveal>
         )}
 
-        <Reveal as="section" delay={0.08} className="bg-ink py-7 md:py-10 md:pl-10">
-          <p className="eyebrow">Due soon</p>
-          {due.length === 0 ? (
-            <p className="mt-4 text-mute">You’re clear. New deadlines from the university appear here first.</p>
-          ) : (
-            <ul className="mt-4 divide-y divide-line border-y border-line">
+        {due.length > 0 && (
+          <Reveal as="section" delay={0.08} className="bg-ink py-8 md:py-12 md:pl-10">
+            <p className="eyebrow">Due soon</p>
+            <ul className="mt-5 divide-y divide-line border-y border-line">
               {due.map((n) => (
                 <li key={n.id} className="grid grid-cols-[3.5rem_minmax(0,1fr)] gap-4 py-4">
                   <div className="text-center">
@@ -121,8 +119,8 @@ export default function Home() {
                 </li>
               ))}
             </ul>
-          )}
-        </Reveal>
+          </Reveal>
+        )}
       </div>
 
       {/* The week on the Gold Line */}
@@ -201,16 +199,16 @@ export default function Home() {
 
       <section aria-labelledby="recruiting" className="mt-16">
         <SectionTitle id="recruiting" title="Clubs recruiting now" count={recruiting.length} action={<a className="hover-gold text-sm text-mute" href={href('clubs')}>All clubs →</a>} />
-        <ul className="-mx-[clamp(1rem,0.6rem+2vw,2.5rem)] flex snap-x snap-mandatory gap-px overflow-x-auto px-[clamp(1rem,0.6rem+2vw,2.5rem)] no-scrollbar">
+        <ul className="-mx-[clamp(1rem,0.6rem+2vw,2.5rem)] flex snap-x snap-mandatory gap-4 overflow-x-auto px-[clamp(1rem,0.6rem+2vw,2.5rem)] py-2 no-scrollbar">
           {recruiting.map((c) => (
-            <li key={c.id} className="w-[15rem] shrink-0 snap-start">
-              <a href={href(`clubs/${c.id}`)} className="row-hover flex h-full flex-col gap-4 border border-line p-5">
+            <li key={c.id} className="w-[16rem] shrink-0 snap-start">
+              <a href={href(`clubs/${c.id}`)} className="row-hover flex h-full flex-col gap-4 border border-line p-5 bg-paper/[0.02] hover:border-gold transition-colors">
                 <Monogram text={c.mono} />
                 <span>
                   <span className="block font-display text-xl">{c.name}</span>
-                  <span className="mt-1 line-clamp-2 block text-sm text-mute">{c.tagline}</span>
+                  <span className="mt-1 line-clamp-2 block text-sm text-mute leading-relaxed">{c.tagline}</span>
                 </span>
-                <span className="mt-auto text-xs text-mute">
+                <span className="mt-auto pt-2 text-xs text-mute border-t border-line/60">
                   <Num>{c.members}</Num> members · {c.category}
                 </span>
               </a>

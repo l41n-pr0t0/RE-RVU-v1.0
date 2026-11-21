@@ -184,22 +184,31 @@ export function Shell({ route, children }: { route: Route; children: ReactNode }
   )
 }
 
-/** Phone tab bar after MNEMOS-ZERO: square cells, the active one inverted. */
+/** Phone tab bar: thumb-reachable, signature gold indicator, zero congestion */
 function MobileTabs({ route }: { route: Route }) {
   return (
-    <nav aria-label="Main" className="fixed inset-x-0 bottom-0 z-40 border-t border-line-strong bg-ink pb-[env(safe-area-inset-bottom)] lg:hidden">
+    <nav aria-label="Main" className="fixed inset-x-0 bottom-0 z-40 border-t border-line-strong bg-ink/95 backdrop-blur-md pb-[env(safe-area-inset-bottom)] lg:hidden">
       <ul className="flex">
         {TABS.map((t) => {
           const active = route.name === t.key || (t.key === 'profile' && UNDER_YOU.includes(route.name))
           return (
-            <li key={t.key} className="flex-1 border-l border-line first:border-l-0">
+            <li key={t.key} className="flex-1">
               <a
                 href={href(t.key)}
                 aria-current={active ? 'page' : undefined}
-                className={`relative flex min-h-14 flex-col items-center justify-center gap-1 text-[0.6rem] font-bold tracking-[0.12em] uppercase ${active ? 'text-black' : 'text-mute'}`}
+                className={`relative flex min-h-[3.75rem] flex-col items-center justify-center gap-1.5 py-1 text-[0.64rem] font-bold tracking-[0.1em] uppercase transition-colors ${
+                  active ? 'text-gold' : 'text-mute hover:text-paper'
+                }`}
               >
-                {active && <motion.span layoutId="tab-fill" className="absolute inset-0 bg-gold" transition={{ type: 'spring', stiffness: 600, damping: 45 }} aria-hidden />}
-                <Icon name={t.icon} className="relative h-[19px] w-[19px]" />
+                {active && (
+                  <motion.span
+                    layoutId="mobile-tab-line"
+                    className="absolute top-0 inset-x-4 h-[2.5px] bg-gold"
+                    transition={{ type: 'spring', stiffness: 500, damping: 40 }}
+                    aria-hidden
+                  />
+                )}
+                <Icon name={t.icon} className="relative h-5 w-5" />
                 <span className="relative">{t.label}</span>
               </a>
             </li>
