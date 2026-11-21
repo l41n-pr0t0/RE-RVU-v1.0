@@ -1,7 +1,9 @@
 import { useEffect, useId, useMemo, useRef, useState } from 'react'
+import { ClubCover } from '../components/ClubCover'
 import { ContactSheet } from '../components/Frames'
 import { EmptyState, Icon, Monogram, Num, PageHeader } from '../components/ui'
-import { CLUB_SECTIONS, type Ask, type CampusEvent, type ClubPage, type ClubSection, type CoverTone, type Photo, type Question } from '../data/types'
+import { CLUB_SECTIONS, type Ask, type CampusEvent, type Club, type ClubLayout, type ClubLook, type ClubPage, type ClubPattern, type ClubSection, type ClubTheme, type ClubType, type Photo, type Question } from '../data/types'
+import { LAYOUTS, PATTERNS, THEMES, TYPES, themeStyle } from '../lib/clubThemes'
 import { useCatalog } from '../lib/catalog'
 import { dayMonth, longDate, ticketCode, time } from '../lib/format'
 import { go, href } from '../lib/router'
@@ -73,7 +75,6 @@ export default function Host({ id }: { id?: string }) {
 /* ---------- Club page editor ---------- */
 
 const ASKS: Ask[] = ['GitHub', 'LinkedIn', 'Portfolio']
-const TONES: CoverTone[] = ['gold', 'teal', 'slate']
 
 function PageEditor({ clubId }: { clubId: string }) {
   const cat = useCatalog()
@@ -81,6 +82,7 @@ function PageEditor({ clubId }: { clubId: string }) {
   const [p, setP] = useState<ClubPage>(() => cat.clubPage(clubId))
   const [saved, setSaved] = useState(false)
   const set = (patch: Partial<ClubPage>) => { setP({ ...p, ...patch }); setSaved(false) }
+  const club = cat.clubById(clubId)!
   const f = useId()
 
   const move = (s: ClubSection, d: -1 | 1) => {
@@ -100,18 +102,14 @@ function PageEditor({ clubId }: { clubId: string }) {
       onSubmit={(e) => { e.preventDefault(); if (!e.currentTarget.checkValidity()) return; saveClubPage(clubId, p); setSaved(true) }}
     >
       <div className="grid gap-8">
+        <LookEditor look={p.look} club={club} onChange={(look) => set({ look })} />
+
         <Group title="Identity">
           <Field label="Tagline" id={`${f}-tag`}><input id={`${f}-tag`} className="field" required maxLength={90} value={p.tagline} onChange={(e) => set({ tagline: e.target.value })} /></Field>
           <Field label="About" id={`${f}-about`}><textarea id={`${f}-about`} className="field min-h-28" required maxLength={600} value={p.about} onChange={(e) => set({ about: e.target.value })} /></Field>
           <Field label="Objectives, one per line" id={`${f}-obj`}>
             <textarea id={`${f}-obj`} className="field min-h-24" value={p.objectives.join('\n')} onChange={(e) => set({ objectives: e.target.value.split('\n').filter((x, i, a) => x.trim() || i === a.length - 1) })} />
           </Field>
-          <fieldset>
-            <legend className="mb-2 text-sm">Cover tone</legend>
-            <div className="flex gap-2">
-              {TONES.map((t) => <button type="button" key={t} className="chip capitalize" aria-pressed={p.tone === t} onClick={() => set({ tone: t })}>{t}</button>)}
-            </div>
-          </fieldset>
         </Group>
 
         <Group title="Leadership">
@@ -175,6 +173,23 @@ function PageEditor({ clubId }: { clubId: string }) {
       </div>
 
       <aside className="lg:sticky lg:top-24 lg:self-start">
+        <Group title="Live preview">
+          <div className="club-theme border border-line-strong" data-type={p.look.type} style={themeStyle(p.look)}>
+            <ClubCover club={club} look={p.look} className="aspect-[16/10]">
+              <div className="flex h-full flex-col justify-end p-4">
+                <span className="eyebrow !text-[0.55rem] !text-gold">{club.category} · {LAYOUTS[p.look.layout].label} layout</span>
+                <span className="club-display mt-1 text-3xl leading-none">{club.name}</span>
+                <span className="mt-1.5 line-clamp-2 text-xs text-mute">{p.tagline}</span>
+              </div>
+            </ClubCover>
+            <div className="flex flex-wrap items-center gap-2 p-3">
+              <span className="btn btn-gold btn-sm pointer-events-none">Apply to join</span>
+              <span className="btn btn-sm pointer-events-none">Follow</span>
+              <span className="tag tag-teal">Recruiting</span>
+            </div>
+          </div>
+        </Group>
+        <div className="mt-8" />
         <Group title="Sections">
           <p className="text-sm text-mute">Order and visibility on your page.</p>
           <ol className="border-t border-line">
@@ -199,6 +214,86 @@ function PageEditor({ clubId }: { clubId: string }) {
         <p role="status" className="mt-3 text-sm text-gold">{saved ? 'Published. Your page is live.' : ''}</p>
       </aside>
     </form>
+  )
+}
+
+/* ---------- Look and feel: presets only, no code ---------- */
+
+function LookEditor({ look, club, onChange }: { look: ClubLook; club: Club; onChange: (l: ClubLook) => void }) {
+  const set = (patch: Partial<ClubLook>) => onChange({ ...look, ...patch })
+  const themes = Object.keys(THEMES) as ClubTheme[]
+  const patterns = Object.keys(PATTERNS) as ClubPattern[]
+  return (
+    <Group title="Look and feel">
+      <p className="text-sm text-mute">Every theme is built from the RV University palette, so your page stays on brand however you set it. Changes show in the preview straight away.</p>
+      <fieldset>
+        <legend className="mb-2 text-sm">Theme</legend>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          {themes.map((t) => {
+            const d = THEMES[t]
+            const on = look.theme === t
+            return (
+              <button key={t} type="button" aria-pressed={on} onClick={() => set({ theme: t })} className={`group text-left outline-offset-2 ${on ? 'outline-2 outline-gold' : ''}`} style={{ outlineStyle: on ? 'solid' : undefined }}>
+                <span className="block border border-line-strong p-2.5" style={{ background: d.ink, color: d.paper }}>
+                  <span className="flex gap-1">
+                    {[d.surface, d.accent, d.paper].map((c) => <span key={c} className="h-3 w-3 border border-black/10" style={{ background: c }} />)}
+                  </span>
+                  <span className="mt-4 block font-display text-lg leading-none">Aa</span>
+                </span>
+                <span className="mt-1.5 block text-sm">{d.label}</span>
+                <span className="block text-xs text-mute">{d.note}</span>
+              </button>
+            )
+          })}
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend className="mb-2 text-sm">Layout</legend>
+        <div className="grid gap-2 sm:grid-cols-3">
+          {(Object.keys(LAYOUTS) as ClubLayout[]).map((l) => (
+            <button key={l} type="button" aria-pressed={look.layout === l} onClick={() => set({ layout: l })} className={`border p-3 text-left transition-colors ${look.layout === l ? 'border-gold' : 'border-line hover:border-line-strong'}`}>
+              <LayoutGlyph layout={l} />
+              <span className="mt-2 block text-sm">{LAYOUTS[l].label}</span>
+              <span className="block text-xs text-mute">{LAYOUTS[l].note}</span>
+            </button>
+          ))}
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend className="mb-2 text-sm">Cover pattern</legend>
+        <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
+          {patterns.map((pt) => (
+            <button key={pt} type="button" aria-pressed={look.pattern === pt} onClick={() => set({ pattern: pt })} className={`border text-left ${look.pattern === pt ? 'border-gold' : 'border-line'}`}>
+              <ClubCover club={club} look={{ ...look, pattern: pt }} size="mini" className="aspect-square"><span /></ClubCover>
+              <span className="block px-2 py-1.5 text-xs">{PATTERNS[pt]}</span>
+            </button>
+          ))}
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend className="mb-2 text-sm">Type</legend>
+        <div className="flex flex-wrap gap-2">
+          {(Object.keys(TYPES) as ClubType[]).map((t) => (
+            <button key={t} type="button" aria-pressed={look.type === t} onClick={() => set({ type: t })} data-type={t} className={`border px-4 py-2.5 text-left ${look.type === t ? 'border-gold' : 'border-line'}`}>
+              <span className="club-display block text-xl leading-none">{club.name.split(' ')[0]}</span>
+              <span className="mt-1 block text-xs text-mute">{TYPES[t].note}</span>
+            </button>
+          ))}
+        </div>
+      </fieldset>
+    </Group>
+  )
+}
+
+/** Tiny wireframe of each layout, so the choice is visual. */
+function LayoutGlyph({ layout }: { layout: ClubLayout }) {
+  const b = 'bg-line-strong'
+  return (
+    <span aria-hidden className="grid h-14 gap-1">
+      {layout === 'cover' && (<><span className={`${b} h-6`} /><span className="grid grid-cols-[1fr_0.4fr] gap-1"><span className={`${b} opacity-50`} /><span className={`${b} opacity-30`} /></span></>)}
+      {layout === 'split' && (<span className="grid h-14 grid-cols-[0.45fr_1fr] gap-1"><span className={b} /><span className="grid gap-1"><span className={`${b} opacity-50`} /><span className={`${b} opacity-50`} /><span className={`${b} opacity-50`} /></span></span>)}
+      {layout === 'poster' && (<><span className={`${b} h-4`} /><span className="grid grid-cols-2 gap-1"><span className={`${b} col-span-2 h-3 opacity-50`} /><span className={`${b} h-4 opacity-40`} /><span className={`${b} h-4 opacity-40`} /></span></>)}
+    </span>
   )
 }
 
