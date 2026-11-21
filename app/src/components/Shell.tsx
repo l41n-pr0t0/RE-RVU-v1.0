@@ -18,7 +18,6 @@ const NAV: { key: Route['name']; label: string; icon: IconName }[] = [
   { key: 'projects', label: 'Projects', icon: 'layers' },
   { key: 'map', label: 'Map', icon: 'map' },
   { key: 'people', label: 'People', icon: 'user' },
-  { key: 'notices', label: 'Notices', icon: 'bell' },
 ]
 
 // Phones: five thumb-reachable tabs with Map for instant campus wayfinding
@@ -38,8 +37,9 @@ export function Shell({ route, children }: { route: Route; children: ReactNode }
   const [notifOpen, setNotifOpen] = useState(false)
   const { profile, readNotices } = useStore()
   const { notices } = useCatalog()
-  const unread = notices.filter((n) => n.priority === 'High' && !readNotices.includes(n.id)).length
+  const unreadNotices = notices.filter((n) => n.priority === 'High' && !readNotices.includes(n.id)).length
   const { unseen } = useNotifications()
+  const totalAlerts = unseen + unreadNotices
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -59,15 +59,17 @@ export function Shell({ route, children }: { route: Route; children: ReactNode }
         Skip to content
       </a>
 
-      <header className="sticky top-0 z-40 border-b border-line-strong bg-ink">
-        <div className="wrap flex h-16 items-center gap-3 md:h-20 md:gap-6">
+      <header className="sticky top-0 z-40 border-b border-line-strong bg-ink/95 backdrop-blur-md">
+        <div className="wrap flex h-16 items-center justify-between gap-2 md:h-20 md:gap-4 lg:gap-6">
+          {/* Logo & Brand */}
           <a href={href('home')} aria-label="RVU Connect, today" className="flex shrink-0 items-center gap-3">
-            <Logo className="h-11 md:h-14" />
-            <span className="hidden h-7 w-px bg-line-strong xl:block" aria-hidden />
-            <span className="hidden font-display text-xl italic xl:block">Connect</span>
+            <Logo className="h-10 md:h-13" />
+            <span className="hidden h-6 w-px bg-line-strong xl:block" aria-hidden />
+            <span className="hidden font-display text-lg italic xl:block">Connect</span>
           </a>
 
-          <nav aria-label="Main" className="ml-2 hidden h-full items-stretch lg:flex lg:ml-4 xl:ml-6">
+          {/* Primary Navigation - Balanced and Spacious */}
+          <nav aria-label="Main" className="hidden h-full items-stretch lg:flex lg:gap-0.5 xl:gap-1">
             {NAV.map((n) => {
               const active = route.name === n.key
               return (
@@ -75,7 +77,7 @@ export function Shell({ route, children }: { route: Route; children: ReactNode }
                   key={n.key}
                   href={href(n.key)}
                   aria-current={active ? 'page' : undefined}
-                  className={`relative flex items-center px-3 text-[0.72rem] font-bold tracking-[0.14em] uppercase transition-colors lg:px-3.5 xl:px-4 ${
+                  className={`relative flex items-center px-2.5 text-[0.7rem] font-bold tracking-[0.14em] uppercase transition-colors xl:px-3.5 ${
                     active ? 'text-gold' : 'text-mute hover:text-paper'
                   }`}
                 >
@@ -83,43 +85,39 @@ export function Shell({ route, children }: { route: Route; children: ReactNode }
                   {active && (
                     <motion.span
                       layoutId="nav-gold-line"
-                      className="absolute inset-x-2 bottom-0 h-[2.5px] bg-gold"
+                      className="absolute inset-x-1.5 bottom-0 h-[2.5px] bg-gold"
                       transition={{ type: 'spring', stiffness: 500, damping: 38 }}
                       aria-hidden
                     />
-                  )}
-                  {n.key === 'notices' && unread > 0 && (
-                    <span className="num relative ml-1.5 bg-gold px-1 py-0.5 text-[0.62rem] font-bold text-black leading-none">
-                      {unread}
-                    </span>
                   )}
                 </a>
               )
             })}
           </nav>
 
-          <div className="ml-auto flex items-center gap-2.5">
-            {/* Quick Search */}
+          {/* Utility Controls Cluster */}
+          <div className="flex items-center gap-2 md:gap-3">
+            {/* Quick Search Trigger */}
             <button
               type="button"
               onClick={() => setPaletteOpen(true)}
               aria-label="Search everything (Ctrl K)"
-              className="group flex h-10 items-center gap-2.5 border border-line bg-paper/[0.03] px-3 text-xs text-mute transition-colors hover:border-gold hover:text-paper xl:w-52"
+              className="group flex h-9.5 items-center gap-2 border border-line bg-paper/[0.03] px-2.5 text-xs text-mute transition-colors hover:border-gold hover:text-paper md:h-10 xl:w-44 2xl:w-52"
             >
               <Icon name="search" className="h-4 w-4 shrink-0 text-mute transition-colors group-hover:text-gold" />
               <span className="hidden xl:inline font-sans text-xs">Search...</span>
-              <kbd className="num ml-auto hidden border border-line px-1.5 py-0.5 text-[0.62rem] text-mute transition-colors group-hover:border-gold/50 xl:inline">
+              <kbd className="num ml-auto hidden border border-line px-1.5 py-0.5 text-[0.6rem] text-mute transition-colors group-hover:border-gold/50 xl:inline">
                 Ctrl K
               </kbd>
             </button>
 
-            {/* Segmented Architectural Control Bar */}
-            <div className="flex h-10 items-center border border-line divide-x divide-line bg-paper/[0.03]">
+            {/* Architectural Control Strip */}
+            <div className="flex h-9.5 items-center border border-line divide-x divide-line bg-paper/[0.03] md:h-10">
               <a
                 href={href('saved')}
-                aria-label="Saved"
+                aria-label="Saved items"
                 aria-current={route.name === 'saved' ? 'page' : undefined}
-                className={`hidden 2xl:grid h-full w-10 place-items-center text-mute transition-colors hover:text-gold hover:bg-paper/[0.04] ${
+                className={`hidden xl:grid h-full w-9.5 md:w-10 place-items-center text-mute transition-colors hover:text-gold hover:bg-paper/[0.04] ${
                   route.name === 'saved' ? 'text-gold bg-gold/10' : ''
                 }`}
               >
@@ -129,7 +127,7 @@ export function Shell({ route, children }: { route: Route; children: ReactNode }
                 href={href('calendar')}
                 aria-label="Your calendar"
                 aria-current={route.name === 'calendar' ? 'page' : undefined}
-                className={`hidden 2xl:grid h-full w-10 place-items-center text-mute transition-colors hover:text-gold hover:bg-paper/[0.04] ${
+                className={`hidden xl:grid h-full w-9.5 md:w-10 place-items-center text-mute transition-colors hover:text-gold hover:bg-paper/[0.04] ${
                   route.name === 'calendar' ? 'text-gold bg-gold/10' : ''
                 }`}
               >
@@ -138,17 +136,17 @@ export function Shell({ route, children }: { route: Route; children: ReactNode }
               <button
                 type="button"
                 onClick={() => setNotifOpen(true)}
-                aria-label={`Notifications${unseen ? `, ${unseen} new` : ''}`}
-                className="relative grid h-full w-10 place-items-center text-mute transition-colors hover:text-gold hover:bg-paper/[0.04]"
+                aria-label={`Notifications and notices${totalAlerts ? `, ${totalAlerts} unread` : ''}`}
+                className="relative grid h-full w-9.5 md:w-10 place-items-center text-mute transition-colors hover:text-gold hover:bg-paper/[0.04]"
               >
                 <Icon name="bell" className="h-4 w-4" />
-                {unseen > 0 && (
+                {totalAlerts > 0 && (
                   <span className="num absolute top-1.5 right-1.5 flex h-3.5 min-w-[0.875rem] items-center justify-center bg-gold px-0.5 text-[0.55rem] font-bold text-black leading-none">
-                    {unseen > 9 ? '9+' : unseen}
+                    {totalAlerts > 9 ? '9+' : totalAlerts}
                   </span>
                 )}
               </button>
-              <ThemeToggle className="!h-full !w-10 !border-0 text-mute hover:text-gold hover:bg-paper/[0.04]" />
+              <ThemeToggle className="!h-full !w-9.5 md:!w-10 !border-0 text-mute hover:text-gold hover:bg-paper/[0.04]" />
             </div>
 
             {/* Monogram Profile */}
@@ -156,7 +154,7 @@ export function Shell({ route, children }: { route: Route; children: ReactNode }
               href={href('profile')}
               aria-label="Your profile"
               aria-current={route.name === 'profile' ? 'page' : undefined}
-              className={`hidden h-10 min-w-10 items-center justify-center border px-3 font-display text-sm italic transition-colors md:flex ${
+              className={`flex h-9.5 min-w-9.5 items-center justify-center border px-2.5 font-display text-xs italic transition-colors md:h-10 md:min-w-10 md:text-sm ${
                 route.name === 'profile'
                   ? 'border-gold bg-gold text-black font-semibold'
                   : 'border-line text-paper hover:border-gold hover:text-gold bg-paper/[0.03]'

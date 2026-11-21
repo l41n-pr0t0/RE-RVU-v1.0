@@ -62,7 +62,15 @@ function Panel({ titleId, onClose }: { titleId: string; onClose: () => void }) {
   return (
     <div className="flex h-full max-h-[inherit] flex-col border-t border-line-strong bg-slate-2 md:border-t-0 md:border-l">
       <div className="flex items-center justify-between gap-3 border-b border-line px-5 py-3 md:px-8 md:py-4">
-        <h2 id={titleId} className="text-2xl">Notifications</h2>
+        <div>
+          <h2 id={titleId} className="text-2xl">Notifications</h2>
+          <button
+            onClick={() => { onClose(); go('notices') }}
+            className="mt-0.5 text-xs text-gold hover:underline"
+          >
+            All university notices →
+          </button>
+        </div>
         <div className="flex items-center gap-2">
           <button className="btn btn-sm" onClick={() => markNotifsRead(items.map((n) => n.id))}>Mark all read</button>
           <button onClick={onClose} aria-label="Close" className="icon-btn"><Icon name="close" /></button>

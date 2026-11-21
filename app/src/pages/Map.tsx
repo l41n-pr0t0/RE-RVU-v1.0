@@ -73,9 +73,31 @@ export default function MapPage({ id }: { id?: string }) {
         <p>Interactive 3D model of RV University, Bengaluru. Select any building to locate venues, clubs, and scheduled events.</p>
       </PageHeader>
 
-      <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] items-start">
+      <div className="mt-6 grid gap-6 lg:mt-8 lg:gap-8 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] items-start">
+        {/* Right: 3D Campus Stage (ordered first on mobile for immediate visual wayfinding) */}
+        <div className="order-first lg:order-last sticky top-18 lg:top-24 h-[38vh] min-h-[15rem] lg:h-[75vh] lg:min-h-[28rem] border border-line bg-ink overflow-hidden relative">
+          <div className="absolute inset-0 z-0">
+            <Suspense
+              fallback={
+                <div className="h-full w-full flex items-center justify-center text-sm text-mute">
+                  Loading 3D Campus Stage...
+                </div>
+              }
+            >
+              <CampusStage focus={selectedPlace} paused={paused} />
+            </Suspense>
+          </div>
+          {/* Subtle frame corner brackets */}
+          <div className="pointer-events-none absolute top-3 left-3 text-[0.62rem] font-mono text-mute/80 bg-ink/80 px-2 py-0.5 backdrop-blur-sm border border-line">
+            LAT 12.9225° N · LON 77.5017° E
+          </div>
+          <div className="pointer-events-none absolute bottom-3 right-3 text-[0.62rem] font-mono text-mute/80 bg-ink/80 px-2 py-0.5 backdrop-blur-sm border border-line">
+            RVU ATLAS v1.0
+          </div>
+        </div>
+
         {/* Left: Venue List & Details */}
-        <div className="space-y-6">
+        <div className="space-y-5 lg:space-y-6">
           <div className="flex flex-wrap items-center gap-2 border-b border-line pb-3">
             <label className="relative flex-1 min-w-[12rem]">
               <span className="sr-only">Search venues</span>
