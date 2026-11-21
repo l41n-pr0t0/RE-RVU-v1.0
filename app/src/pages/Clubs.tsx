@@ -1,10 +1,12 @@
 import { useEffect, useId, useMemo, useState, type ReactNode } from 'react'
+import { ClubCover } from '../components/ClubCover'
 import { EventRow, ShareButton, useOpenEvent } from '../components/EventBits'
 import { ContactSheet } from '../components/Frames'
 import { LinksFields, linksValid, normaliseLink } from '../components/LinksFields'
 import { Dialog, EmptyState, ErrorState, Icon, Monogram, Num, PageHeader, Reveal } from '../components/ui'
 import { CATEGORIES, CLUB_SECTIONS, type Ask, type Category, type Club, type ClubPage, type ClubSection, type Links } from '../data/types'
 import { useCatalog } from '../lib/catalog'
+import { themeStyle } from '../lib/clubThemes'
 import { dayMonth, longDate } from '../lib/format'
 import { go, href } from '../lib/router'
 import { useQuery, useStore } from '../lib/store'
@@ -21,20 +23,17 @@ export default function Clubs({ id }: { id?: string }) {
   return club ? <ClubDetail c={club} /> : <ClubIndex />
 }
 
-/** Sc. 04: a register of dossiers, alphabetical, each one drawn rather than photographed. */
+/* ------------------------------------------------------------------ */
+/* Browse: a wall of covers, each club in its own look                 */
+/* ------------------------------------------------------------------ */
+
 function ClubIndex() {
   const { clubs, events, clubPage } = useCatalog()
   const { followedClubs, joinRequests } = useStore()
   const q = useQuery(clubs)
   const [cat, setCat] = useState<Category | null>(null)
   const [recruiting, setRecruiting] = useState(false)
-  const [mine, setMine] = useState(false)
   const [text, setText] = useState('')
-
-  const order = useMemo(() => {
-    const sorted = [...clubs].sort((a, b) => a.name.localeCompare(b.name))
-    return new Map(sorted.map((c, i) => [c.id, i + 1]))
-  }, [clubs])
 
   const upcomingByClub = useMemo(() => {
     const counts = new Map<string, number>()
@@ -46,23 +45,24 @@ function ClubIndex() {
     const s = text.trim().toLowerCase()
     return [...clubs]
       .sort((a, b) => a.name.localeCompare(b.name))
-      .filter((c) => (!cat || c.category === cat) && (!recruiting || c.recruiting) && (!mine || followedClubs.includes(c.id)) && (!s || `${c.name} ${c.tagline} ${c.category}`.toLowerCase().includes(s)))
-  }, [clubs, cat, recruiting, mine, text, followedClubs])
+      .filter((c) => (!cat || c.category === cat) && (!recruiting || c.recruiting) && (!s || `${c.name} ${c.tagline} ${c.category}`.toLowerCase().includes(s)))
+  }, [clubs, cat, recruiting, text])
 
-  const active = !!cat || recruiting || mine || text.trim().length > 0
+  const mine = clubs.filter((c) => followedClubs.includes(c.id) || joinRequests[c.id])
+  const count = (k: Category) => clubs.filter((c) => c.category === k).length
+  const active = !!cat || recruiting || text.trim().length > 0
   const clear = () => {
     setCat(null)
     setRecruiting(false)
-    setMine(false)
     setText('')
   }
 
   return (
-    <>
+    <div className="pb-16">
       <PageHeader
         scene="04"
         eyebrow="Clubs"
-        title={<>Every club,<br /><span className="italic text-gold">on the record.</span></>}
+        title={<>Find your <span className="italic text-gold">people.</span></>}
         aside={
           <div className="grid grid-cols-2 gap-5 border-line-strong sm:border-l sm:pl-6">
             <div>
@@ -76,133 +76,127 @@ function ClubIndex() {
           </div>
         }
       >
-        <p>Every approved club keeps a dossier here: what it does, who runs it, what’s on, and how to ask to join. No Instagram or WhatsApp hunting.</p>
+        <p>Every approved club, each on a page its own core team designs. Pick an area, open a cover, follow or apply.</p>
       </PageHeader>
 
-      <div className="mt-6 flex flex-col gap-3 lg:flex-row lg:items-center">
-        <label className="relative w-full lg:w-72">
+      {mine.length > 0 && (
+        <section aria-labelledby="your-clubs" className="mt-8">
+          <h2 id="your-clubs" className="eyebrow">Your clubs</h2>
+          <ul className="no-scrollbar mt-3 flex gap-3 overflow-x-auto pb-1">
+            {mine.map((c) => (
+              <li key={c.id} className="shrink-0">
+                <a href={href(`clubs/${c.id}`)} className="group flex w-64 items-center gap-3 border border-line p-2 transition-colors hover:border-line-strong">
+                  <ClubCover club={c} look={clubPage(c.id).look} size="mini" className="h-14 w-14 shrink-0">
+                    <span className="club-display grid h-full place-items-center text-xl text-paper">{c.mono}</span>
+                  </ClubCover>
+                  <span className="min-w-0">
+                    <span className="block truncate group-hover:text-gold">{c.name}</span>
+                    <span className="block text-xs text-mute">{joinRequests[c.id] ? 'Request sent' : 'Following'} · <Num>{upcomingByClub.get(c.id) ?? 0}</Num> upcoming</span>
+                  </span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      <div className="mt-8 flex flex-col gap-3 md:flex-row md:items-center">
+        <label className="relative w-full md:w-72">
           <span className="sr-only">Search clubs</span>
           <Icon name="search" className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-mute" />
-          <input className="field !h-10 !pl-9" type="search" placeholder="Search clubs" value={text} onChange={(e) => setText(e.target.value)} />
+          <input className="field !h-11 !pl-9" type="search" placeholder="Search clubs" value={text} onChange={(e) => setText(e.target.value)} />
         </label>
-        <div role="group" aria-label="Filter clubs" className="flex gap-2 overflow-x-auto no-scrollbar pb-1 lg:pb-0">
-          <button className="chip shrink-0" aria-pressed={recruiting} onClick={() => setRecruiting((x) => !x)}>Recruiting</button>
-          <button className="chip shrink-0" aria-pressed={mine} onClick={() => setMine((x) => !x)}>Following</button>
-          <span className="w-px shrink-0 bg-line" aria-hidden />
-          {CATEGORIES.map((c) => (
-            <button key={c} className="chip shrink-0" aria-pressed={cat === c} onClick={() => setCat(cat === c ? null : c)}>{c}</button>
-          ))}
-        </div>
+        <button className="chip h-11 shrink-0 self-start md:self-auto" aria-pressed={recruiting} onClick={() => setRecruiting((x) => !x)}>
+          <span aria-hidden className="h-2 w-2 bg-teal-bright" /> Recruiting now
+        </button>
+        {active && <button type="button" onClick={clear} className="hover-gold text-sm text-mute underline underline-offset-4 md:ml-auto">Clear</button>}
+      </div>
+      <div role="tablist" aria-label="Area" className="no-scrollbar mt-4 flex gap-1 overflow-x-auto border-b border-line">
+        {([null, ...CATEGORIES] as (Category | null)[]).map((k) => (
+          <button
+            key={k ?? 'all'}
+            role="tab"
+            aria-selected={cat === k}
+            onClick={() => setCat(k)}
+            className={`relative shrink-0 px-3.5 pt-2 pb-3 text-sm transition-colors ${cat === k ? 'text-paper' : 'text-mute hover-gold'}`}
+          >
+            {k ?? 'All'} <Num className="ml-1 text-xs text-mute">{k ? count(k) : clubs.length}</Num>
+            {cat === k && <span aria-hidden className="absolute inset-x-0 -bottom-px h-0.5 bg-gold" />}
+          </button>
+        ))}
       </div>
 
-      <div className="mt-5 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 border-b border-line pb-3">
-        <p className="eyebrow">The register</p>
-        <p className="text-sm text-mute">
-          <Num>{list.length}</Num> of <Num>{clubs.length}</Num> clubs
-          {active && (
-            <button type="button" onClick={clear} className="ml-3 text-gold underline decoration-gold/40 underline-offset-4 hover:decoration-gold">
-              Clear
-            </button>
-          )}
-        </p>
-      </div>
-
-      <div className="mt-4">
-        {q.status === 'loading' && <ClubIndexSkeleton />}
+      <div className="mt-6">
+        {q.status === 'loading' && (
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-4" aria-busy="true" aria-label="Loading clubs">
+            {Array.from({ length: 8 }, (_, i) => <div key={i} className="skeleton aspect-[4/5]" />)}
+          </div>
+        )}
         {q.status === 'error' && <ErrorState onRetry={q.retry} />}
         {q.status === 'ready' &&
           (list.length === 0 ? (
-            <EmptyState
-              title="No clubs match"
-              body={mine ? 'You aren’t following any clubs yet.' : 'Try another category or clear the search.'}
-              action={active ? <button className="btn" onClick={clear}>Clear filters</button> : undefined}
-            />
+            <EmptyState title="No clubs match" body="Try another area or clear the search." action={active ? <button className="btn" onClick={clear}>Clear filters</button> : undefined} />
           ) : (
-            <ul className="grid gap-4 lg:grid-cols-2">
-              {list.map((c) => (
-                <ClubCard
-                  key={c.id}
-                  c={c}
-                  page={clubPage(c.id)}
-                  index={order.get(c.id) ?? 1}
-                  upcoming={upcomingByClub.get(c.id) ?? 0}
-                  followed={followedClubs.includes(c.id)}
-                  requested={!!joinRequests[c.id]}
-                />
+            <ul className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-4">
+              {list.map((c, i) => (
+                <Reveal as="li" key={c.id} delay={Math.min(i, 8) * 0.035}>
+                  <ClubTile c={c} page={clubPage(c.id)} upcoming={upcomingByClub.get(c.id) ?? 0} requested={!!joinRequests[c.id]} />
+                </Reveal>
               ))}
             </ul>
           ))}
       </div>
-    </>
-  )
-}
-
-function ClubCard({ c, page, index, upcoming, followed, requested }: { c: Club; page: ClubPage; index: number; upcoming: number; followed: boolean; requested: boolean }) {
-  const status = requested ? 'Requested' : c.recruiting ? 'Recruiting' : followed ? 'Following' : null
-  const statusClass = requested ? 'tag-gold' : c.recruiting ? 'tag-teal' : ''
-
-  return (
-    <li className="group relative">
-      <a
-        href={href(`clubs/${c.id}`)}
-        className="absolute inset-0 z-10 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-gold"
-        aria-label={`Open the ${c.name} dossier`}
-      />
-      <div className="grid h-full overflow-hidden border border-line bg-slate-2/30 transition-colors group-hover:border-line-strong group-hover:bg-slate-2/60 sm:grid-cols-[8rem_minmax(0,1fr)] lg:grid-cols-[9rem_minmax(0,1fr)]">
-        <ClubPlate c={c} page={page} className="aspect-[16/6] sm:aspect-auto sm:h-full" />
-        <div className="flex min-w-0 flex-col p-4 sm:p-5">
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0">
-              <p className="slate-no">Dossier <Num>{String(index).padStart(2, '0')}</Num></p>
-              <h2 className="mt-1.5 font-display text-[clamp(1.35rem,1.15rem+0.7vw,1.85rem)] leading-[1.05] group-hover:text-gold">{c.name}</h2>
-            </div>
-            {status && <span className={`tag shrink-0 ${statusClass}`}>{status}</span>}
-          </div>
-          <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-mute">{c.tagline}</p>
-          <div className="mt-auto flex items-end justify-between gap-3 border-t border-line pt-3">
-            <p className="text-xs text-mute">
-              <Num>{c.members}</Num> members<span aria-hidden className="mx-1.5 text-line-strong">·</span>
-              {upcoming > 0 ? <><Num>{upcoming}</Num> upcoming</> : 'Nothing scheduled'}
-            </p>
-            <span className="inline-flex shrink-0 items-center gap-1.5 text-[0.64rem] font-bold tracking-[0.16em] uppercase text-gold">
-              Dossier <Icon name="arrow" className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
-            </span>
-          </div>
-        </div>
-      </div>
-    </li>
-  )
-}
-
-function ClubIndexSkeleton() {
-  return (
-    <div className="grid gap-4 lg:grid-cols-2" aria-busy="true" aria-label="Loading clubs">
-      {Array.from({ length: 6 }, (_, i) => (
-        <div key={i} className="grid border border-line sm:grid-cols-[8rem_minmax(0,1fr)] lg:grid-cols-[9rem_minmax(0,1fr)]">
-          <div className="skeleton aspect-[16/6] sm:aspect-auto sm:min-h-44" />
-          <div className="grid content-start gap-3 p-5">
-            <div className="skeleton h-2.5 w-20" />
-            <div className="skeleton h-6 w-40" />
-            <div className="skeleton h-3 w-full" />
-            <div className="skeleton h-3 w-2/3" />
-            <div className="skeleton mt-4 h-2.5 w-28" />
-          </div>
-        </div>
-      ))}
     </div>
   )
 }
 
-const TONE: Record<ClubPage['tone'], string> = {
-  gold: 'from-gold/25 via-gold/5',
-  teal: 'from-teal/70 via-teal/15',
-  slate: 'from-slate via-slate/30',
+function ClubTile({ c, page, upcoming, requested }: { c: Club; page: ClubPage; upcoming: number; requested: boolean }) {
+  const { followedClubs, toggleFollow } = useStore()
+  const following = followedClubs.includes(c.id)
+  return (
+    <div className="group relative">
+      <a href={href(`clubs/${c.id}`)} className="block focus-visible:outline-offset-2">
+        <ClubCover club={c} look={page.look} className="aspect-[4/5] transition-transform duration-500 ease-[cubic-bezier(0.2,0.7,0.1,1)] group-hover:-translate-y-1">
+          <div className="flex h-full flex-col p-3.5 sm:p-4">
+            <div className="flex items-start justify-between gap-2 pr-10">
+              <span className="eyebrow !text-[0.55rem] !text-gold">{c.category}</span>
+            </div>
+            <span aria-hidden className="club-display pointer-events-none absolute -right-2 bottom-[28%] text-[clamp(5rem,3rem+6vw,8rem)] leading-none text-paper/15">{c.mono}</span>
+            <div className="mt-auto">
+              {(requested || c.recruiting) && (
+                <span className={`tag mb-2 ${requested ? 'tag-gold' : 'tag-teal'}`}>{requested ? 'Requested' : 'Recruiting'}</span>
+              )}
+              <h2 className="club-display text-[clamp(1.3rem,1rem+1vw,1.9rem)] leading-[1.02] text-paper">{c.name}</h2>
+              <p className="mt-1.5 line-clamp-2 text-xs leading-relaxed text-mute sm:text-sm">{page.tagline}</p>
+              <p className="mt-3 border-t border-line pt-2.5 text-[0.7rem] text-mute">
+                <Num>{c.members + (following ? 1 : 0)}</Num> members · {upcoming ? <><Num>{upcoming}</Num> upcoming</> : 'quiet week'}
+              </p>
+            </div>
+          </div>
+        </ClubCover>
+      </a>
+      <button
+        type="button"
+        aria-pressed={following}
+        aria-label={following ? `Unfollow ${c.name}` : `Follow ${c.name}`}
+        onClick={() => toggleFollow(c.id)}
+        className="club-theme absolute top-2.5 right-2.5 z-10 grid h-9 w-9 place-items-center border border-line-strong transition-colors hover:border-gold"
+        style={themeStyle(page.look)}
+      >
+        <Icon name={following ? 'check' : 'plus'} className={`h-4 w-4 ${following ? 'text-gold' : ''}`} />
+      </button>
+    </div>
+  )
 }
 
-/** A club’s own dossier. The core team decides which sections show and in what order. */
+/* ------------------------------------------------------------------ */
+/* A club's own page, in its own theme and layout                      */
+/* ------------------------------------------------------------------ */
+
 function ClubDetail({ c }: { c: Club }) {
   const cat = useCatalog()
   const page = cat.clubPage(c.id)
+  const look = page.look
   const { profile, followedClubs, toggleFollow, joinRequests, withdrawJoin, setManaging } = useStore()
   const following = followedClubs.includes(c.id)
   const request = joinRequests[c.id]
@@ -223,9 +217,7 @@ function ClubDetail({ c }: { c: Club }) {
     if (!els.length) return
     const io = new IntersectionObserver(
       (entries) => {
-        const hit = entries
-          .filter((e) => e.isIntersecting)
-          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)[0]
+        const hit = entries.filter((e) => e.isIntersecting).sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)[0]
         if (hit) setCurrent(hit.target.id.replace('sec-', '') as ClubSection)
       },
       { rootMargin: '-24% 0px -62% 0px' },
@@ -235,6 +227,11 @@ function ClubDetail({ c }: { c: Club }) {
   }, [orderKey, current])
 
   const step = (s: ClubSection) => Math.max(1, order.indexOf(s) + 1)
+  const followBtn = (cls = 'btn') => (
+    <button className={cls} aria-pressed={following} onClick={() => toggleFollow(c.id)}>
+      <Icon name={following ? 'check' : 'plus'} className="h-4 w-4" /> {following ? 'Following' : 'Follow'}
+    </button>
+  )
 
   const join = guest ? (
     <a className="btn btn-gold" href="#/">Sign in to join</a>
@@ -243,6 +240,33 @@ function ClubDetail({ c }: { c: Club }) {
   ) : page.recruitment.open ? (
     <button className="btn btn-gold" onClick={() => setJoining(true)}>Apply to join</button>
   ) : null
+
+  const actions = (
+    <>
+      {join}
+      {followBtn()}
+      {page.contact.website && <a className="btn" href={page.contact.website} target="_blank" rel="noreferrer"><Icon name="globe" className="h-4 w-4" /> Website</a>}
+      <ShareButton path={`clubs/${c.id}`} title={c.name} />
+      {!guest && (
+        <button className="btn btn-sm" onClick={() => { setManaging(c.id); go(`host/${c.id}`) }}>
+          <Icon name="settings" className="h-4 w-4" /> Design this page
+        </button>
+      )}
+    </>
+  )
+
+  const status = request ? 'Requested' : page.recruitment.open ? 'Recruiting' : 'Not recruiting'
+  const stats = (narrow = false) => (
+    <dl className={`grid grid-cols-2 gap-px border border-line bg-line ${narrow ? '' : 'sm:grid-cols-4'}`}>
+      <Stat label="Members" value={c.members + (following ? 1 : 0)} />
+      <Stat label="Upcoming" value={upcoming.length} />
+      <Stat label="Founded" value={page.founded} />
+      <div className="bg-ink p-3">
+        <dt className="eyebrow !text-[0.55rem]">Status</dt>
+        <dd className="mt-1.5"><span className={`tag ${request ? 'tag-gold' : page.recruitment.open ? 'tag-teal' : ''}`}>{status}</span></dd>
+      </div>
+    </dl>
+  )
 
   const sections: Record<ClubSection, ReactNode> = {
     about: (
@@ -263,7 +287,7 @@ function ClubDetail({ c }: { c: Club }) {
     recruitment: (
       <Section id="recruitment" index={step('recruitment')} title="Recruitment">
         {page.recruitment.open ? (
-          <div className="border border-line-strong bg-slate-2/40">
+          <div className="border border-line-strong bg-slate-2">
             <div className="flex flex-wrap items-baseline justify-between gap-3 border-b border-line px-5 py-3.5 md:px-7">
               <p className="eyebrow !text-gold">{request ? 'Request with the core team' : 'Open now'}</p>
               {closes && <p className="text-xs text-mute">Closes <Num>{longDate(closes)}</Num></p>}
@@ -271,14 +295,10 @@ function ClubDetail({ c }: { c: Club }) {
             <div className="grid gap-6 p-5 md:grid-cols-[minmax(0,1fr)_auto] md:items-end md:p-7">
               <div>
                 <p className="max-w-[56ch] leading-relaxed">
-                  {request
-                    ? `Sent ${dayMonth(new Date(request.at))} for ${request.role || 'Member'}. They reply on your RVU email within a week.`
-                    : page.recruitment.message}
+                  {request ? `Sent ${dayMonth(new Date(request.at))} for ${request.role || 'Member'}. They reply on your RVU email within a week.` : page.recruitment.message}
                 </p>
                 {page.recruitment.roles.length > 0 && (
-                  <ul className="mt-4 flex flex-wrap gap-2">
-                    {page.recruitment.roles.map((r) => <li key={r} className="tag">{r}</li>)}
-                  </ul>
+                  <ul className="mt-4 flex flex-wrap gap-2">{page.recruitment.roles.map((r) => <li key={r} className="tag">{r}</li>)}</ul>
                 )}
               </div>
               <div className="md:self-end">{join}</div>
@@ -287,9 +307,7 @@ function ClubDetail({ c }: { c: Club }) {
         ) : (
           <div className="border border-line-strong p-5 md:p-7">
             <p className="max-w-[56ch] leading-relaxed text-mute">Not recruiting right now. Follow the club and you’ll hear when it opens.</p>
-            <button className="btn btn-sm mt-4" aria-pressed={following} onClick={() => toggleFollow(c.id)}>
-              <Icon name={following ? 'check' : 'plus'} className="h-4 w-4" /> {following ? 'Following' : 'Follow'}
-            </button>
+            <div className="mt-4">{followBtn('btn btn-sm')}</div>
           </div>
         )}
       </Section>
@@ -301,18 +319,16 @@ function ClubDetail({ c }: { c: Club }) {
         ) : (
           <div className="border border-dashed border-line-strong p-5 md:p-7">
             <p className="max-w-[48ch] text-mute">Nothing scheduled yet. Follow the club and its next event will reach you first.</p>
-            <button className="btn btn-sm mt-4" aria-pressed={following} onClick={() => toggleFollow(c.id)}>
-              <Icon name={following ? 'check' : 'plus'} className="h-4 w-4" /> {following ? 'Following' : 'Follow'}
-            </button>
+            <div className="mt-4">{followBtn('btn btn-sm')}</div>
           </div>
         )}
       </Section>
     ),
     leadership: (
       <Section id="leadership" index={step('leadership')} title="Current leadership" count={page.leadership.length}>
-        <ul className="grid gap-px border border-line bg-line sm:grid-cols-2 xl:grid-cols-3">
+        <ul className="grid gap-px border border-line bg-line sm:grid-cols-2">
           {page.leadership.map((m) => (
-            <li key={m.name + m.role} className="flex items-center gap-4 bg-ink p-4 transition-colors hover:bg-slate-2/60">
+            <li key={m.name + m.role} className="flex items-center gap-4 bg-ink p-4">
               <Monogram text={m.name.split(' ').map((w) => w[0]).join('').slice(0, 2)} size="sm" />
               <span className="min-w-0">
                 {m.studentId ? <a className="hover-gold block truncate" href={href(`people/${m.studentId}`)}>{m.name}</a> : <span className="block truncate">{m.name}</span>}
@@ -346,159 +362,150 @@ function ClubDetail({ c }: { c: Club }) {
     contact: (
       <Section id="contact" index={step('contact')} title="Contact">
         <ul className="grid gap-px border border-line bg-line sm:grid-cols-2">
-          {([
-            { icon: 'mail' as const, label: 'Email', value: page.contact.email, link: page.contact.email && `mailto:${page.contact.email}` },
-            { icon: 'globe' as const, label: 'Website', value: page.contact.website.replace(/^https?:\/\//, ''), link: page.contact.website },
-            { icon: 'image' as const, label: 'Instagram', value: page.contact.instagram, link: page.contact.instagram && `https://instagram.com/${page.contact.instagram.replace('@', '')}` },
-            { icon: 'chat' as const, label: 'WhatsApp', value: page.contact.whatsapp ? 'Community group' : '', link: page.contact.whatsapp },
-          ] as const)
+          {(
+            [
+              { icon: 'mail' as const, label: 'Email', value: page.contact.email, link: page.contact.email && `mailto:${page.contact.email}` },
+              { icon: 'globe' as const, label: 'Website', value: page.contact.website.replace(/^https?:\/\//, ''), link: page.contact.website },
+              { icon: 'image' as const, label: 'Instagram', value: page.contact.instagram, link: page.contact.instagram && `https://instagram.com/${page.contact.instagram.replace('@', '')}` },
+              { icon: 'chat' as const, label: 'WhatsApp', value: page.contact.whatsapp ? 'Community group' : '', link: page.contact.whatsapp },
+            ] as const
+          )
             .filter((item) => item.value)
             .map((item) => <ContactItem key={item.label} {...item} />)}
-          {[page.contact.email, page.contact.website.replace(/^https?:\/\//, ''), page.contact.instagram, page.contact.whatsapp].filter(Boolean).length % 2 === 1 && <li aria-hidden className="bg-ink" />}
+          {[page.contact.email, page.contact.website, page.contact.instagram, page.contact.whatsapp].filter(Boolean).length % 2 === 1 && <li aria-hidden className="bg-ink" />}
         </ul>
       </Section>
     ),
   }
 
-  return (
-    <>
-      <header className="relative -mx-4 overflow-hidden border-b border-line-strong px-4 pt-6 pb-8 md:-mx-8 md:px-8 md:pt-10 md:pb-12">
-        <div aria-hidden className={`absolute inset-0 bg-gradient-to-br ${TONE[page.tone]} to-transparent opacity-70`} />
-        <div aria-hidden className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-gold/70 via-gold/20 to-transparent" />
-        <div className="relative">
-          <a href={href('clubs')} className="hover-gold inline-flex items-center gap-2 text-sm text-mute">
-            <Icon name="arrow-left" className="h-4 w-4" /> All clubs
-          </a>
-
-          <div className="mt-6 grid gap-8 lg:grid-cols-[minmax(0,1fr)_18rem] lg:items-start xl:grid-cols-[minmax(0,1fr)_20rem]">
-            <div>
-              <p className="slate-no">Sc. 04 · {c.category} · founded <Num>{page.founded}</Num></p>
-              <Reveal>
-                <h1 className="mt-3 text-[clamp(2.7rem,2rem+4vw,5.2rem)] leading-[0.94]">{c.name}</h1>
-                <p className="mt-4 max-w-[48ch] text-lg leading-relaxed text-mute">{page.tagline}</p>
-              </Reveal>
-
-              <dl className="mt-7 grid grid-cols-2 gap-px border border-line bg-line sm:grid-cols-4">
-                <Stat label="Members" value={c.members + (following ? 1 : 0)} />
-                <Stat label="Upcoming" value={upcoming.length} />
-                <Stat label="Founded" value={page.founded} />
-                <div className="bg-ink/80 p-3">
-                  <dt className="eyebrow !text-[0.55rem]">Status</dt>
-                  <dd className="mt-1.5">
-                    <span className={`tag ${request ? 'tag-gold' : page.recruitment.open ? 'tag-teal' : ''}`}>
-                      {request ? 'Requested' : page.recruitment.open ? 'Recruiting' : 'Not recruiting'}
-                    </span>
-                  </dd>
-                </div>
-              </dl>
-
-              <div className="mt-6 flex flex-wrap gap-2 sm:gap-3">
-                {join}
-                <button className="btn" aria-pressed={following} onClick={() => toggleFollow(c.id)}>
-                  <Icon name={following ? 'check' : 'plus'} className="h-4 w-4" /> {following ? 'Following' : 'Follow'}
-                </button>
-                {page.contact.website && (
-                  <a className="btn" href={page.contact.website} target="_blank" rel="noreferrer"><Icon name="globe" className="h-4 w-4" /> Website</a>
-                )}
-                <ShareButton path={`clubs/${c.id}`} title={c.name} />
-                {!guest && (
-                  <button className="btn btn-sm sm:ml-auto" onClick={() => { setManaging(c.id); go(`host/${c.id}`) }}>
-                    <Icon name="settings" className="h-4 w-4" /> Manage page
-                  </button>
-                )}
-              </div>
-            </div>
-
-            <div className="lg:pt-1">
-              <div className="group relative">
-                <ClubPlate c={c} page={page} variant="cover" className="aspect-[16/7] sm:aspect-[16/6] lg:aspect-[4/5]" />
-                <div aria-hidden className="pointer-events-none absolute inset-0 flex items-end bg-ink/85 p-4 opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-within:opacity-100">
-                  <p className="text-sm leading-relaxed text-paper">{page.about.split('. ')[0]}.</p>
-                </div>
-              </div>
-              <ContactRail contact={page.contact} name={c.name} />
-            </div>
-          </div>
-        </div>
-      </header>
-
-      <nav aria-label="On this page" className="sticky top-16 z-20 -mx-4 overflow-x-auto border-b border-line bg-ink/90 px-4 backdrop-blur no-scrollbar md:top-20 md:-mx-8 md:px-8">
-        <ul className="flex gap-5 whitespace-nowrap py-3 text-sm md:gap-7">
-          {order.map((s) => (
-            <li key={s}>
-              <a
-                href={`#/clubs/${c.id}`}
-                aria-current={current === s ? 'location' : undefined}
-                className={`hover-gold inline-flex items-center gap-2 ${current === s ? 'text-gold' : 'text-mute'}`}
-                onClick={(e) => {
-                  e.preventDefault()
-                  document.getElementById(`sec-${s}`)?.scrollIntoView({ behavior: 'smooth' })
-                }}
-              >
-                <Num className="text-[0.6rem] opacity-60">{String(step(s)).padStart(2, '0')}</Num>
-                {CLUB_SECTIONS.find((x) => x.id === s)!.label}
-              </a>
-            </li>
-          ))}
-        </ul>
-      </nav>
-
-      <div className="grid gap-12 py-10 md:py-14 lg:grid-cols-[minmax(0,1fr)_16rem] lg:gap-16">
-        <div className="grid gap-14 md:gap-20">{order.map((s) => <div key={s}>{sections[s]}</div>)}</div>
-
-        <aside className="hidden lg:block">
-          <div className="sticky top-32 grid gap-4">
-            <div className="border border-line-strong bg-slate-2/40 p-5">
-              <p className="eyebrow">Next up</p>
-              {upcoming[0] ? (
-                <button onClick={() => openEvent(upcoming[0].id)} className="mt-3 block w-full text-left">
-                  <span className="block font-display text-xl leading-tight hover:text-gold">{upcoming[0].title}</span>
-                  <span className="mt-1 block text-xs text-mute"><Num>{longDate(upcoming[0].start)}</Num> · {upcoming[0].venue}</span>
-                </button>
-              ) : (
-                <p className="mt-2 text-sm text-mute">Nothing scheduled.</p>
-              )}
-            </div>
-
-            <div className="border border-line-strong bg-slate-2/40 p-5">
-              <p className="eyebrow">Ways in</p>
-              <ContactRail contact={page.contact} name={c.name} />
-              {page.contact.email && <p className="mt-3 truncate text-xs text-mute">{page.contact.email}</p>}
-            </div>
-
-            <div className="border border-line-strong bg-slate-2/40 p-5">
-              <p className="eyebrow">Keep close</p>
-              <p className="mt-2 text-sm leading-relaxed text-mute">Follow the club and its next event, recruitment window and archive land here first.</p>
-              <button className="btn btn-sm mt-4 w-full" aria-pressed={following} onClick={() => toggleFollow(c.id)}>
-                <Icon name={following ? 'check' : 'plus'} className="h-4 w-4" /> {following ? 'Following' : 'Follow'}
-              </button>
-            </div>
-          </div>
-        </aside>
-      </div>
-
-      {!guest && <JoinDialog c={c} page={page} open={joining} onClose={() => setJoining(false)} />}
-    </>
+  const back = (
+    <a href={href('clubs')} className="hover-gold inline-flex items-center gap-2 text-sm text-mute">
+      <Icon name="arrow-left" className="h-4 w-4" /> All clubs
+    </a>
   )
-}
+  const slate = <p className="slate-no !text-gold">Sc. 04 · {c.category} · founded <Num>{page.founded}</Num></p>
 
-/** The drawn portrait: a monogram on a stage, inside a hairline frame. */
-function ClubPlate({ c, page, variant = 'card', className = '' }: { c: Club; page: ClubPage; variant?: 'card' | 'cover'; className?: string }) {
-  const cover = variant === 'cover'
-  return (
-    <div aria-hidden data-tone={page.tone} className={`club-plate stage-dark ${className}`}>
-      <span className="club-plate__rule" />
-      <div className="flex h-full flex-col justify-between p-3 sm:p-4">
-        <div className="flex items-start justify-between gap-2">
-          <span className="eyebrow !text-[0.55rem] !tracking-[0.2em]">Sc. 04</span>
-          <span className="num text-[0.6rem] text-gold">{page.founded}</span>
-        </div>
-        <span className={`club-plate__mono self-center text-center ${cover ? 'text-[clamp(4rem,9vw,8rem)]' : 'text-[clamp(2.4rem,5vw,4rem)]'}`}>{c.mono}</span>
-        <div className="flex items-end justify-between gap-2">
-          <span className="text-[0.52rem] font-bold tracking-[0.14em] whitespace-nowrap uppercase text-paper/70">{c.category}</span>
-          <span className="num text-[0.6rem] text-paper/60">{c.members}</span>
-        </div>
+  const sectionNav = (
+    <nav aria-label="On this page" className="sticky top-16 z-20 overflow-x-auto border-b border-line bg-ink/95 backdrop-blur no-scrollbar md:top-20">
+      <ul className="flex gap-5 whitespace-nowrap py-3 text-sm md:gap-7">
+        {order.map((s) => (
+          <li key={s}>
+            <a
+              href={`#/clubs/${c.id}`}
+              aria-current={current === s ? 'location' : undefined}
+              className={`hover-gold inline-flex items-center gap-2 ${current === s ? 'text-gold' : 'text-mute'}`}
+              onClick={(e) => {
+                e.preventDefault()
+                document.getElementById(`sec-${s}`)?.scrollIntoView({ behavior: 'smooth' })
+              }}
+            >
+              <Num className="text-[0.6rem] opacity-60">{String(step(s)).padStart(2, '0')}</Num>
+              {CLUB_SECTIONS.find((x) => x.id === s)!.label}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  )
+
+  const nextUp = (
+    <div className="border border-line-strong bg-slate-2 p-5">
+      <p className="eyebrow">Next up</p>
+      {upcoming[0] ? (
+        <button onClick={() => openEvent(upcoming[0].id)} className="mt-3 block w-full text-left">
+          <span className="block font-display text-xl leading-tight hover:text-gold">{upcoming[0].title}</span>
+          <span className="mt-1 block text-xs text-mute"><Num>{longDate(upcoming[0].start)}</Num> · {upcoming[0].venue}</span>
+        </button>
+      ) : (
+        <p className="mt-2 text-sm text-mute">Nothing scheduled.</p>
+      )}
+    </div>
+  )
+
+  let body: ReactNode
+  if (look.layout === 'split') {
+    body = (
+      <div className="grid gap-10 pt-6 pb-14 lg:grid-cols-[22rem_minmax(0,1fr)] lg:gap-16">
+        <aside className="lg:sticky lg:top-24 lg:self-start">
+          {back}
+          <ClubCover club={c} look={look} className="mt-5 aspect-square" />
+          <div className="mt-6">{slate}</div>
+          <Reveal>
+            <h1 className="club-display mt-3 text-[clamp(2.4rem,1.8rem+2.4vw,3.6rem)] leading-[0.95]">{c.name}</h1>
+            <p className="mt-3 leading-relaxed text-mute">{page.tagline}</p>
+          </Reveal>
+          <div className="mt-6">{stats(true)}</div>
+          <div className="mt-5 flex flex-wrap gap-2">{actions}</div>
+          <div className="mt-5"><ContactRail contact={page.contact} name={c.name} /></div>
+          <div className="mt-5">{nextUp}</div>
+        </aside>
+        <div className="grid gap-14 md:gap-20 lg:pt-12">{order.map((s) => <div key={s}>{sections[s]}</div>)}</div>
       </div>
+    )
+  } else if (look.layout === 'poster') {
+    body = (
+      <>
+        <header className="pt-6 pb-8 md:pb-12">
+          {back}
+          <div className="mt-8">{slate}</div>
+          <Reveal>
+            <h1 className="club-display mt-3 text-[clamp(3.4rem,1.5rem+9vw,10.5rem)] leading-[0.86] break-words">{c.name}</h1>
+          </Reveal>
+          <ClubCover club={c} look={look} className="mt-8 min-h-48 md:min-h-60">
+            <div className="grid h-full gap-6 p-5 md:grid-cols-[minmax(0,1fr)_auto] md:items-end md:p-8">
+              <p className="max-w-[44ch] text-lg leading-relaxed md:text-xl">{page.tagline}</p>
+              <div className="flex flex-wrap gap-2">{actions}</div>
+            </div>
+          </ClubCover>
+          <div className="mt-px">{stats()}</div>
+        </header>
+        {sectionNav}
+        <div className="grid gap-4 py-10 md:py-14 lg:grid-flow-row-dense lg:grid-cols-2">
+          {order.map((s) => (
+            <div key={s} className={`border border-line bg-slate-2 p-5 md:p-8 ${s === 'about' || s === 'archive' || s === 'upcoming' ? 'lg:col-span-2' : ''}`}>{sections[s]}</div>
+          ))}
+        </div>
+      </>
+    )
+  } else {
+    body = (
+      <>
+        <header className="pt-6 pb-8 md:pb-12">
+          {back}
+          <ClubCover club={c} look={look} size="hero" className="mt-5 min-h-[22rem] md:aspect-[21/8] md:min-h-0">
+            <div className="flex h-full flex-col justify-end p-5 md:p-10">
+              <span aria-hidden className="club-display pointer-events-none absolute top-4 right-6 text-[clamp(6rem,3rem+12vw,15rem)] leading-none text-paper/10">{c.mono}</span>
+              {slate}
+              <Reveal>
+                <h1 className="club-display mt-3 text-[clamp(2.7rem,1.8rem+4.4vw,5.8rem)] leading-[0.92]">{c.name}</h1>
+                <p className="mt-3 max-w-[48ch] text-lg leading-relaxed text-mute">{page.tagline}</p>
+              </Reveal>
+            </div>
+          </ClubCover>
+          <div className="mt-px">{stats()}</div>
+          <div className="mt-6 flex flex-wrap gap-2 sm:gap-3">{actions}</div>
+        </header>
+        {sectionNav}
+        <div className="grid gap-12 py-10 md:py-14 lg:grid-cols-[minmax(0,1fr)_16rem] lg:gap-16">
+          <div className="grid gap-14 md:gap-20">{order.map((s) => <div key={s}>{sections[s]}</div>)}</div>
+          <aside className="hidden lg:block">
+            <div className="sticky top-32 grid gap-4">
+              {nextUp}
+              <div className="border border-line-strong bg-slate-2 p-5">
+                <p className="eyebrow">Ways in</p>
+                <div className="mt-3"><ContactRail contact={page.contact} name={c.name} /></div>
+              </div>
+            </div>
+          </aside>
+        </div>
+      </>
+    )
+  }
+
+  return (
+    <div className="club-theme club-bleed" data-type={look.type} data-layout={look.layout} style={themeStyle(look)}>
+      {body}
+      {!guest && <JoinDialog c={c} page={page} open={joining} onClose={() => setJoining(false)} />}
     </div>
   )
 }
