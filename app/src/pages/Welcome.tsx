@@ -1,5 +1,5 @@
 import { motion, useReducedMotion } from 'framer-motion'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { LinksFields, linksValid, normaliseLink } from '../components/LinksFields'
 import { blankLinks, clearPending, pendingIdentity } from '../components/SignIn'
 import { DOLLY, Icon, Logo, Num } from '../components/ui'
@@ -21,6 +21,14 @@ export default function Welcome() {
   const [interests, setInterests] = useState<Category[]>(profile?.interests ?? [])
   const [links, setLinks] = useState<Links>(profile?.links ?? blankLinks)
   const [tried, setTried] = useState(false)
+
+  useEffect(() => {
+    if (profile && profile.name !== 'Guest' && profile.year && profile.school && !pendingIdentity()) {
+      go('home')
+    } else if (!who) {
+      go('')
+    }
+  }, [profile, who])
 
   if (!who) return null
   const first = who.name.split(' ')[0]

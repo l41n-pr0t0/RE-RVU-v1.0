@@ -21,5 +21,12 @@ export function applyTheme(theme: Theme): void {
   } catch {
     /* storage blocked: theme still applies for this page view */
   }
+  try {
+    if (typeof window !== 'undefined' && window.location.search.includes('theme=')) {
+      const url = new URL(window.location.href)
+      url.searchParams.delete('theme')
+      window.history.replaceState({}, '', url.pathname + (url.search ? url.search : '') + url.hash)
+    }
+  } catch {}
   window.dispatchEvent(new CustomEvent('rvu-theme', { detail: theme }))
 }

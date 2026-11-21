@@ -50,11 +50,26 @@ export default function Landing() {
   }, [events, now])
   const weekItems = useMemo<Featured[]>(() => week.map((e) => ({ kind: 'event', e })), [week])
 
+  const [, setTheme] = useState(() => (typeof document !== 'undefined' ? document.documentElement.dataset.theme : 'dark'))
+  useEffect(() => {
+    const onTheme = (e: CustomEvent) => setTheme(e.detail)
+    window.addEventListener('rvu-theme', onTheme as EventListener)
+    return () => window.removeEventListener('rvu-theme', onTheme as EventListener)
+  }, [])
+
   const guest = (then = 'home') => {
-    setProfile({ name: 'Guest', email: '', year: 1, school: SCHOOLS[0], role: 'Student', interests: [], links: blankLinks, skills: [], openToCollaborate: false, bio: '' })
+    if (!profile || profile.name === 'Guest') {
+      setProfile({ name: 'Guest', email: '', year: 1, school: SCHOOLS[0], role: 'Student', interests: [], links: blankLinks, skills: [], openToCollaborate: false, bio: '' })
+    }
     go(then)
   }
-  const start = () => (profile ? go('home') : setSignIn(true))
+  const start = () => {
+    if (profile && profile.name !== 'Guest' && profile.year && profile.school) {
+      go('home')
+    } else {
+      setSignIn(true)
+    }
+  }
   const open = (f: Featured) => {
     const path = f.kind === 'event' ? `events/${f.e.id}` : `clubs/${f.c.id}`
     if (profile) go(path)
@@ -73,7 +88,7 @@ export default function Landing() {
           </SceneGuard>
         </div>
         {/* Legibility: darker where the words are, open where the campus is */}
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgb(244_240_230/.6)_0%,transparent_24%,transparent_45%,rgb(244_240_230/.9)_88%)] md:bg-[linear-gradient(90deg,rgb(244_240_230/.9)_0%,rgb(244_240_230/.55)_36%,transparent_64%),linear-gradient(180deg,rgb(244_240_230/.55)_0%,transparent_18%,transparent_72%,rgb(244_240_230/.75)_100%)]" />
+        <div className="landing-scrim absolute inset-0 transition-colors duration-500" />
         <div className="grain absolute inset-0" />
       </div>
 

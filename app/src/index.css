@@ -264,6 +264,18 @@
 :root[data-theme="light"] .stage-dark .logo-dark-theme { display: inline-block; }
 :root[data-theme="light"] .stage-dark .logo-light-theme { display: none; }
 
+/* Landing page backdrop overlay: adapts to dark (--color-ink = #000) and light (--color-ink = #f4f0e6) */
+.landing-scrim {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--color-ink) 70%, transparent) 0%, transparent 24%, transparent 45%, color-mix(in srgb, var(--color-ink) 92%, transparent) 88%);
+}
+@media (min-width: 768px) {
+  .landing-scrim {
+    background:
+      linear-gradient(90deg, color-mix(in srgb, var(--color-ink) 92%, transparent) 0%, color-mix(in srgb, var(--color-ink) 55%, transparent) 36%, transparent 64%),
+      linear-gradient(180deg, color-mix(in srgb, var(--color-ink) 55%, transparent) 0%, transparent 18%, transparent 72%, color-mix(in srgb, var(--color-ink) 80%, transparent) 100%);
+  }
+}
+
 /* Always-dark surfaces (the landing "screen") re-assert the dark tokens in either theme */
 .stage-dark {
   --color-ink: #000000;

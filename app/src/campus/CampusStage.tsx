@@ -21,7 +21,7 @@ const RVU_CENTRE: [number, number] = [77.50169, 12.92254]
  * - Stops rendering when the tab is hidden (efficient-background-processing).
  */
 
-const NIGHT = {
+const LIGHT_PALETTE = {
   ground: '#EAE4D6',
   context: '#E2DCCF',
   contextTop: '#CFC7B5',
@@ -32,12 +32,36 @@ const NIGHT = {
   building: '#D3D0C6',
   rvu: '#C29650',
   gold: '#D7AC54',
+  sky: '#F4F0E6',
+  fog: '#EAE4D6',
+  horizon: '#D3CBBB',
+  lightColor: '#fff4dc',
+  lightIntensity: 0.42,
+}
+
+const DARK_PALETTE = {
+  ground: '#06090c',
+  context: '#0e1419',
+  contextTop: '#141d24',
+  road: '#162028',
+  campusRoad: '#202d38',
+  path: '#263642',
+  green: '#0a1614',
+  building: '#18232c',
+  rvu: '#233039',
+  gold: '#D7AC54',
+  sky: '#000000',
+  fog: '#06090c',
+  horizon: '#10171c',
+  lightColor: '#ffe4a0',
+  lightIntensity: 0.55,
 }
 
 const height = (fallback: number) =>
   ['*', ['coalesce', ['get', 'levels'], fallback], 3.6] as unknown as ExpressionSpecification
 
-function style(): StyleSpecification {
+function style(dark: boolean): StyleSpecification {
+  const c = dark ? DARK_PALETTE : LIGHT_PALETTE
   const src = (name: string) => ({ type: 'geojson' as const, data: `${import.meta.env.BASE_URL}atlas/${name}.geojson` })
   return {
     version: 8,
@@ -50,36 +74,36 @@ function style(): StyleSpecification {
       buildings: src('buildings'),
     },
     sky: {
-      'sky-color': '#F4F0E6',
-      'horizon-color': '#D3CBBB',
-      'fog-color': '#EAE4D6',
+      'sky-color': c.sky,
+      'horizon-color': c.horizon,
+      'fog-color': c.fog,
       'sky-horizon-blend': 0.7,
       'horizon-fog-blend': 0.6,
       'fog-ground-blend': 0.35,
     },
-    light: { anchor: 'map', color: '#fff4dc', intensity: 0.42, position: [1.3, 200, 35] },
+    light: { anchor: 'map', color: c.lightColor, intensity: c.lightIntensity, position: [1.3, 200, 35] },
     layers: [
-      { id: 'ground', type: 'background', paint: { 'background-color': NIGHT.ground } },
-      { id: 'ctx-road', type: 'line', source: 'context', filter: ['==', ['get', 'kind'], 'road'], paint: { 'line-opacity': 0.45, 'line-color': NIGHT.road, 'line-width': ['interpolate', ['linear'], ['zoom'], 14, 1, 18, 6] } },
-      { id: 'green', type: 'fill', source: 'green', paint: { 'fill-color': NIGHT.green, 'fill-opacity': 0.85 } },
-      { id: 'road', type: 'line', source: 'roads', layout: { 'line-cap': 'butt' }, paint: { 'line-color': NIGHT.campusRoad, 'line-width': ['interpolate', ['linear'], ['zoom'], 14, 1.5, 18, 9] } },
-      { id: 'path', type: 'line', source: 'paths', paint: { 'line-color': NIGHT.path, 'line-width': ['interpolate', ['linear'], ['zoom'], 15, 0.5, 18, 2.5], 'line-dasharray': [2, 1.5] } },
-      { id: 'boundary', type: 'line', source: 'boundary', paint: { 'line-color': NIGHT.gold, 'line-opacity': 0.45, 'line-width': 1.2, 'line-dasharray': [3, 2] } },
-      { id: 'ground-on', type: 'fill', source: 'green', filter: ['==', ['get', 'id'], ''], paint: { 'fill-color': NIGHT.gold, 'fill-opacity': 0.42 } },
-      { id: 'ground-on-edge', type: 'line', source: 'green', filter: ['==', ['get', 'id'], ''], paint: { 'line-color': NIGHT.gold, 'line-width': 2 } },
+      { id: 'ground', type: 'background', paint: { 'background-color': c.ground } },
+      { id: 'ctx-road', type: 'line', source: 'context', filter: ['==', ['get', 'kind'], 'road'], paint: { 'line-opacity': 0.45, 'line-color': c.road, 'line-width': ['interpolate', ['linear'], ['zoom'], 14, 1, 18, 6] } },
+      { id: 'green', type: 'fill', source: 'green', paint: { 'fill-color': c.green, 'fill-opacity': dark ? 0.6 : 0.85 } },
+      { id: 'road', type: 'line', source: 'roads', layout: { 'line-cap': 'butt' }, paint: { 'line-color': c.campusRoad, 'line-width': ['interpolate', ['linear'], ['zoom'], 14, 1.5, 18, 9] } },
+      { id: 'path', type: 'line', source: 'paths', paint: { 'line-color': c.path, 'line-width': ['interpolate', ['linear'], ['zoom'], 15, 0.5, 18, 2.5], 'line-dasharray': [2, 1.5] } },
+      { id: 'boundary', type: 'line', source: 'boundary', paint: { 'line-color': c.gold, 'line-opacity': 0.45, 'line-width': 1.2, 'line-dasharray': [3, 2] } },
+      { id: 'ground-on', type: 'fill', source: 'green', filter: ['==', ['get', 'id'], ''], paint: { 'fill-color': c.gold, 'fill-opacity': 0.42 } },
+      { id: 'ground-on-edge', type: 'line', source: 'green', filter: ['==', ['get', 'id'], ''], paint: { 'line-color': c.gold, 'line-width': 2 } },
       {
         id: 'ctx-building',
         type: 'fill-extrusion',
         source: 'context',
         filter: ['==', ['get', 'kind'], 'building'],
-        paint: { 'fill-extrusion-color': NIGHT.context, 'fill-extrusion-height': height(2), 'fill-extrusion-opacity': 0.4 },
+        paint: { 'fill-extrusion-color': c.context, 'fill-extrusion-height': height(2), 'fill-extrusion-opacity': dark ? 0.6 : 0.4 },
       },
       {
         id: 'building',
         type: 'fill-extrusion',
         source: 'buildings',
         paint: {
-          'fill-extrusion-color': ['case', ['==', ['get', 'owner'], 'rvu'], NIGHT.rvu, NIGHT.building],
+          'fill-extrusion-color': ['case', ['==', ['get', 'owner'], 'rvu'], c.rvu, c.building],
           'fill-extrusion-height': ['case', ['==', ['get', 'owner'], 'rvu'], ['+', height(3), 3], height(3)],
           'fill-extrusion-opacity': 0.96,
         },
@@ -89,7 +113,7 @@ function style(): StyleSpecification {
         type: 'fill-extrusion',
         source: 'buildings',
         filter: ['==', ['get', 'id'], ''],
-        paint: { 'fill-extrusion-color': NIGHT.gold, 'fill-extrusion-height': ['+', height(3), 1.5], 'fill-extrusion-opacity': 1 },
+        paint: { 'fill-extrusion-color': c.gold, 'fill-extrusion-height': ['+', height(3), 1.5], 'fill-extrusion-opacity': 1 },
       },
     ],
   }
@@ -112,9 +136,11 @@ export default function CampusStage({ focus, paused, onReady }: Props) {
     state.current.reduce = reduce
     const narrow = el.clientWidth < 768
 
+    const isDark = () => (typeof document !== 'undefined' ? document.documentElement.dataset.theme !== 'light' : true)
+
     const map = new MLMap({
       container: el,
-      style: style(),
+      style: style(isDark()),
       center: RVU_CENTRE,
       zoom: narrow ? 16.6 : 17.1,
       pitch: narrow ? 52 : 58,
@@ -165,7 +191,14 @@ export default function CampusStage({ focus, paused, onReady }: Props) {
     const ro = new ResizeObserver(() => map.resize())
     ro.observe(el)
 
+    const onTheme = (e: CustomEvent) => {
+      const dark = e.detail !== 'light'
+      map.setStyle(style(dark))
+    }
+    window.addEventListener('rvu-theme', onTheme as EventListener)
+
     return () => {
+      window.removeEventListener('rvu-theme', onTheme as EventListener)
       cancelAnimationFrame(raf)
       ro.disconnect()
       map.remove()

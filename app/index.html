@@ -14,7 +14,7 @@
           t = params.get("theme");
           if (!t) t = localStorage.getItem("rvu-connect:theme-v2");
         } catch (e) {}
-        if (t !== "light" && t !== "dark") t = "light"; // first visit opens in the light theme
+        if (t !== "light" && t !== "dark") t = "dark";
         var r = document.documentElement;
         r.dataset.theme = t;
         r.style.colorScheme = t;

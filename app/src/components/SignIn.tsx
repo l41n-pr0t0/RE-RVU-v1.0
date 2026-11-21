@@ -32,6 +32,19 @@ export const pendingIdentity = (): Identity | null => {
 export const clearPending = () => sessionStorage.removeItem(PENDING)
 
 function finish(who: Identity) {
+  try {
+    const raw = localStorage.getItem('rvu-connect:v3')
+    if (raw) {
+      const s = JSON.parse(raw)
+      const p = s.profile
+      if (p && p.name !== 'Guest' && p.email?.toLowerCase() === who.email.toLowerCase() && p.year && p.school) {
+        // Details already filled and saved: proceed straight to home without asking again
+        sessionStorage.removeItem(PENDING)
+        go('home')
+        return
+      }
+    }
+  } catch {}
   sessionStorage.setItem(PENDING, JSON.stringify(who))
   go('welcome')
 }
@@ -134,24 +147,42 @@ function RealGoogle({ clientId }: { clientId: string }) {
 function DemoChooser() {
   const [other, setOther] = useState(false)
   const [email, setEmail] = useState('')
+  const [name, setName] = useState('')
   const fieldId = useId()
   const hintId = useId()
   const errId = useId()
   const valid = isRvuEmail(email)
-  const demoName = identityFromEmail(DEMO_ACCOUNT).name
 
-  const pick = (address: string) => finish({ name: identityFromEmail(address).name, email: address.toLowerCase(), via: 'demo' })
+  // Use currently saved student profile if one exists
+  let savedProfile: { name: string; email: string } | null = null
+  try {
+    const raw = localStorage.getItem('rvu-connect:v3')
+    if (raw) {
+      const p = JSON.parse(raw).profile
+      if (p && p.name && p.name !== 'Guest' && p.email) {
+        savedProfile = { name: p.name, email: p.email }
+      }
+    }
+  } catch {}
+
+  const defaultAccount = savedProfile ? savedProfile.email : DEMO_ACCOUNT
+  const defaultName = savedProfile ? savedProfile.name : identityFromEmail(DEMO_ACCOUNT).name
+
+  const pick = (address: string, customName?: string) => {
+    const resolvedName = customName?.trim() || identityFromEmail(address).name
+    finish({ name: resolvedName, email: address.toLowerCase(), via: 'demo' })
+  }
 
   return (
     <div className="px-5 py-6 md:px-7 md:py-7">
       <p className="text-mute">Choose an account to continue to RVU Connect.</p>
       <ul className="mt-5 border-y border-line">
         <li>
-          <button className="row-hover flex w-full items-center gap-4 px-1 py-4 text-left" onClick={() => pick(DEMO_ACCOUNT)} autoFocus>
-            <span className="grid h-11 w-11 shrink-0 place-items-center bg-gold font-semibold text-[#000]">{initials(demoName)}</span>
+          <button className="row-hover flex w-full items-center gap-4 px-1 py-4 text-left" onClick={() => pick(defaultAccount, defaultName)} autoFocus>
+            <span className="grid h-11 w-11 shrink-0 place-items-center bg-gold font-semibold text-[#000]">{initials(defaultName)}</span>
             <span className="min-w-0 flex-1">
-              <span className="block font-semibold">{demoName}</span>
-              <span className="block truncate text-sm text-mute">{DEMO_ACCOUNT}</span>
+              <span className="block font-semibold">{defaultName}</span>
+              <span className="block truncate text-sm text-mute">{defaultAccount}</span>
             </span>
             <Icon name="arrow" className="h-4 w-4 text-mute" />
           </button>
@@ -168,32 +199,46 @@ function DemoChooser() {
 
       {other && (
         <form
-          className="field-wrap mt-5"
+          className="field-wrap mt-5 space-y-3"
           noValidate={false}
           onSubmit={(e) => {
             e.preventDefault()
-            if (valid) pick(email)
+            if (valid) pick(email, name)
           }}
         >
-          <label htmlFor={fieldId} className="eyebrow">RVU email</label>
-          <p id={hintId} className="mt-1 text-sm text-mute">Ends in @rvu.edu.in</p>
-          <div className="mt-2 flex gap-2">
+          <div>
+            <label htmlFor={`${fieldId}-name`} className="eyebrow">Your name (optional)</label>
             <input
-              id={fieldId}
-              type="email"
-              required
-              autoComplete="email"
-              inputMode="email"
-              pattern="[^@\s]+@rvu\.edu\.in"
-              className="field min-w-0 flex-1"
-              value={email}
-              onChange={(e) => setEmail(e.target.value.trim())}
-              aria-describedby={`${hintId} ${errId}`}
-              autoFocus
+              id={`${fieldId}-name`}
+              type="text"
+              placeholder="e.g. Alex Sharma"
+              className="field mt-1"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
             />
-            <button className="btn btn-gold" type="submit">Next</button>
           </div>
-          <p id={errId} className="field-error mt-2 text-sm">Error: use your @rvu.edu.in address.</p>
+          <div>
+            <label htmlFor={fieldId} className="eyebrow">RVU email</label>
+            <p id={hintId} className="mt-1 text-sm text-mute">Ends in @rvu.edu.in</p>
+            <div className="mt-2 flex gap-2">
+              <input
+                id={fieldId}
+                type="email"
+                required
+                autoComplete="email"
+                inputMode="email"
+                pattern="[^@\s]+@rvu\.edu\.in"
+                className="field min-w-0 flex-1"
+                placeholder="nameprogramme25@rvu.edu.in"
+                value={email}
+                onChange={(e) => setEmail(e.target.value.trim())}
+                aria-describedby={`${hintId} ${errId}`}
+                autoFocus
+              />
+              <button className="btn btn-gold" type="submit">Next</button>
+            </div>
+            <p id={errId} className="field-error mt-2 text-sm">Error: use your @rvu.edu.in address.</p>
+          </div>
         </form>
       )}
 

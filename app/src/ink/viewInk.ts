@@ -196,52 +196,52 @@ export function switchTheme(point?: Point): void {
     const doc = document as Document & { startViewTransition?: (cb: () => void) => VT };
     if (!doc.startViewTransition || prefersReduced()) return crossFade(to);
 
-    running?.skipTransition();
-    const c = point ?? { x: innerWidth - 40, y: 32 };
-    lastPoint = c;
+    try {
+        running?.skipTransition();
+        const c = point ?? { x: innerWidth - 40, y: 32 };
+        lastPoint = c;
 
-    const root = document.documentElement;
-    root.style.setProperty('--ink-x', `${c.x}px`);
-    root.style.setProperty('--ink-y', `${c.y}px`);
-    root.style.setProperty('--ink-duration', `${DURATION}ms`);
-    root.classList.add('ink-vt');
+        const root = document.documentElement;
+        root.style.setProperty('--ink-x', `${c.x}px`);
+        root.style.setProperty('--ink-y', `${c.y}px`);
+        root.style.setProperty('--ink-duration', `${DURATION}ms`);
+        root.classList.add('ink-vt');
 
-    // Mobile browsers size the transition snapshot to the screen *including* the
-    // area behind the URL bar, so its origin is not the viewport origin. A 1px
-    // named probe at the tap point tells us where that point really is.
-    const probe = document.createElement('div');
-    probe.setAttribute('aria-hidden', 'true');
-    probe.style.cssText = `position:fixed;left:${c.x}px;top:${c.y}px;width:1px;height:1px;pointer-events:none;view-transition-name:ink-probe`;
-    document.body.append(probe);
+        const probe = document.createElement('div');
+        probe.setAttribute('aria-hidden', 'true');
+        probe.style.cssText = `position:fixed;left:${c.x}px;top:${c.y}px;width:1px;height:1px;pointer-events:none;view-transition-name:ink-probe`;
+        document.body.append(probe);
 
-    const vt = doc.startViewTransition(() => applyTheme(to));
-    running = vt;
+        const vt = doc.startViewTransition(() => applyTheme(to));
+        running = vt;
 
-    // Show tap ripple after snapshot is initiated so it doesn't dirty the capture
-    showTapMarker(c);
+        showTapMarker(c);
 
-    vt.ready
-        .then(() => {
-            const at = snapshotPoint(c);
-            const box = snapshotBox(at, c);
-            root.style.setProperty('--ink-x', `${at.x}px`);
-            root.style.setProperty('--ink-y', `${at.y}px`);
-            root.animate(
-                { clipPath: inkFrames(at, box.w, box.h) },
-                {
-                    duration: DURATION,
-                    easing: 'linear',
-                    pseudoElement: '::view-transition-new(root)',
-                    fill: 'both',
-                }
-            );
-        })
-        .catch(() => undefined);
-    vt.finished.finally(() => {
-        probe.remove();
-        if (running === vt) running = null;
-        root.classList.remove('ink-vt');
-    });
+        vt.ready
+            .then(() => {
+                const at = snapshotPoint(c);
+                const box = snapshotBox(at, c);
+                root.style.setProperty('--ink-x', `${at.x}px`);
+                root.style.setProperty('--ink-y', `${at.y}px`);
+                root.animate(
+                    { clipPath: inkFrames(at, box.w, box.h) },
+                    {
+                        duration: DURATION,
+                        easing: 'linear',
+                        pseudoElement: '::view-transition-new(root)',
+                        fill: 'both',
+                    }
+                );
+            })
+            .catch(() => undefined);
+        vt.finished.finally(() => {
+            probe.remove();
+            if (running === vt) running = null;
+            root.classList.remove('ink-vt');
+        });
+    } catch {
+        crossFade(to);
+    }
 }
 
 /** Where viewport point `c` sits inside the transition snapshot (falls back to `c`). */
