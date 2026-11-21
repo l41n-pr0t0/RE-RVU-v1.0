@@ -27,11 +27,10 @@ class SceneGuard extends Component<{ children: ReactNode }, { failed: boolean }>
 type Featured =
   | { kind: 'event'; e: CampusEvent }
   | { kind: 'club'; c: Club }
-  | { kind: 'project'; p: Project }
 
 type Focus = { place: Place; item: Featured } | null
 
-type TourPillar = 'events' | 'clubs' | 'projects'
+type TourPillar = 'events' | 'clubs'
 
 /**
  * The landing page is one continuous shot over the real campus at night.
@@ -42,7 +41,7 @@ type TourPillar = 'events' | 'clubs' | 'projects'
 export default function Landing() {
   const { profile, setProfile } = useStore()
   const reduce = useReducedMotion()
-  const { events, clubs, projects, notices } = useCatalog()
+  const { events, clubs, notices } = useCatalog()
   const [signIn, setSignIn] = useState(false)
   const [paused, setPaused] = useState(false)
   const [ready, setReady] = useState(false)
@@ -57,17 +56,13 @@ export default function Landing() {
   }, [events, now])
 
   const recruitingClubs = useMemo(() => clubs.filter((c) => c.recruiting), [clubs])
-  const activeProjects = useMemo(() => projects.filter((p) => p.openings.length > 0), [projects])
 
   const tourItems = useMemo<Featured[]>(() => {
     if (pillar === 'clubs') {
       return recruitingClubs.map((c) => ({ kind: 'club', c }))
     }
-    if (pillar === 'projects') {
-      return activeProjects.map((p) => ({ kind: 'project', p }))
-    }
     return week.map((e) => ({ kind: 'event', e }))
-  }, [pillar, week, recruitingClubs, activeProjects])
+  }, [pillar, week, recruitingClubs])
 
   const [, setTheme] = useState(() => (typeof document !== 'undefined' ? document.documentElement.dataset.theme : 'dark'))
   useEffect(() => {
@@ -90,7 +85,7 @@ export default function Landing() {
     }
   }
   const open = (f: Featured) => {
-    const path = f.kind === 'event' ? `events/${f.e.id}` : f.kind === 'club' ? `clubs/${f.c.id}` : `projects/${f.p.id}`
+    const path = f.kind === 'event' ? `events/${f.e.id}` : `clubs/${f.c.id}`
     if (profile) go(path)
     else guest(path)
   }
@@ -127,7 +122,6 @@ export default function Landing() {
           reduce={!!reduce}
           eventsCount={week.length}
           clubsCount={recruitingClubs.length}
-          projectsCount={activeProjects.length}
           noticesCount={notices.length}
         />
 
@@ -146,7 +140,7 @@ export default function Landing() {
       <AnimatePresence>
         {focus && (
           <Caption
-            key={focus.item.kind === 'event' ? focus.item.e.id : focus.item.kind === 'club' ? focus.item.c.id : focus.item.p.id}
+            key={focus.item.kind === 'event' ? focus.item.e.id : focus.item.c.id}
             item={focus.item}
             place={focus.place}
             now={now}
@@ -173,10 +167,9 @@ function Hero(props: {
   reduce: boolean
   eventsCount: number
   clubsCount: number
-  projectsCount: number
   noticesCount: number
 }) {
-  const { next, signedIn, firstName, onStart, onGuest, onExplore, paused, onPause, reduce, eventsCount, clubsCount, projectsCount, noticesCount } = props
+  const { next, signedIn, firstName, onStart, onGuest, onExplore, paused, onPause, reduce, eventsCount, clubsCount, noticesCount } = props
   const rise = (i: number) =>
     reduce ? {} : { initial: { opacity: 0, y: 28 }, animate: { opacity: 1, y: 0 }, transition: { duration: 1.1, ease: DOLLY, delay: 0.25 + i * 0.12 } }
 
@@ -189,7 +182,6 @@ function Hero(props: {
         <nav className="flex items-center gap-1.5 text-sm md:gap-3" aria-label="On this page">
           <a href="#this-week" className="hover-gold hidden px-2 py-2 text-paper/70 sm:inline-block md:px-3">This week</a>
           <button onClick={() => onExplore('clubs')} className="hover-gold hidden px-2 py-2 text-paper/70 md:inline-block">Clubs</button>
-          <button onClick={() => onExplore('projects')} className="hover-gold hidden px-2 py-2 text-paper/70 md:inline-block">Projects</button>
           <ThemeToggle />
           <button className="btn btn-sm ml-1" onClick={onStart}>{signedIn ? 'Open' : 'Sign in'}</button>
         </nav>
@@ -203,7 +195,7 @@ function Hero(props: {
           <motion.span className="block italic text-gold" {...rise(3)}>this week.</motion.span>
         </h1>
         <motion.p className="mt-5 max-w-[42ch] text-[1.05rem] leading-relaxed text-paper/80 md:mt-6" {...rise(4)}>
-          Events, clubs, notices and student projects in one place, sorted by what starts next.
+          Events, clubs, and notices in one place, sorted by what starts next.
         </motion.p>
         <motion.div className="mt-7 flex flex-wrap gap-3 md:mt-8" {...rise(5)}>
           <button className="btn btn-gold" onClick={onStart}>
@@ -224,7 +216,7 @@ function Hero(props: {
         </motion.div>
 
         {/* Live campus pulse strip */}
-        <motion.div {...rise(6)} className="mt-10 grid grid-cols-2 gap-2 border-t border-line-strong pt-4 sm:grid-cols-4 sm:gap-4">
+        <motion.div {...rise(6)} className="mt-10 grid grid-cols-3 gap-2 border-t border-line-strong pt-4 sm:gap-4 max-w-lg">
           <button onClick={() => onExplore('events')} className="group text-left transition-colors">
             <span className="eyebrow !text-[0.6rem] text-paper/60 group-hover:text-gold">Events</span>
             <span className="mt-0.5 block font-display text-xl sm:text-2xl"><Num>{eventsCount}</Num> this week</span>
@@ -232,10 +224,6 @@ function Hero(props: {
           <button onClick={() => onExplore('clubs')} className="group text-left transition-colors">
             <span className="eyebrow !text-[0.6rem] text-paper/60 group-hover:text-gold">Clubs</span>
             <span className="mt-0.5 block font-display text-xl sm:text-2xl"><Num>{clubsCount}</Num> recruiting</span>
-          </button>
-          <button onClick={() => onExplore('projects')} className="group text-left transition-colors">
-            <span className="eyebrow !text-[0.6rem] text-paper/60 group-hover:text-gold">Projects</span>
-            <span className="mt-0.5 block font-display text-xl sm:text-2xl"><Num>{projectsCount}</Num> looking</span>
           </button>
           <div className="text-left">
             <span className="eyebrow !text-[0.6rem] text-paper/60">Notices</span>
@@ -291,18 +279,17 @@ function Tour(props: {
   const sectionRef = useRef<HTMLElement>(null)
   const latest = useRef({ items, onFocus })
   latest.current = { items, onFocus }
+  const debounceTimer = useRef<number>(0)
 
   const choose = (i: number) => {
-    const f = latest.current.items[i]
-    if (!f) return
-    setActive(i)
-    const place =
-      f.kind === 'event'
-        ? placeFor(f.e.venue)
-        : f.kind === 'club'
-        ? CLUB_HOME[f.c.category]
-        : placeFor(f.p.school)
-    latest.current.onFocus({ place, item: f })
+    window.clearTimeout(debounceTimer.current)
+    debounceTimer.current = window.setTimeout(() => {
+      const f = latest.current.items[i]
+      if (!f) return
+      setActive(i)
+      const place = f.kind === 'event' ? placeFor(f.e.venue) : CLUB_HOME[f.c.category]
+      latest.current.onFocus({ place, item: f })
+    }, 60)
   }
 
   // The row crossing the middle band of the viewport becomes active as you scroll.
@@ -316,7 +303,10 @@ function Tour(props: {
       { rootMargin: '-46% 0px -46% 0px' },
     )
     list.querySelectorAll('[data-row]').forEach((r) => io.observe(r))
-    return () => io.disconnect()
+    return () => {
+      window.clearTimeout(debounceTimer.current)
+      io.disconnect()
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [items.length])
 
@@ -341,12 +331,12 @@ function Tour(props: {
     <section id={id} ref={sectionRef} className="wrap scroll-mt-4 py-[14svh]" aria-labelledby={`${id}-title`}>
       <p className="eyebrow text-gold">Campus exploration</p>
 
-      {/* Pillar Switcher */}
+      {/* Pillar Switcher: Events and Clubs only */}
       <div className="mt-4 flex flex-wrap items-center gap-2 border-b border-line pb-4">
         <button
           type="button"
           onClick={() => onPillarChange('events')}
-          className={`px-3 py-1.5 text-xs font-bold tracking-[0.1em] uppercase transition-colors ${
+          className={`px-3.5 py-1.5 text-xs font-bold tracking-[0.1em] uppercase transition-colors ${
             pillar === 'events' ? 'bg-gold text-ink' : 'border border-line text-paper/70 hover:text-gold'
           }`}
         >
@@ -355,43 +345,30 @@ function Tour(props: {
         <button
           type="button"
           onClick={() => onPillarChange('clubs')}
-          className={`px-3 py-1.5 text-xs font-bold tracking-[0.1em] uppercase transition-colors ${
+          className={`px-3.5 py-1.5 text-xs font-bold tracking-[0.1em] uppercase transition-colors ${
             pillar === 'clubs' ? 'bg-gold text-ink' : 'border border-line text-paper/70 hover:text-gold'
           }`}
         >
           Clubs recruiting
-        </button>
-        <button
-          type="button"
-          onClick={() => onPillarChange('projects')}
-          className={`px-3 py-1.5 text-xs font-bold tracking-[0.1em] uppercase transition-colors ${
-            pillar === 'projects' ? 'bg-gold text-ink' : 'border border-line text-paper/70 hover:text-gold'
-          }`}
-        >
-          Student projects
         </button>
       </div>
 
       <h2 id={`${id}-title`} className="mt-6 max-w-[24ch] text-[clamp(1.6rem,1.2rem+1.6vw,2.6rem)] leading-tight">
         {pillar === 'events'
           ? `${items.length} things on in the next seven days.`
-          : pillar === 'clubs'
-          ? `${items.length} clubs looking for new members.`
-          : `${items.length} student teams with open roles.`}
+          : `${items.length} clubs looking for new members.`}
       </h2>
 
       <ol ref={listRef} className="mt-[6svh] md:max-w-[65%]">
         {items.map((f, i) => {
           const on = i === active
-          const name = f.kind === 'event' ? f.e.title : f.kind === 'club' ? f.c.name : f.p.name
+          const name = f.kind === 'event' ? f.e.title : f.c.name
           const meta =
             f.kind === 'event'
               ? `${weekday(f.e.start)} ${time(f.e.start)}`
-              : f.kind === 'club'
-              ? `${f.c.category} · ${f.c.members} members`
-              : `${f.p.openings.length} open role${f.p.openings.length === 1 ? '' : 's'} · ${f.p.category}`
+              : `${f.c.category} · ${f.c.members} members`
           return (
-            <li key={f.kind === 'event' ? f.e.id : f.kind === 'club' ? f.c.id : f.p.id} data-row={i}>
+            <li key={f.kind === 'event' ? f.e.id : f.c.id} data-row={i}>
               <button
                 className="grid w-full grid-cols-1 gap-0.5 py-2 text-left md:grid-cols-[8.5rem_minmax(0,1fr)] md:items-baseline md:gap-3 md:py-3"
                 onMouseEnter={() => choose(i)}
@@ -419,7 +396,7 @@ function Tour(props: {
 
 /* --------------------------------------------------------------- caption */
 
-/** The line that fades in at the corner: when, where, who. Dogstudio's description slot. */
+/** The line that fades in at the corner: when, where, who. */
 function Caption({ item, place, now }: { item: Featured; place: Place; now: Date }) {
   const reduce = useReducedMotion()
   return (
@@ -429,7 +406,7 @@ function Caption({ item, place, now }: { item: Featured; place: Place; now: Date
       initial={reduce ? false : { opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       exit={reduce ? undefined : { opacity: 0, y: 8 }}
-      transition={{ duration: 0.45, ease: DOLLY }}
+      transition={{ duration: 0.35, ease: DOLLY }}
     >
       <div className="flex gap-4 p-4">
         <div className="relative hidden h-20 w-28 shrink-0 overflow-hidden md:block" aria-hidden>
@@ -451,19 +428,12 @@ function Caption({ item, place, now }: { item: Featured; place: Place; now: Date
                 </p>
               )}
             </>
-          ) : item.kind === 'club' ? (
+          ) : (
             <>
               <p className="text-gold">{item.c.recruiting ? 'Recruiting now' : item.c.category}</p>
               <p className="mt-1 font-semibold">{item.c.name}</p>
               <p className="line-clamp-2 text-paper/65">{item.c.tagline}</p>
               <p className="mt-1 text-xs text-paper/55">Usually around {place.name}</p>
-            </>
-          ) : (
-            <>
-              <p className="text-gold">Looking for collaborators</p>
-              <p className="mt-1 font-semibold">{item.p.name}</p>
-              <p className="line-clamp-2 text-paper/65">{item.p.description}</p>
-              <p className="mt-1 text-xs text-paper/55">{item.p.openings.map((o) => o.role).join(', ')}</p>
             </>
           )}
         </div>

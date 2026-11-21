@@ -149,7 +149,7 @@ export default function CampusStage({ focus, paused, onReady }: Props) {
       interactive: false,
       attributionControl: false,
       fadeDuration: 0,
-      pixelRatio: Math.min(devicePixelRatio, 2),
+      pixelRatio: Math.min(window.devicePixelRatio || 1, 1.25),
       canvasContextAttributes: { antialias: true, powerPreference: 'low-power' },
     })
     mapRef.current = map
@@ -176,14 +176,28 @@ export default function CampusStage({ focus, paused, onReady }: Props) {
 
     map.once('idle', () => onReady?.())
 
-    // Slow orbit while nothing is in focus.
+    // Pause orbit during user scroll to eliminate stutter/lag
+    let isScrolling = false
+    let scrollTimer = 0
+    const handleScroll = () => {
+      isScrolling = true
+      clearTimeout(scrollTimer)
+      scrollTimer = window.setTimeout(() => {
+        isScrolling = false
+      }, 350)
+    }
+    window.addEventListener('scroll', handleScroll, { passive: true })
+
+    // Smooth idle orbit when stationary
     let raf = 0
     let last = performance.now()
     const tick = (t: number) => {
       const dt = Math.min(64, t - last)
       last = t
       const s = state.current
-      if (!s.paused && !s.reduce && !s.focus && !s.flying && !document.hidden) map.setBearing(map.getBearing() + dt * 0.0035)
+      if (!s.paused && !s.reduce && !s.focus && !s.flying && !isScrolling && !document.hidden) {
+        map.setBearing(map.getBearing() + dt * 0.0022)
+      }
       raf = requestAnimationFrame(tick)
     }
     raf = requestAnimationFrame(tick)
@@ -198,7 +212,9 @@ export default function CampusStage({ focus, paused, onReady }: Props) {
     window.addEventListener('rvu-theme', onTheme as EventListener)
 
     return () => {
+      window.removeEventListener('scroll', handleScroll)
       window.removeEventListener('rvu-theme', onTheme as EventListener)
+      clearTimeout(scrollTimer)
       cancelAnimationFrame(raf)
       ro.disconnect()
       map.remove()
@@ -227,8 +243,8 @@ export default function CampusStage({ focus, paused, onReady }: Props) {
     const offset: [number, number] = p ? (narrow ? [0, -el.clientHeight * 0.18] : [el.clientWidth * 0.2, 0]) : narrow ? [0, -el.clientHeight * 0.22] : [el.clientWidth * 0.22, 0]
     const camera = {
       center: centre,
-      zoom: p ? (narrow ? 17.4 : 17.8) : narrow ? 16.6 : 17.1,
-      pitch: p ? (narrow ? 55 : 62) : narrow ? 52 : 58,
+      zoom: p ? (narrow ? 17.3 : 17.6) : narrow ? 16.6 : 17.1,
+      pitch: p ? (narrow ? 54 : 60) : narrow ? 52 : 58,
       bearing: p ? (hash(id) % 120) - 60 : map.getBearing(),
       offset,
     }
@@ -237,7 +253,13 @@ export default function CampusStage({ focus, paused, onReady }: Props) {
       return
     }
     state.current.flying = true
-    map.flyTo({ ...camera, duration: 1500, curve: 1.3, essential: false })
+    map.stop()
+    map.easeTo({
+      ...camera,
+      duration: 850,
+      easing: (t) => t * (2 - t),
+      essential: true,
+    })
     map.once('moveend', () => (state.current.flying = false))
   }
 
