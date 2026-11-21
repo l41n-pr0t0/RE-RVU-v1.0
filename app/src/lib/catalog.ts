@@ -24,7 +24,11 @@ export function useCatalog() {
 
     const page = (id: string): ClubPage => {
       const c = clubs.find((x) => x.id === id)
-      return clubPages[id] ?? (c ? defaultClubPage(c) : (undefined as never))
+      if (!c) return clubPages[id] ?? (undefined as never)
+      const base = defaultClubPage(c)
+      const stored = clubPages[id]
+      // Pages saved before themes existed get the club's default look.
+      return stored ? { ...base, ...stored, look: { ...base.look, ...stored.look } } : base
     }
     const liveClubs: Club[] = clubs.map((c) => {
       const p = clubPages[c.id]

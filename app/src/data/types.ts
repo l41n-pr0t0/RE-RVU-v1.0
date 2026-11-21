@@ -105,6 +105,10 @@ export interface Project {
   updated: Date
   /** Published by the signed-in student in this browser */
   mine?: boolean
+  /** Stars from other students (seeded); yours is added on top */
+  stars?: number
+  /** Free-form topics, like GitHub topics */
+  topics?: string[]
 }
 
 export interface Notice {
@@ -175,6 +179,18 @@ export const CLUB_SECTIONS: { id: ClubSection; label: string }[] = [
 
 export type CoverTone = 'gold' | 'teal' | 'slate'
 
+/* ---------- A club's own look (brand-safe presets, no code) ---------- */
+export type ClubTheme = 'night-gold' | 'teal-studio' | 'slate-lab' | 'deep-teal' | 'gold-field' | 'paper-press' | 'teal-paper' | 'archive'
+export type ClubLayout = 'cover' | 'split' | 'poster'
+export type ClubPattern = 'grid' | 'rays' | 'waves' | 'dots' | 'stripes' | 'rings'
+export type ClubType = 'classic' | 'italic' | 'bold'
+export interface ClubLook {
+  theme: ClubTheme
+  layout: ClubLayout
+  pattern: ClubPattern
+  type: ClubType
+}
+
 /** Everything a club core can change about its own page */
 export interface ClubPage {
   tagline: string
@@ -188,6 +204,8 @@ export interface ClubPage {
   sections: ClubSection[]
   hidden: ClubSection[]
   tone: CoverTone
+  /** Theme, layout, cover pattern and type style the core team picked */
+  look: ClubLook
   founded: number
 }
 

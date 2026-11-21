@@ -1,3 +1,4 @@
+import { defaultLook } from '../lib/clubThemes'
 import type { Ask, BoardPost, CampusEvent, Club, ClubPage, Notice, Photo, Project, Student } from './types'
 
 /**
@@ -135,7 +136,7 @@ export const projects: Project[] = [
     github: 'https://github.com/rvu-greenhouse/mesh', demo: '',
     team: [{ name: 'Nikhil Varma', role: 'Lead, firmware', studentId: 's-nikhil' }, { name: 'Sara Thomas', role: 'Dashboard', studentId: 's-sara' }],
     openings: [{ role: 'Embedded systems developer', skills: ['C++', 'ESP32', 'Low-power design'], commitment: '4 hours a week' }, { role: 'PCB designer', skills: ['KiCad', 'Soldering'], commitment: '3 hours a week' }],
-    closes: at(6, 23, 59), updated: at(-1, 20),
+    closes: at(6, 23, 59), stars: 128, topics: ['iot', 'sustainability', 'campus-garden', 'hardware'], updated: at(-1, 20),
   },
   {
     id: 'p-mess', name: 'Mess menu that learns', category: 'Technology', school: P, status: 'Building',
@@ -144,7 +145,7 @@ export const projects: Project[] = [
     github: 'https://github.com/ananya-r/mess-forecast', demo: 'https://mess-forecast.example.app',
     team: [{ name: 'Ananya Rao', role: 'Lead, modelling', studentId: 's-ananya' }, { name: 'Dev Malhotra', role: 'Backend' }, { name: 'Pooja Iyer', role: 'Data collection' }],
     openings: [{ role: 'Data analyst', skills: ['Python', 'Pandas', 'Statistics'], commitment: '4 hours a week' }, { role: 'Frontend developer', skills: ['React', 'TypeScript'], commitment: '3 hours a week' }],
-    closes: at(4, 23, 59), updated: at(-2, 18),
+    closes: at(4, 23, 59), stars: 94, topics: ['forecasting', 'food-waste', 'machine-learning'], updated: at(-2, 18),
   },
   {
     id: 'p-wayfind', name: 'Campus wayfinding signage', category: 'Design', school: 'School of Design and Innovation', status: 'Building',
@@ -153,7 +154,7 @@ export const projects: Project[] = [
     github: '', demo: 'https://www.figma.com/proto/wayfinding-demo',
     team: [{ name: 'Kabir Sethi', role: 'Lead, wayfinding', studentId: 's-kabir' }, { name: 'Tara Nair', role: 'Research' }],
     openings: [{ role: 'Visual designer', skills: ['Typography', 'Illustrator'], commitment: '3 hours a week' }],
-    closes: at(9, 23, 59), updated: at(-3, 12),
+    closes: at(9, 23, 59), stars: 163, topics: ['wayfinding', 'signage', 'user-research', 'orientation'], updated: at(-3, 12),
   },
   {
     id: 'p-podcast', name: 'Hallway: a student podcast', category: 'Media', school: 'School of Film, Media and Creative Arts', status: 'Building',
@@ -162,7 +163,7 @@ export const projects: Project[] = [
     github: '', demo: 'https://hallway.example.fm',
     team: [{ name: 'Meera Krishnan', role: 'Host, producer', studentId: 's-meera' }, { name: 'Aarav Shetty', role: 'Recording' }],
     openings: [{ role: 'Sound editor', skills: ['Audition', 'Mixing'], commitment: '2 hours a week' }],
-    closes: at(5, 23, 59), updated: at(-1, 9),
+    closes: at(5, 23, 59), stars: 71, topics: ['podcast', 'oral-history', 'audio'], updated: at(-1, 9),
   },
   {
     id: 'p-booking', name: 'Room booking agent', category: 'Technology', school: P, status: 'Completed',
@@ -170,7 +171,7 @@ export const projects: Project[] = [
     stack: ['TypeScript', 'Node.js', 'Claude API', 'Google Calendar API'],
     github: 'https://github.com/iterium-rvu/room-agent', demo: 'https://room-agent.example.app',
     team: [{ name: 'Harsh Gupta', role: 'Lead', studentId: 's-harsh' }, { name: 'Ananya Rao', role: 'Prompting and evals', studentId: 's-ananya' }, { name: 'Leo D’Souza', role: 'Calendar integration' }],
-    openings: [], updated: at(-8, 16),
+    openings: [], stars: 212, topics: ['llm-agents', 'automation', 'iterium'], updated: at(-8, 16),
   },
   {
     id: 'p-policy', name: 'Bus routes, by the numbers', category: 'Business', school: 'School of Economics and Public Policy', status: 'Building',
@@ -179,7 +180,7 @@ export const projects: Project[] = [
     github: 'https://github.com/ishita-v/shuttle-model', demo: '',
     team: [{ name: 'Ishita Verma', role: 'Lead', studentId: 's-ishita' }, { name: 'Neel Joshi', role: 'Survey' }],
     openings: [{ role: 'Survey designer', skills: ['Questionnaire design'], commitment: '3 hours a week' }, { role: 'GIS analyst', skills: ['QGIS', 'R'], commitment: '3 hours a week' }],
-    closes: at(2, 23, 59), updated: at(-1, 14),
+    closes: at(2, 23, 59), stars: 57, topics: ['public-policy', 'transport', 'survey', 'gis'], updated: at(-1, 14),
   },
   {
     id: 'p-thrift', name: 'Hostel thrift exchange', category: 'Social impact', school: 'School of Business', status: 'Completed',
@@ -187,7 +188,7 @@ export const projects: Project[] = [
     stack: ['Glide', 'Google Sheets'],
     github: '', demo: 'https://thrift.example.app',
     team: [{ name: 'Rohan Patel', role: 'Operations', studentId: 's-rohan' }, { name: 'Diya Menon', role: 'Outreach' }],
-    openings: [], updated: at(-14, 11),
+    openings: [], stars: 139, topics: ['circular-economy', 'hostels', 'operations'], updated: at(-14, 11),
   },
   {
     id: 'p-legal', name: 'Know your tenancy rights', category: 'Social impact', school: 'School of Law', status: 'Building',
@@ -196,7 +197,33 @@ export const projects: Project[] = [
     github: 'https://github.com/arjun-m/tenancy-guide', demo: '',
     team: [{ name: 'Arjun Mehta', role: 'Lead writer', studentId: 's-arjun' }],
     openings: [{ role: 'Illustrator', skills: ['Illustration', 'Procreate'], commitment: '2 hours a week' }, { role: 'Web developer', skills: ['Astro', 'HTML', 'CSS'], commitment: '2 hours a week' }],
-    closes: at(10, 23, 59), updated: at(-4, 10),
+    closes: at(10, 23, 59), stars: 88, topics: ['tenancy', 'plain-language', 'legal-aid'], updated: at(-4, 10),
+  },
+  {
+    id: 'p-shorts', name: 'Eight minutes in Block C', category: 'Media', school: 'School of Film, Media and Creative Arts', status: 'Completed',
+    description: 'A short documentary following the last lab of the night, shot on one phone over a fortnight. Screened at Thesis Student Shorts.',
+    stack: ['DaVinci Resolve', 'Cinematography', 'Sound design'],
+    github: '', demo: 'https://vimeo.com/example-blockc',
+    team: [{ name: 'Riya Kapoor', role: 'Director' }, { name: 'Meera Krishnan', role: 'Sound', studentId: 's-meera' }],
+    openings: [], stars: 176, topics: ['documentary', 'short-film', 'campus-life'], updated: at(-6, 21),
+  },
+  {
+    id: 'p-zine', name: 'Margins: a poetry zine', category: 'Culture', school: 'School of Liberal Arts and Sciences', status: 'Building',
+    description: 'A printed zine of student poetry in four languages, risograph-printed each term and left in the library. Issue 02 is open for submissions.',
+    stack: ['Editing', 'Translation', 'InDesign', 'Risograph'],
+    github: '', demo: '',
+    team: [{ name: 'Priya Natarajan', role: 'Editor', studentId: 's-priya' }, { name: 'Sana Iqbal', role: 'Translation' }],
+    openings: [{ role: 'Translator (Kannada or Hindi)', skills: ['Translation', 'Editing'], commitment: '2 hours a week' }, { role: 'Layout designer', skills: ['InDesign', 'Typography'], commitment: '3 hours a week' }],
+    closes: at(12, 23, 59), stars: 64, topics: ['poetry', 'print', 'multilingual'], updated: at(-2, 11),
+  },
+  {
+    id: 'p-moot', name: 'Moot court bundle builder', category: 'Social impact', school: 'School of Law', status: 'Building',
+    description: 'A checklist and template pack that turns a moot problem into a filed bundle: memorial, list of authorities, compendium. Used by two teams this term.',
+    stack: ['Legal research', 'Google Docs', 'Templates'],
+    github: '', demo: '',
+    team: [{ name: 'Arjun Mehta', role: 'Lead', studentId: 's-arjun' }, { name: 'Kavya Rao', role: 'Research' }],
+    openings: [{ role: 'Research assistant', skills: ['Legal research', 'Research'], commitment: '2 hours a week' }],
+    closes: at(8, 23, 59), stars: 41, topics: ['moot-court', 'legal-writing', 'templates'], updated: at(-5, 15),
   },
 ]
 
@@ -304,6 +331,7 @@ export function defaultClubPage(c: Club): ClubPage {
     sections: ['about', 'recruitment', 'upcoming', 'leadership', 'archive', 'contact'],
     hidden: [],
     tone: c.category === 'Technology' ? 'teal' : c.category === 'Culture' || c.category === 'Media' ? 'gold' : 'slate',
+    look: defaultLook(c),
     founded: 2021 + (n % 4),
   }
 }

@@ -521,3 +521,77 @@ html.ink-vt::view-transition-group(root) { animation-duration: var(--ink-duratio
 /* Composer: once a submit was tried, show every invalid field */
 .tried .field:invalid { border-color: #e0795f; }
 .tried .field-wrap:has(.field:invalid) .field-error { display: flex; }
+
+/* ---------- Club themes (src/lib/clubThemes.ts) ----------
+   A theme is a set of the same tokens the app uses, redefined on
+   `.club-theme`; everything inside re-skins. Brand palette only. */
+.club-theme {
+  background: var(--color-ink);
+  color: var(--color-paper);
+}
+/* Full-bleed: the page's colour reaches the screen edges past the .wrap gutter */
+.club-bleed {
+  box-shadow: 0 0 0 100vmax var(--color-ink);
+  clip-path: inset(0 -100vmax);
+}
+.club-theme .btn-gold { color: var(--on-accent); }
+.club-theme .btn-gold::before { background: var(--color-ink); }
+.club-theme .tag-gold, .club-theme .text-black { color: var(--on-accent); }
+.club-theme ::selection { background: var(--color-gold); color: var(--on-accent); }
+.club-theme :focus-visible { outline-color: var(--color-gold-text); }
+.club-theme .text-gold { color: var(--color-gold-text); }
+
+/* Type styles: all brand faces, used three ways */
+.club-display { font-family: var(--font-display); font-weight: 400; letter-spacing: -0.02em; }
+[data-type="italic"] .club-display { font-style: italic; }
+[data-type="bold"] .club-display { font-family: var(--font-sans); font-weight: 700; text-transform: uppercase; letter-spacing: -0.035em; }
+
+/* Cover: the pattern lives on a pseudo-element so it can drift with transform only */
+.club-cover { position: relative; isolation: isolate; overflow: hidden; background: var(--color-ink); color: var(--color-paper); }
+.club-cover::before {
+  content: "";
+  position: absolute;
+  inset: -12%;
+  z-index: 0;
+  pointer-events: none;
+  transition: transform 1.2s var(--ease-dolly);
+}
+.club-cover::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: linear-gradient(180deg, transparent 35%, color-mix(in srgb, var(--color-ink) 80%, transparent));
+}
+.club-cover > * { position: relative; z-index: 1; }
+.club-cover[data-pattern="grid"]::before {
+  background:
+    repeating-linear-gradient(90deg, var(--pat) 0 1px, transparent 1px 2.5rem),
+    repeating-linear-gradient(0deg, var(--pat) 0 1px, transparent 1px 2.5rem);
+}
+.club-cover[data-pattern="rays"]::before { background: repeating-conic-gradient(from -8deg at 82% 112%, var(--pat) 0 3deg, transparent 3deg 11deg); }
+.club-cover[data-pattern="waves"]::before { background: radial-gradient(circle at 50% 0, transparent 58%, var(--pat) 59% 64%, transparent 65%) 0 0 / 3.2rem 1.6rem; }
+.club-cover[data-pattern="dots"]::before { background: radial-gradient(var(--pat) 1.6px, transparent 1.8px) 0 0 / 1.15rem 1.15rem; }
+.club-cover[data-pattern="stripes"]::before { background: repeating-linear-gradient(-45deg, var(--pat) 0 1px, transparent 1px 0.9rem); }
+.club-cover[data-pattern="rings"]::before { background: repeating-radial-gradient(circle at 74% 34%, transparent 0 1.6rem, var(--pat) 1.6rem calc(1.6rem + 1px)); }
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .group:hover .club-cover::before, .club-cover.is-live::before { transform: translate3d(-3%, -2%, 0) scale(1.05); }
+}
+
+/* ---------- Projects: code-host vocabulary in brand colours ---------- */
+.topic {
+  display: inline-flex;
+  align-items: center;
+  height: 1.5rem;
+  padding: 0 0.55rem;
+  font-size: 0.72rem;
+  color: var(--color-teal-bright);
+  background: color-mix(in srgb, var(--color-teal) 32%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-teal-bright) 30%, transparent);
+}
+:root[data-theme="light"] .topic { color: var(--color-teal); background: color-mix(in srgb, var(--color-teal) 9%, transparent); }
+@media (prefers-reduced-motion: no-preference) {
+  .star-pop { animation: star-pop 0.45s var(--ease-dolly); }
+}
+@keyframes star-pop { 0% { transform: scale(0.6) rotate(-20deg); } 60% { transform: scale(1.25); } 100% { transform: scale(1); } }
