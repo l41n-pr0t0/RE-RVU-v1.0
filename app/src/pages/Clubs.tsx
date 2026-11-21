@@ -386,7 +386,7 @@ function ClubDetail({ c }: { c: Club }) {
   const slate = <p className="slate-no !text-gold">Sc. 04 · {c.category} · founded <Num>{page.founded}</Num></p>
 
   const sectionNav = (
-    <nav aria-label="On this page" className="sticky top-16 z-20 overflow-x-auto border-b border-line bg-ink/95 backdrop-blur no-scrollbar md:top-20">
+    <nav aria-label="On this page" className="sticky top-[var(--head)] z-20 overflow-x-auto border-b border-line bg-ink/95 backdrop-blur no-scrollbar">
       <ul className="flex gap-5 whitespace-nowrap py-3 text-sm md:gap-7">
         {order.map((s) => (
           <li key={s}>
@@ -426,7 +426,7 @@ function ClubDetail({ c }: { c: Club }) {
   if (look.layout === 'split') {
     body = (
       <div className="grid gap-10 pt-6 pb-14 lg:grid-cols-[22rem_minmax(0,1fr)] lg:gap-16">
-        <aside className="lg:sticky lg:top-24 lg:self-start">
+        <aside className="lg:sticky lg:top-[calc(var(--head)+1.5rem)] lg:self-start">
           {back}
           <ClubCover club={c} look={look} className="mt-5 aspect-square" />
           <div className="mt-6">{slate}</div>
@@ -489,7 +489,7 @@ function ClubDetail({ c }: { c: Club }) {
         <div className="grid gap-12 py-10 md:py-14 lg:grid-cols-[minmax(0,1fr)_16rem] lg:gap-16">
           <div className="grid gap-14 md:gap-20">{order.map((s) => <div key={s}>{sections[s]}</div>)}</div>
           <aside className="hidden lg:block">
-            <div className="sticky top-32 grid gap-4">
+            <div className="sticky top-[calc(var(--head)+4.5rem)] grid gap-4">
               {nextUp}
               <div className="border border-line-strong bg-slate-2 p-5">
                 <p className="eyebrow">Ways in</p>
@@ -550,9 +550,9 @@ function Stat({ label, value }: { label: string; value: number }) {
 
 function Section({ id, index, title, count, children }: { id: ClubSection; index: number; title: string; count?: number; children: ReactNode }) {
   return (
-    <section id={`sec-${id}`} aria-labelledby={`h-${id}`} className="scroll-mt-32">
+    <section id={`sec-${id}`} aria-labelledby={`h-${id}`} className="scroll-mt-[calc(var(--head)+4.5rem)]">
       <div className="mb-5 grid grid-cols-[2.25rem_minmax(0,1fr)_auto] items-baseline gap-3 border-b border-line pb-3">
-        <Num className="text-[0.68rem] font-semibold tracking-[0.16em] text-gold">{String(index).padStart(2, '0')}</Num>
+        <Num className="text-[0.68rem] font-bold tracking-[0.16em] text-gold">{String(index).padStart(2, '0')}</Num>
         <h2 id={`h-${id}`} className="text-[clamp(1.6rem,1.3rem+1vw,2.2rem)] leading-tight">{title}</h2>
         {count !== undefined && <Num className="text-sm text-mute">{count}</Num>}
       </div>

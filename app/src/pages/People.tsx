@@ -526,7 +526,7 @@ function Listing({
       <div className="mt-6 grid gap-8 lg:grid-cols-[minmax(0,1fr)_26rem] xl:grid-cols-[minmax(0,1fr)_30rem]">
         <div className="min-w-0">
           {mine.length > 0 && (
-            <section id="yours" aria-labelledby="yours-title" className="mb-10 scroll-mt-28">
+            <section id="yours" aria-labelledby="yours-title" className="mb-10 scroll-mt-[calc(var(--head)+2rem)]">
               <p id="yours-title" className="slate-no mb-3">Yours · {pad(mine.length)}</p>
               <ul className="divide-y divide-line border-y border-line">
                 {mine.map((p) => (
@@ -567,7 +567,7 @@ function Listing({
         </div>
 
         <aside className="hidden lg:block" aria-label="Selected post">
-          <div className="sticky top-24 h-[calc(100dvh-7.5rem)] border border-line-strong bg-slate-2">
+          <div className="sticky top-[calc(var(--head)+1.5rem)] h-[calc(100dvh-var(--head)-3rem)] border border-line-strong bg-slate-2">
             {shown ? (
               <PostSheet key={shown.id} post={shown} billed={shownBilled} total={billing.length} />
             ) : (
@@ -770,7 +770,7 @@ function PostSheet({ post: p, billed, total, onClose }: { post: BoardPost; bille
             <div className="flex flex-wrap items-center gap-3">
               <p className="flex-1 text-sm">Take this post down? Raised hands go with it.</p>
               <button type="button" className="btn btn-sm" onClick={() => setConfirmDelete(false)}>Keep it</button>
-              <button type="button" className="btn btn-sm border-[#e0795f] text-[#e0795f]" onClick={() => { deletePost(p.id); onClose?.() }}>Take down</button>
+              <button type="button" className="btn btn-sm border-alert text-alert" onClick={() => { deletePost(p.id); onClose?.() }}>Take down</button>
             </div>
           ) : (
             <div className="flex items-center justify-between gap-3">
@@ -874,7 +874,7 @@ function Composer({ kind: initial, onCancel, onPublish }: { kind: PostKind; onCa
       <div className="flex-1 space-y-6 overflow-y-auto px-5 py-6 md:px-7">
         <div role="radiogroup" aria-label="Kind of post" className="grid grid-cols-2 border border-line-strong">
           {(['seeking', 'offering'] as const).map((k) => (
-            <button key={k} type="button" role="radio" aria-checked={kind === k} onClick={() => setKind(k)} className={`px-3 py-3 text-sm transition-colors ${kind === k ? (k === 'seeking' ? 'bg-gold text-black' : 'bg-teal text-[#f2ede3]') : 'text-mute hover-gold'}`}>
+            <button key={k} type="button" role="radio" aria-checked={kind === k} onClick={() => setKind(k)} className={`px-3 py-3 text-sm transition-colors ${kind === k ? (k === 'seeking' ? 'bg-gold text-black' : 'bg-teal text-white') : 'text-mute hover-gold'}`}>
               {k === 'seeking' ? 'I need a hand' : 'I can help'}
             </button>
           ))}
@@ -889,7 +889,7 @@ function Composer({ kind: initial, onCancel, onPublish }: { kind: PostKind; onCa
 
         <div>
           <label htmlFor={`${f}-s`} className="eyebrow block">{seeking ? 'Skills wanted' : 'Skills on offer'}</label>
-          <div className={`mt-2 flex flex-wrap items-center gap-1.5 border p-2 ${tried && !skills.length && !skillText.trim() ? 'border-[#e0795f]' : 'border-line-strong'}`}>
+          <div className={`mt-2 flex flex-wrap items-center gap-1.5 border p-2 ${tried && !skills.length && !skillText.trim() ? 'border-alert' : 'border-line-strong'}`}>
             {skills.map((k) => (
               <button key={k} type="button" className="tag hover-gold" onClick={() => setSkills(skills.filter((x) => x !== k))} aria-label={`Remove ${k}`}>
                 {k} <Icon name="close" className="h-3 w-3" />
@@ -909,7 +909,7 @@ function Composer({ kind: initial, onCancel, onPublish }: { kind: PostKind; onCa
               }}
             />
           </div>
-          {tried && !skills.length && !skillText.trim() && <p className="mt-1.5 text-sm text-[#e0795f]">Add at least one skill.</p>}
+          {tried && !skills.length && !skillText.trim() && <p className="alert-mark mt-1.5 text-sm text-alert">Add at least one skill.</p>}
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
@@ -931,7 +931,7 @@ function Composer({ kind: initial, onCancel, onPublish }: { kind: PostKind; onCa
               <button key={r} type="button" className="chip" aria-pressed={rewards.includes(r)} onClick={() => setRewards(rewards.includes(r) ? rewards.filter((x) => x !== r) : [...rewards, r])}>{r}</button>
             ))}
           </div>
-          {tried && !rewards.length && <p className="mt-1.5 text-sm text-[#e0795f]">Pick at least one. Say it up front, like a real opening.</p>}
+          {tried && !rewards.length && <p className="alert-mark mt-1.5 text-sm text-alert">Pick at least one. Say it up front, like a real opening.</p>}
         </fieldset>
 
         {seeking && (
@@ -1175,7 +1175,7 @@ function Person({ s }: { s: Student }) {
       </header>
 
       <div className="mt-10 grid gap-12 lg:grid-cols-[17rem_minmax(0,1fr)]">
-        <aside className="space-y-8 lg:sticky lg:top-24 lg:self-start">
+        <aside className="space-y-8 lg:sticky lg:top-[calc(var(--head)+1.5rem)] lg:self-start">
           <dl className="divide-y divide-line border-y border-line text-sm">
             {(
               [

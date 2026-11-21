@@ -18,10 +18,10 @@ export function ContactSheet({ photos, compact = false, onRemove }: { photos: Ph
             ) : (
               <div aria-hidden className="frame-placeholder absolute inset-0" style={{ ['--seed' as string]: (i * 37) % 100 }} />
             )}
-            <span className="absolute top-1.5 left-2 font-[Montserrat] text-[0.6rem] tracking-[0.18em] text-gold">
+            <span className="absolute top-1.5 left-2 font-num text-[0.6rem] tracking-[0.18em] text-gold">
               <Num>{String(i + 1).padStart(2, '0')}</Num>A
             </span>
-            {!compact && <figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 to-transparent px-2 pt-6 pb-1.5 text-xs text-[#F2EDE3]">{p.caption}</figcaption>}
+            {!compact && <figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 to-transparent px-2 pt-6 pb-1.5 text-xs text-white">{p.caption}</figcaption>}
           </figure>
           {onRemove && (
             <button onClick={() => onRemove(p.id)} className="btn btn-sm mt-1 w-full">

@@ -3,25 +3,29 @@ import { useEffect, useRef, type ReactNode } from 'react'
 
 export const DOLLY = [0.2, 0.7, 0.1, 1] as const
 
-/** Official logo asset matching dark and light themes seamlessly. */
-export function Logo({ className = 'h-11 md:h-14' }: { className?: string }) {
+/**
+ * The official logo, gold on dark and black on light (gold never on white).
+ * Brand guidelines §9: never under 21 mm tall, 5 mm clear space around it,
+ * so the size is fixed in physical units and the clear space is real padding.
+ */
+export function Logo({ className = '' }: { className?: string }) {
   return (
-    <span className="logo-wrap inline-flex items-center">
+    <span className={`logo-wrap rv-logo ${className}`}>
       <img
         src="/brand/rvu-logo-gold.png"
         alt="RV University"
-        className={`${className} w-auto select-none logo-dark-theme`}
+        className="rv-logo__img select-none logo-dark-theme"
         draggable={false}
-        width={3000}
-        height={1708}
+        width={2614}
+        height={1316}
       />
       <img
         src="/brand/rvu-logo-black.png"
         alt="RV University"
-        className={`${className} w-auto select-none logo-light-theme`}
+        className="rv-logo__img select-none logo-light-theme"
         draggable={false}
-        width={3000}
-        height={1708}
+        width={2614}
+        height={1316}
       />
     </span>
   )
@@ -88,8 +92,8 @@ export function EmptyState({ title, body, action }: { title: string; body: strin
 
 export function ErrorState({ onRetry }: { onRetry: () => void }) {
   return (
-    <div role="alert" className="border border-[#e0795f]/50 px-6 py-10 md:px-10">
-      <p className="slate-no !text-[#e0795f]">Connection lost</p>
+    <div role="alert" className="border border-alert/50 px-6 py-10 md:px-10">
+      <p className="alert-mark slate-no !text-alert">Connection lost</p>
       <h3 className="mt-3 text-2xl">We couldn’t load this</h3>
       <p className="mt-2 max-w-[48ch] text-mute">Your connection dropped or the server is busy. Nothing you saved has been lost.</p>
       <button className="btn btn-gold mt-6" onClick={onRetry}>

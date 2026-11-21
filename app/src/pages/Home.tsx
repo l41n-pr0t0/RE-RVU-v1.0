@@ -77,7 +77,7 @@ export default function Home() {
             <p className="eyebrow">{mine[0] ? 'Your next event' : 'Next on campus'}</p>
             <div className="mt-5 flex items-start gap-5 md:gap-7">
               <div className="shrink-0 border border-gold px-3.5 py-2.5 text-center">
-                <Num className="block text-3xl font-semibold text-gold md:text-5xl">{next.start.getDate()}</Num>
+                <Num className="block text-3xl font-bold text-gold md:text-5xl">{next.start.getDate()}</Num>
                 <span className="eyebrow !text-[0.62rem]">{next.start.toLocaleString('en-GB', { month: 'short' })}</span>
               </div>
               <div className="min-w-0 flex-1">
@@ -106,7 +106,7 @@ export default function Home() {
               {due.map((n) => (
                 <li key={n.id} className="grid grid-cols-[3.5rem_minmax(0,1fr)] gap-4 py-4">
                   <div className="text-center">
-                    <Num className="block text-2xl font-semibold text-gold">{daysFrom(n.due!, now)}</Num>
+                    <Num className="block text-2xl font-bold text-gold">{daysFrom(n.due!, now)}</Num>
                     <span className="eyebrow !text-[0.56rem]">days</span>
                   </div>
                   <div className="min-w-0">

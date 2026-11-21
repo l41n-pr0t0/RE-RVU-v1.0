@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react'
+import { BRAND, mix, TONE, triplet } from './brand'
 import type { Club, ClubLook, ClubLayout, ClubPattern, ClubTheme, ClubType } from '../data/types'
 
 /**
@@ -25,15 +26,18 @@ export interface ThemeDef {
   line: string // hairline base colour (rgb triplet)
 }
 
+const { black: K, gold: G, slate: S, teal: T, ochre: O, white: W } = BRAND
+const theme = (d: Omit<ThemeDef, 'line'>): ThemeDef => ({ ...d, line: triplet(d.paper) })
+
 export const THEMES: Record<ClubTheme, ThemeDef> = {
-  'night-gold': { label: 'Night Gold', note: 'Black stage, gold key light', mode: 'dark', ink: '#000000', surface: '#10171c', paper: '#f2ede3', mute: '#a39f96', accent: '#d7ac54', accentText: '#d7ac54', onAccent: '#000000', line: '242 237 227' },
-  'teal-studio': { label: 'Teal Studio', note: 'Deep teal room, gold detail', mode: 'dark', ink: '#00262d', surface: '#003640', paper: '#eef3f1', mute: '#9fb8b8', accent: '#d7ac54', accentText: '#e0bd73', onAccent: '#00262d', line: '238 243 241' },
-  'slate-lab': { label: 'Slate Lab', note: 'Dark slate, ochre instruments', mode: 'dark', ink: '#141d23', surface: '#233039', paper: '#eef0ef', mute: '#9aa6ad', accent: '#c29650', accentText: '#d4ad6c', onAccent: '#141d23', line: '238 240 239' },
-  'deep-teal': { label: 'Deep Teal', note: 'Black stage, teal signal', mode: 'dark', ink: '#000000', surface: '#071a1e', paper: '#eef3f1', mute: '#93abad', accent: '#3d8f9b', accentText: '#6fb3bd', onAccent: '#000000', line: '238 243 241' },
-  'gold-field': { label: 'Gold Field', note: 'The approved gold background', mode: 'light', ink: '#d7ac54', surface: '#e2bf75', paper: '#000000', mute: '#3b2f14', accent: '#000000', accentText: '#000000', onAccent: '#d7ac54', line: '0 0 0' },
-  'paper-press': { label: 'Paper Press', note: 'Warm paper, black type, gold rule', mode: 'light', ink: '#f4f0e6', surface: '#fbf8f1', paper: '#11181d', mute: '#565249', accent: '#85631f', accentText: '#85631f', onAccent: '#f4f0e6', line: '35 48 57' },
-  'teal-paper': { label: 'Teal Paper', note: 'Pale paper, deep teal ink', mode: 'light', ink: '#eef1ec', surface: '#f8faf6', paper: '#0b1f23', mute: '#4f5f60', accent: '#004854', accentText: '#004854', onAccent: '#eef1ec', line: '0 72 84' },
-  archive: { label: 'Archive', note: 'Ochre on slate, like an old programme', mode: 'dark', ink: '#1a2329', surface: '#233039', paper: '#efe6d2', mute: '#b2a68c', accent: '#c29650', accentText: '#c9a160', onAccent: '#1a2329', line: '239 230 210' },
+  'night-gold': theme({ label: 'Night Gold', note: 'Black stage, gold key light', mode: 'dark', ink: K, surface: TONE.surface, paper: TONE.paper, mute: TONE.mute, accent: G, accentText: G, onAccent: K }),
+  'teal-studio': theme({ label: 'Teal Studio', note: 'Deep teal room, gold detail', mode: 'dark', ink: mix(T, K, 0.47), surface: mix(T, K, 0.25), paper: mix(W, T, 0.06), mute: mix(W, T, 0.4), accent: G, accentText: mix(G, W, 0.15), onAccent: mix(T, K, 0.47) }),
+  'slate-lab': theme({ label: 'Slate Lab', note: 'Dark slate, ochre instruments', mode: 'dark', ink: mix(S, K, 0.4), surface: S, paper: mix(W, S, 0.06), mute: mix(W, S, 0.4), accent: O, accentText: mix(O, W, 0.15), onAccent: mix(S, K, 0.4) }),
+  'deep-teal': theme({ label: 'Deep Teal', note: 'Black stage, teal signal', mode: 'dark', ink: K, surface: mix(T, K, 0.7), paper: mix(W, T, 0.06), mute: mix(W, T, 0.42), accent: mix(T, W, 0.3), accentText: TONE.tealText, onAccent: K }),
+  'gold-field': theme({ label: 'Gold Field', note: 'The approved gold background', mode: 'light', ink: G, surface: mix(G, W, 0.2), paper: K, mute: mix(G, K, 0.75), accent: K, accentText: K, onAccent: G }),
+  'paper-press': theme({ label: 'Paper Press', note: 'Warm paper, black type, gold rule', mode: 'light', ink: TONE.lightStage, surface: mix(W, G, 0.04), paper: mix(S, K, 0.5), mute: mix(S, W, 0.25), accent: TONE.goldOnLight, accentText: TONE.goldOnLight, onAccent: TONE.lightStage }),
+  'teal-paper': theme({ label: 'Teal Paper', note: 'Pale paper, deep teal ink', mode: 'light', ink: mix(W, T, 0.07), surface: mix(W, T, 0.025), paper: mix(T, K, 0.6), mute: mix(T, W, 0.2), accent: T, accentText: T, onAccent: mix(W, T, 0.07) }),
+  archive: theme({ label: 'Archive', note: 'Ochre on slate, like an old programme', mode: 'dark', ink: mix(S, K, 0.25), surface: S, paper: mix(W, O, 0.2), mute: mix(O, W, 0.3), accent: O, accentText: mix(O, W, 0.1), onAccent: mix(S, K, 0.25) }),
 }
 
 export const LAYOUTS: Record<ClubLayout, { label: string; note: string }> = {

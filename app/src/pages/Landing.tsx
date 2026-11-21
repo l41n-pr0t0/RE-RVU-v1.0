@@ -175,9 +175,9 @@ function Hero(props: {
 
   return (
     <section className="grid min-h-[100svh] grid-rows-[auto_1fr_auto]" aria-labelledby="hero-title">
-      <header className="wrap flex h-20 items-center justify-between md:h-24">
+      <header className="wrap flex h-[var(--head-inner)] items-center justify-between gap-2">
         <a href="#/" aria-label="RVU Connect, start">
-          <Logo className="h-12 md:h-16" />
+          <Logo />
         </a>
         <nav className="flex items-center gap-1.5 text-sm md:gap-3" aria-label="On this page">
           <a href="#this-week" className="hover-gold hidden px-2 py-2 text-paper/70 sm:inline-block md:px-3">This week</a>
@@ -240,7 +240,7 @@ function Hero(props: {
             {...(reduce ? {} : { initial: { opacity: 0 }, animate: { opacity: 1 }, transition: { delay: 1.2, duration: 0.8 } })}
           >
             <span className="eyebrow">{next.start <= new Date() ? 'On now' : 'Next up'}</span>
-            <span className="mt-1 block truncate font-semibold group-hover:text-gold">{next.title}</span>
+            <span className="mt-1 block truncate font-bold group-hover:text-gold">{next.title}</span>
             <span className="block truncate text-sm text-paper/65">
               {relativeDay(next.start)} · <Num>{time(next.start)}</Num> · {placeFor(next.venue).name}
             </span>
@@ -418,7 +418,7 @@ function Caption({ item, place, now }: { item: Featured; place: Place; now: Date
               <p className="text-gold">
                 {relativeDay(item.e.start, now)} · <Num>{time(item.e.start)}</Num>
               </p>
-              <p className="mt-1 font-semibold">{place.name}</p>
+              <p className="mt-1 font-bold">{place.name}</p>
               <p className="truncate text-paper/65">
                 {item.e.venue === place.name ? item.e.hostName : `${item.e.venue} · ${item.e.hostName}`}
               </p>
@@ -431,7 +431,7 @@ function Caption({ item, place, now }: { item: Featured; place: Place; now: Date
           ) : (
             <>
               <p className="text-gold">{item.c.recruiting ? 'Recruiting now' : item.c.category}</p>
-              <p className="mt-1 font-semibold">{item.c.name}</p>
+              <p className="mt-1 font-bold">{item.c.name}</p>
               <p className="line-clamp-2 text-paper/65">{item.c.tagline}</p>
               <p className="mt-1 text-xs text-paper/55">Usually around {place.name}</p>
             </>

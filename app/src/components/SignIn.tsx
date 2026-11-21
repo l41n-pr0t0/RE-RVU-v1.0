@@ -134,7 +134,7 @@ function RealGoogle({ clientId }: { clientId: string }) {
       <p className="text-mute">Use your RV University Google account. Other accounts are turned away.</p>
       <div ref={slot} className="mt-6 min-h-11" />
       {error && (
-        <p role="alert" className="mt-4 flex items-start gap-2 text-[#e0795f]">
+        <p role="alert" className="mt-4 flex items-start gap-2 text-alert">
           <Icon name="close" className="mt-0.5 h-4 w-4 shrink-0" /> <span>Error: {error}</span>
         </p>
       )}
@@ -179,9 +179,9 @@ function DemoChooser() {
       <ul className="mt-5 border-y border-line">
         <li>
           <button className="row-hover flex w-full items-center gap-4 px-1 py-4 text-left" onClick={() => pick(defaultAccount, defaultName)} autoFocus>
-            <span className="grid h-11 w-11 shrink-0 place-items-center bg-gold font-semibold text-[#000]">{initials(defaultName)}</span>
+            <span className="grid h-11 w-11 shrink-0 place-items-center bg-gold font-bold text-black">{initials(defaultName)}</span>
             <span className="min-w-0 flex-1">
-              <span className="block font-semibold">{defaultName}</span>
+              <span className="block font-bold">{defaultName}</span>
               <span className="block truncate text-sm text-mute">{defaultAccount}</span>
             </span>
             <Icon name="arrow" className="h-4 w-4 text-mute" />

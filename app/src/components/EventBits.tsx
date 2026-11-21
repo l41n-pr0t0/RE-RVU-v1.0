@@ -223,12 +223,12 @@ function EventDetail({ e, titleId, onClose }: { e: CampusEvent; titleId: string;
 
         {state === 'going' && (
           <section aria-labelledby={`${titleId}-ticket`} className="mt-8 grid gap-5 border border-line-strong p-5 sm:grid-cols-[auto_1fr]">
-            <div className="justify-self-start bg-[#F2EDE3] p-2">
+            <div className="justify-self-start bg-white p-2">
               <Qr value={`RVUC:${e.id}:${me}`} label={`Entry code for ${e.title}`} size={150} />
             </div>
             <div>
               <h3 id={`${titleId}-ticket`} className="eyebrow">Your entry pass</h3>
-              <p className="mt-3 font-[Montserrat] text-2xl tracking-[0.12em] text-paper">{ticketCode(e.id, me)}</p>
+              <p className="mt-3 font-num text-2xl tracking-[0.12em] text-paper">{ticketCode(e.id, me)}</p>
               <p className="mt-2 text-sm text-mute">Show this at the door. The host scans it to mark your attendance; the code works if the camera doesn’t.</p>
               {checkedIn && <p className="tag tag-gold mt-3">Checked in</p>}
             </div>

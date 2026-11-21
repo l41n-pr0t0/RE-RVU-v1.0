@@ -43,21 +43,29 @@ like a job board: billed rows on the left (01 in gold, 01–03 set larger with
 their reasons), the selected post open beside them, re-ranked live with Flip.
 
 ## 2. Palette and roles
+Only the five brand colours (Brand guidelines §11) and tints/shades mixed from
+them. CSS uses `color-mix()` on the five hex values; TypeScript uses
+`app/src/lib/brand.ts` (`BRAND`, `mix()`, `TONE`). No other hex is allowed.
 - **RV Black** (#000000) — the stage. Brand primary; used instead of off-black by brand rule.
-- **Slate 2** (#10171C) — raised surfaces: sheets, plates, panels.
-- **Dark Slate** (#233039) — depth, plate gradients.
+- **Dark Slate** (#233039) — depth; `slate-2` raised plates = Slate 45% into Black.
 - **RV Gold** (#D7AC54) — the single accent: the lead item, primary action, focus ring, your skill matches. Never on white.
-- **Gold text on paper** (#85631F) — gold for text in the light theme (AA on paper).
-- **Deep Teal** (#004854) / **Teal bright** (#3D8F9B) — secondary category marker only (offers, "open"). Never competes with gold.
-- **Paper** (#F2EDE3) — text on dark; stage in the light theme (#F4F0E6).
-- **Mute** (#A39F96) — secondary text.
+- **Secondary Gold / Ochre** (#C29650) — secondary sub-accents and errors (always with a marker and words, never colour alone). On the light stage it is shaded with Black for AA.
+- **Deep Teal** (#004854) — "open" and category markers; `teal-bright` = Teal 50% into white so it reads on black.
+- **Paper** (white with 8% Gold) — text on dark. **Mute** (white with 38% Slate) — secondary text.
+- Light theme stage: white with 16% Gold; text: Slate 50% into Black.
 
 ## 3. Typography
+- Only the approved styles are loaded: Cantarell Regular/Bold/Oblique, Playfair Display Regular/Bold/Oblique, Montserrat Regular/Medium/Bold. `font-synthesis: none`, so no fake weights or italics.
 - Display: Playfair Display — headings and titles only, never body. Hierarchy by size step and italic, not weight spam.
 - Body/UI: Cantarell — everything else; body max 65ch, relaxed leading.
-- Numerals: Montserrat — every number, rank, count and date, tabular lining figures.
+- Numerals: Montserrat, through the `RVU Numerals` face (Montserrat limited to the digits 0–9) at the front of the sans stack. Every figure in running text sets in Montserrat and every letter in Cantarell, so Montserrat is never used for words.
 - Writing: UK English; dates as "4 April 2026"; "RV University" exactly; campuses as "Bengaluru Campus" / "Mysuru Campus".
-- Banned: Inter, any other serif, text gradients, all-caps paragraphs.
+- Banned: Inter, system monospace, any other face, text gradients, all-caps paragraphs.
+
+## 3b. Logo
+- Gold logo on dark, black logo on light; never gold on white.
+- At least 21 mm tall with 5 mm clear space (`.rv-logo`, sized in physical units). The header height is derived from it (`--head`), and every sticky offset uses `--head`.
+- Nothing set beside it as a lockup: school/product lockups come only from the Communications Department.
 
 ## 4. Components
 - Buttons: square, 46px min height, a fill wipes in from the left on hover, `translateY(1px)` on press. Gold = the one primary action per view.
@@ -78,7 +86,7 @@ their reasons), the selected post open beside them, re-ranked live with Flip.
 - Everything inside `prefers-reduced-motion: no-preference`; content is visible without JS animation.
 
 ## 7. Anti-patterns (BANNED)
-Emojis. Inter. Neon, glows, purple. Text gradients. Custom cursors. Overlapping
+Emojis. Inter. Neon, glows, purple. Any colour not mixed from the five brand colours. Text gradients. Custom cursors. Overlapping
 elements. Three identical cards. Ambient blobs or effects that carry no
 information. "John Doe"/"Acme". Fake round numbers. "Elevate", "Seamless",
 "Unleash", "Next-gen". Bouncing chevrons, "Scroll to explore". Gold on white.

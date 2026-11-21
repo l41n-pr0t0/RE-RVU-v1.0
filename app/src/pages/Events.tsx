@@ -152,7 +152,7 @@ function Spotlight({ items, now }: { items: CampusEvent[]; now: Date }) {
         if (k.key === 'ArrowLeft') go(i - 1)
       }}
     >
-      <div className="grid gap-px bg-line lg:grid-cols-[minmax(0,1fr)_20rem]">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-px bg-line lg:grid-cols-[minmax(0,1fr)_20rem]">
         <div className="relative min-h-[30rem] overflow-hidden md:min-h-[34rem]">
           <AnimatePresence initial={false} mode="popLayout">
             <motion.div
@@ -403,7 +403,7 @@ function Calendar({ events, past, now }: { events: CampusEvent[]; past: CampusEv
       </div>
 
       {/* Date strip: sticky, one column per day, like a sale calendar */}
-      <div className="sticky top-16 z-20 mt-5 -mx-[clamp(1rem,0.6rem+2vw,2.5rem)] border-y border-line bg-ink/95 px-[clamp(1rem,0.6rem+2vw,2.5rem)] backdrop-blur md:top-20">
+      <div className="sticky top-[var(--head)] z-20 mt-5 -mx-[clamp(1rem,0.6rem+2vw,2.5rem)] border-y border-line bg-ink/95 px-[clamp(1rem,0.6rem+2vw,2.5rem)] backdrop-blur">
         <ol className="no-scrollbar grid auto-cols-[minmax(3.6rem,1fr)] grid-flow-col overflow-x-auto">
           {strip.map((d) => {
             const k = d.toDateString()
@@ -444,8 +444,8 @@ function Calendar({ events, past, now }: { events: CampusEvent[]; past: CampusEv
           {groups.map(([k, g]) => {
             const d = g[0].start
             return (
-              <section key={k} id={`day-${k.replace(/\s/g, '-')}`} data-day={k} aria-label={longDate(d)} className="scroll-mt-44 border-b border-line py-8 md:grid md:grid-cols-[9rem_minmax(0,1fr)] md:gap-8">
-                <header className="mb-4 flex items-baseline gap-3 md:sticky md:top-44 md:mb-0 md:block md:self-start">
+              <section key={k} id={`day-${k.replace(/\s/g, '-')}`} data-day={k} aria-label={longDate(d)} className="scroll-mt-[calc(var(--head)+6rem)] border-b border-line py-8 md:grid md:grid-cols-[9rem_minmax(0,1fr)] md:gap-8">
+                <header className="mb-4 flex items-baseline gap-3 md:sticky md:top-[calc(var(--head)+6rem)] md:mb-0 md:block md:self-start">
                   <p className={`text-[0.7rem] font-bold tracking-[0.16em] uppercase ${daysFrom(d, now) === 0 ? 'text-gold' : 'text-mute'}`}>{relativeDay(d, now)}</p>
                   <Num className="block text-5xl leading-none md:mt-1 md:text-6xl">{d.getDate()}</Num>
                   <p className="text-sm text-mute md:mt-1">{d.toLocaleString('en-GB', { month: 'long' })} <Num>{d.getFullYear()}</Num></p>

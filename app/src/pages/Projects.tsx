@@ -3,6 +3,7 @@ import { ShareButton } from '../components/EventBits'
 import { LinksFields, linksValid, normaliseLink } from '../components/LinksFields'
 import { Dialog, EmptyState, ErrorState, Icon, ListSkeleton, Monogram, Num, PageHeader, Reveal } from '../components/ui'
 import { CATEGORIES, SCHOOLS, type Category, type Links, type Opening, type Project, type ProjectStatus, type School } from '../data/types'
+import { BRAND, mix, TONE } from '../lib/brand'
 import { skillMatch, useCatalog } from '../lib/catalog'
 import { daysFrom, longDate } from '../lib/format'
 import { go, href } from '../lib/router'
@@ -32,13 +33,13 @@ export default function Projects({ id }: { id?: string }) {
 
 /** Discipline dots: brand tones only, one per area. */
 const DOT: Record<Category, string> = {
-  Technology: '#3d8f9b',
-  Design: '#d7ac54',
-  Business: '#c29650',
-  Culture: '#efe6d2',
-  Media: '#9aa6ad',
-  'Social impact': '#6fb3bd',
-  Sport: '#85631f',
+  Technology: TONE.tealText,
+  Design: BRAND.gold,
+  Business: BRAND.ochre,
+  Culture: mix(BRAND.white, BRAND.gold, 0.25),
+  Media: mix(BRAND.white, BRAND.slate, 0.45),
+  'Social impact': mix(BRAND.teal, BRAND.white, 0.25),
+  Sport: TONE.goldOnLight,
 }
 
 const slug = (s: string) => s.toLowerCase().replace(/[’']/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
@@ -208,7 +209,7 @@ function ProjectIndex() {
 
       <div className="mt-8 grid gap-10 lg:grid-cols-[14rem_minmax(0,1fr)] xl:grid-cols-[14rem_minmax(0,1fr)_18rem]">
         <aside className="hidden lg:block">
-          <div className="sticky top-28">{filters}</div>
+          <div className="sticky top-[calc(var(--head)+1.5rem)]">{filters}</div>
         </aside>
 
         <div className="min-w-0">
@@ -263,7 +264,7 @@ function ProjectIndex() {
         </div>
 
         <aside className="hidden xl:block">
-          <div className="sticky top-28 grid gap-6">
+          <div className="sticky top-[calc(var(--head)+1.5rem)] grid gap-6">
             <section className="border border-line">
               <h2 className="eyebrow border-b border-line px-4 py-3">{matches.length ? 'Openings that fit you' : 'Teams looking'}</h2>
               <ul className="divide-y divide-line">
@@ -465,7 +466,7 @@ function ProjectDetail({ p }: { p: Project }) {
           )}
         </div>
 
-        <aside className="space-y-7 lg:sticky lg:top-24 lg:self-start">
+        <aside className="space-y-7 lg:sticky lg:top-[calc(var(--head)+1.5rem)] lg:self-start">
           <section>
             <h2 className="font-sans text-base font-bold">About</h2>
             <p className="mt-2 leading-relaxed text-mute">{p.description}</p>
@@ -495,7 +496,7 @@ function ProjectDetail({ p }: { p: Project }) {
                 <div className="flex flex-wrap items-center gap-2">
                   <p className="w-full text-sm">Take this project down? Applications go with it.</p>
                   <button type="button" className="btn btn-sm" onClick={() => setConfirmDelete(false)}>Keep it</button>
-                  <button type="button" className="btn btn-sm border-[#e0795f] text-[#e0795f]" onClick={() => { deleteProject(p.id); go('projects') }}>Take down</button>
+                  <button type="button" className="btn btn-sm border-alert text-alert" onClick={() => { deleteProject(p.id); go('projects') }}>Take down</button>
                 </div>
               ) : (
                 <button type="button" className="btn w-full" onClick={() => setConfirmDelete(true)}><Icon name="trash" className="h-4 w-4" /> Take this project down</button>

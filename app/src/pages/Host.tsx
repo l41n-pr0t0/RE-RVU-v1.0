@@ -124,7 +124,7 @@ function PageEditor({ clubId }: { clubId: string }) {
         </Group>
 
         <Group title="Recruitment">
-          <label className="flex items-center gap-3"><input type="checkbox" className="h-5 w-5 accent-[#D7AC54]" checked={p.recruitment.open} onChange={(e) => set({ recruitment: { ...p.recruitment, open: e.target.checked } })} /> Taking applications</label>
+          <label className="flex items-center gap-3"><input type="checkbox" className="h-5 w-5 accent-gold" checked={p.recruitment.open} onChange={(e) => set({ recruitment: { ...p.recruitment, open: e.target.checked } })} /> Taking applications</label>
           {p.recruitment.open && (
             <>
               <Field label="Announcement" id={`${f}-msg`}><textarea id={`${f}-msg`} className="field min-h-20" required maxLength={300} value={p.recruitment.message} onChange={(e) => set({ recruitment: { ...p.recruitment, message: e.target.value } })} /></Field>
@@ -150,7 +150,7 @@ function PageEditor({ clubId }: { clubId: string }) {
                 <button type="button" className="icon-btn" aria-label="Remove question" onClick={() => set({ questions: p.questions.filter((_, k) => k !== i) })}><Icon name="trash" className="h-4 w-4" /></button>
               </div>
               {q.kind === 'choice' && <input aria-label="Options, separated by commas" className="field" value={q.options?.join(', ') ?? ''} onChange={(e) => setQ(i, { options: e.target.value.split(',').map((o) => o.trim()).filter(Boolean) })} />}
-              <label className="flex items-center gap-2 text-sm"><input type="checkbox" className="accent-[#D7AC54]" checked={q.required} onChange={(e) => setQ(i, { required: e.target.checked })} /> Required</label>
+              <label className="flex items-center gap-2 text-sm"><input type="checkbox" className="accent-gold" checked={q.required} onChange={(e) => setQ(i, { required: e.target.checked })} /> Required</label>
             </div>
           ))}
           <button type="button" className="btn btn-sm justify-self-start" onClick={() => set({ questions: [...p.questions, { id: `q-${Date.now()}`, label: '', kind: 'short', required: false }] })}><Icon name="plus" className="h-4 w-4" /> Add question</button>
@@ -172,7 +172,7 @@ function PageEditor({ clubId }: { clubId: string }) {
         </Group>
       </div>
 
-      <aside className="lg:sticky lg:top-24 lg:self-start">
+      <aside className="lg:sticky lg:top-[calc(var(--head)+1.5rem)] lg:self-start">
         <Group title="Live preview">
           <div className="club-theme border border-line-strong" data-type={p.look.type} style={themeStyle(p.look)}>
             <ClubCover club={club} look={p.look} className="aspect-[16/10]">
@@ -389,7 +389,7 @@ function EventsPanel({ clubId }: { clubId: string }) {
           </div>
         </fieldset>
         <Field label="What happens" id={`${f}-d`}><textarea id={`${f}-d`} className="field min-h-24" required minLength={20} maxLength={400} value={d.summary} onChange={(e) => setD({ ...d, summary: e.target.value })} /><p className="field-error text-sm"><b>Error:</b> Two lines at least, so people know what to expect.</p></Field>
-        <label className="flex items-center gap-3 text-sm"><input type="checkbox" className="h-5 w-5 accent-[#D7AC54]" checked={d.free} onChange={(e) => setD({ ...d, free: e.target.checked })} /> Free entry</label>
+        <label className="flex items-center gap-3 text-sm"><input type="checkbox" className="h-5 w-5 accent-gold" checked={d.free} onChange={(e) => setD({ ...d, free: e.target.checked })} /> Free entry</label>
         <p className="text-xs text-mute">When seats run out, a waitlist opens automatically and moves up as people cancel.</p>
         <button type="submit" className="btn btn-gold justify-self-start">Publish event</button>
         <p role="status" className="text-sm text-gold">{done && `“${done}” is live on Events and on your club page.`}</p>
@@ -470,11 +470,11 @@ function CheckInPanel({ clubId }: { clubId: string }) {
         <form className="grid gap-1.5" onSubmit={(x) => { x.preventDefault(); accept(code) }}>
           <label htmlFor={`${f}-code`} className="text-sm">Or type the six-letter code</label>
           <div className="flex gap-2">
-            <input id={`${f}-code`} className="field font-[Montserrat] uppercase tracking-[0.2em]" autoComplete="off" placeholder="ABC-DEF" maxLength={7} value={code} onChange={(x) => setCode(x.target.value)} />
+            <input id={`${f}-code`} className="field font-num uppercase tracking-[0.2em]" autoComplete="off" placeholder="ABC-DEF" maxLength={7} value={code} onChange={(x) => setCode(x.target.value)} />
             <button className="btn" type="submit">Check in</button>
           </div>
         </form>
-        <p role="status" aria-live="polite" className={`min-h-6 text-sm ${msg?.ok ? 'text-gold' : 'text-[#e0795f]'}`}>{msg?.text}</p>
+        <p role="status" aria-live="polite" className={`min-h-6 text-sm ${msg?.ok ? 'text-gold' : 'alert-mark text-alert'}`}>{msg?.text}</p>
       </section>
 
       <section>
@@ -573,7 +573,7 @@ function ArchivePanel({ clubId }: { clubId: string }) {
 
   return (
     <div className="grid gap-12">
-      <p role="status" className="text-sm text-[#e0795f]">{err}</p>
+      <p role="status" className="alert-mark text-sm text-alert">{err}</p>
       {past.map((e) => (
         <section key={e.id} className="grid gap-4 md:grid-cols-[16rem_1fr]">
           <div>

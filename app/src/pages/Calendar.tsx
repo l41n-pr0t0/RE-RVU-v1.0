@@ -77,7 +77,7 @@ export default function Calendar() {
                   aria-label={`${longDate(d)}, ${list.length} ${list.length === 1 ? 'event' : 'events'}`}
                   onClick={() => setPicked(d)}
                   className={`relative flex min-h-14 flex-col items-start gap-1 border-r border-b border-line p-1.5 text-left transition-colors sm:min-h-24 sm:p-2 ${
-                    sel ? 'bg-gold text-[#000]' : 'row-hover'
+                    sel ? 'bg-gold text-black' : 'row-hover'
                   } ${inMonth ? '' : 'opacity-40'}`}
                 >
                   <span className={`num text-sm ${isToday && !sel ? 'text-gold' : ''}`}>{d.getDate()}</span>
@@ -91,7 +91,7 @@ export default function Calendar() {
                   </span>
                   {list.length > 0 && (
                     <span className="flex gap-0.5 sm:hidden" aria-hidden>
-                      {list.slice(0, 3).map((e) => <span key={e.id} className={`h-1.5 w-1.5 ${sel ? 'bg-[#000]' : 'bg-gold'}`} />)}
+                      {list.slice(0, 3).map((e) => <span key={e.id} className={`h-1.5 w-1.5 ${sel ? 'bg-black' : 'bg-gold'}`} />)}
                     </span>
                   )}
                 </button>

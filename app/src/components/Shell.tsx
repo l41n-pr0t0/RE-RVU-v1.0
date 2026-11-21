@@ -67,11 +67,9 @@ export function Shell({ route, children }: { route: Route; children: ReactNode }
       </a>
 
       <header className="sticky top-0 z-40 border-b border-line-strong bg-ink/85 backdrop-blur-md">
-        <div className="wrap flex h-16 items-center gap-4 md:h-[4.5rem] lg:gap-8">
+        <div className="wrap flex h-[var(--head-inner)] items-center gap-3 md:gap-4 lg:gap-8">
           <a href={href('home')} aria-label="RVU Connect, today" className="flex shrink-0 items-center gap-3">
-            <Logo className="h-10 md:h-12" />
-            <span className="hidden h-6 w-px bg-line-strong xl:block" aria-hidden />
-            <span className="hidden font-display text-lg italic xl:block">Connect</span>
+            <Logo />
           </a>
 
           <nav aria-label="Main" className="hidden h-full items-stretch lg:flex">
@@ -93,12 +91,12 @@ export function Shell({ route, children }: { route: Route; children: ReactNode }
             })}
           </nav>
 
-          <div className="ml-auto flex items-center gap-2">
+          <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
             <button
               type="button"
               onClick={() => setPaletteOpen(true)}
               aria-label="Search everything (Ctrl K or /)"
-              className="group flex h-10 items-center gap-2.5 border border-line px-3 text-sm text-mute transition-colors hover:border-gold hover:text-paper md:w-56 xl:w-72"
+              className="group flex h-10 w-9 items-center justify-center gap-2.5 border border-line text-sm sm:w-10 md:justify-start md:px-3 text-mute transition-colors hover:border-gold hover:text-paper md:w-56 xl:w-72"
             >
               <Icon name="search" className="h-4 w-4 shrink-0 transition-colors group-hover:text-gold" />
               <span className="hidden md:inline">Search people, events, clubs</span>
@@ -108,7 +106,7 @@ export function Shell({ route, children }: { route: Route; children: ReactNode }
               type="button"
               onClick={() => setNotifOpen(true)}
               aria-label={`Notifications${totalAlerts ? `, ${totalAlerts} unread` : ''}`}
-              className="relative grid h-10 w-10 place-items-center border border-line text-mute transition-colors hover:border-gold hover:text-gold"
+              className="relative grid h-10 w-9 place-items-center border border-line text-mute sm:w-10 transition-colors hover:border-gold hover:text-gold"
             >
               <Icon name="bell" className="h-4 w-4" />
               {totalAlerts > 0 && (
@@ -117,11 +115,12 @@ export function Shell({ route, children }: { route: Route; children: ReactNode }
                 </span>
               )}
             </button>
+            <ThemeToggle className="!h-10 !w-9 text-mute sm:!w-10" />
             <button
               type="button"
               popoverTarget={YOU_MENU}
               aria-label="You: profile, saved, calendar, settings"
-              className={`flex h-10 min-w-10 items-center justify-center gap-2 border px-2.5 font-display text-sm italic transition-colors ${
+              className={`flex h-10 min-w-9 items-center justify-center gap-2 border px-2 font-display sm:min-w-10 sm:px-2.5 text-sm italic transition-colors ${
                 youActive ? 'border-gold bg-gold text-black' : 'border-line hover:border-gold hover:text-gold'
               }`}
             >
@@ -183,10 +182,6 @@ function YouMenu({ route }: { route: Route }) {
           )
         })}
       </ul>
-      <div className="flex items-center justify-between gap-3 border-t border-line px-4 py-3">
-        <span className="text-sm">Theme <kbd className="num ml-1.5 border border-line px-1.5 py-0.5 text-[0.6rem] text-mute">T</kbd></span>
-        <ThemeToggle className="!h-9 !w-9" />
-      </div>
     </div>
   )
 }

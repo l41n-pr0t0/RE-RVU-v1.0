@@ -1,3 +1,4 @@
+import { BRAND, TONE } from '../lib/brand'
 export type Theme = 'light' | 'dark'
 
 const root = document.documentElement
@@ -15,7 +16,7 @@ export function otherTheme(theme: Theme): Theme {
 export function applyTheme(theme: Theme): void {
   root.dataset.theme = theme
   root.style.colorScheme = theme
-  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme === 'dark' ? '#000000' : '#F4F0E6')
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme === 'dark' ? BRAND.black : TONE.lightStage)
   try {
     localStorage.setItem(KEY, theme)
   } catch {

@@ -5,6 +5,7 @@ import 'maplibre-gl/dist/maplibre-gl.css'
 // MapLibre 6 ships its worker as a separate module; Vite bundles it and hands back the URL.
 setWorkerUrl(workerUrl)
 import { useEffect, useRef } from 'react'
+import { BRAND, mix, TONE } from '../lib/brand'
 import { type Place } from './venues'
 
 /** Centroid of the RVU-owned blocks (A, B, C, F, Admin). The camera frames these, not the shared campus. */
@@ -21,39 +22,42 @@ const RVU_CENTRE: [number, number] = [77.50169, 12.92254]
  * - Stops rendering when the tab is hidden (efficient-background-processing).
  */
 
+const { black: K, gold: G, slate: S, teal: T, ochre: O, white: W } = BRAND
+
+/** Brand-derived tones only (lib/brand.ts): paper and ochre by day, slate and black by night. */
 const LIGHT_PALETTE = {
-  ground: '#EAE4D6',
-  context: '#E2DCCF',
-  contextTop: '#CFC7B5',
-  road: '#C9C1AE',
-  campusRoad: '#A9AFAA',
-  path: '#BEC1BB',
-  green: '#C6D6D0',
-  building: '#D3D0C6',
-  rvu: '#C29650',
-  gold: '#D7AC54',
-  sky: '#F4F0E6',
-  fog: '#EAE4D6',
-  horizon: '#D3CBBB',
-  lightColor: '#fff4dc',
+  ground: mix(W, O, 0.2),
+  context: mix(W, O, 0.25),
+  contextTop: mix(W, O, 0.36),
+  road: mix(W, O, 0.4),
+  campusRoad: mix(W, S, 0.32),
+  path: mix(W, S, 0.25),
+  green: mix(W, T, 0.2),
+  building: mix(W, S, 0.17),
+  rvu: O,
+  gold: G,
+  sky: TONE.lightStage,
+  fog: mix(W, O, 0.2),
+  horizon: mix(W, O, 0.3),
+  lightColor: mix(W, G, 0.12),
   lightIntensity: 0.42,
 }
 
 const DARK_PALETTE = {
-  ground: '#06090c',
-  context: '#0e1419',
-  contextTop: '#141d24',
-  road: '#162028',
-  campusRoad: '#202d38',
-  path: '#263642',
-  green: '#0a1614',
-  building: '#18232c',
-  rvu: '#233039',
-  gold: '#D7AC54',
-  sky: '#000000',
-  fog: '#06090c',
-  horizon: '#10171c',
-  lightColor: '#ffe4a0',
+  ground: mix(S, K, 0.85),
+  context: mix(S, K, 0.72),
+  contextTop: mix(S, K, 0.62),
+  road: mix(S, K, 0.55),
+  campusRoad: mix(S, K, 0.35),
+  path: mix(S, K, 0.22),
+  green: mix(T, K, 0.8),
+  building: mix(S, K, 0.45),
+  rvu: S,
+  gold: G,
+  sky: K,
+  fog: mix(S, K, 0.85),
+  horizon: TONE.surface,
+  lightColor: mix(W, G, 0.4),
   lightIntensity: 0.55,
 }
 

@@ -1,3 +1,4 @@
+import { ThemeToggle } from '../components/ThemeToggle'
 import { motion, useReducedMotion } from 'framer-motion'
 import { useEffect, useMemo, useState } from 'react'
 import { LinksFields, linksValid, normaliseLink } from '../components/LinksFields'
@@ -97,10 +98,11 @@ export default function Welcome() {
     <div className="min-h-[100dvh] bg-ink text-paper flex flex-col lg:grid lg:grid-cols-[minmax(0,4.5fr)_minmax(0,7.5fr)]">
       {/* Left Identity Hero Sidebar */}
       <aside className="border-b border-line lg:sticky lg:top-0 lg:flex lg:h-[100dvh] lg:flex-col lg:justify-between lg:border-r lg:border-b-0 bg-slate-2 p-6 md:p-10 lg:p-12">
-        <div>
+        <div className="flex items-start justify-between gap-3">
           <a href="#/" aria-label="RVU Connect home" className="inline-block">
-            <Logo className="h-10 md:h-12" />
+            <Logo />
           </a>
+          <ThemeToggle />
         </div>
 
         <div className="py-8 lg:py-0">
@@ -122,8 +124,8 @@ export default function Welcome() {
             <span className="eyebrow !text-[0.6rem] text-gold">Detected from {who.email}</span>
             <div className="mt-2 flex flex-wrap items-baseline gap-2">
               <span className="font-bold text-sm text-paper">{extracted?.programme ? extracted.programme.toUpperCase() : 'Student'}</span>
-              {batchMatch && <span className="font-mono text-paper/70">· Batch of '{batchMatch}</span>}
-              <span className="text-gold font-mono">· Year {year}</span>
+              {batchMatch && <span className="text-paper/70">· Batch of '{batchMatch}</span>}
+              <span className="text-gold">· Year {year}</span>
             </div>
             <p className="mt-1 truncate text-paper/60 text-[0.75rem]">{school}</p>
           </div>
@@ -142,14 +144,14 @@ export default function Welcome() {
             <div className="bg-ink p-3.5">
               <span className="eyebrow !text-[0.6rem]">Name (from Google)</span>
               <div className="mt-1 flex items-center justify-between gap-2">
-                <span className="font-semibold truncate">{who.name}</span>
+                <span className="font-bold truncate">{who.name}</span>
                 <span className="text-[0.65rem] border border-line px-1.5 py-0.5 text-paper/50">Fixed</span>
               </div>
             </div>
             <div className="bg-ink p-3.5">
               <span className="eyebrow !text-[0.6rem]">Email Address</span>
               <div className="mt-1 flex items-center justify-between gap-2">
-                <span className="font-mono truncate text-xs text-paper/80">{who.email}</span>
+                <span className="truncate text-xs text-paper/80">{who.email}</span>
                 <span className="text-[0.65rem] border border-line px-1.5 py-0.5 text-gold">Verified</span>
               </div>
             </div>
@@ -159,7 +161,7 @@ export default function Welcome() {
           <motion.fieldset {...enter(1)} aria-describedby={tried && !year ? 'year-err' : undefined}>
             <div className="flex items-center justify-between">
               <legend className="eyebrow">Year of study</legend>
-              <span className="text-xs text-paper/50 font-mono">Editable</span>
+              <span className="text-xs text-paper/50">Editable</span>
             </div>
             <div className="mt-2.5 grid grid-cols-4 border border-line">
               {([1, 2, 3, 4] as const).map((y) => (
@@ -169,21 +171,21 @@ export default function Welcome() {
                   aria-pressed={year === y}
                   onClick={() => setYear(y)}
                   className={`h-11 border-l border-line first:border-l-0 text-sm font-bold transition-colors ${
-                    year === y ? 'bg-gold text-ink font-semibold' : 'hover-gold bg-ink text-paper/70'
+                    year === y ? 'bg-gold text-ink font-bold' : 'hover-gold bg-ink text-paper/70'
                   }`}
                 >
                   <Num>Year {y}</Num>
                 </button>
               ))}
             </div>
-            {tried && !year && <p id="year-err" className="mt-1.5 text-xs text-[#e0795f]">Please select your year of study.</p>}
+            {tried && !year && <p id="year-err" className="alert-mark mt-1.5 text-xs text-alert">Please select your year of study.</p>}
           </motion.fieldset>
 
           {/* School selector - fully editable */}
           <motion.div {...enter(2)}>
             <div className="flex items-center justify-between">
               <label htmlFor="school" className="eyebrow">School / Faculty</label>
-              <span className="text-xs text-paper/50 font-mono">Auto-selected</span>
+              <span className="text-xs text-paper/50">Auto-selected</span>
             </div>
             <select
               id="school"
@@ -206,7 +208,7 @@ export default function Welcome() {
           <motion.fieldset {...enter(3)}>
             <div className="flex items-center justify-between">
               <legend className="eyebrow">What should we put first?</legend>
-              <span className="text-xs text-paper/50 font-mono">Select multiple</span>
+              <span className="text-xs text-paper/50">Select multiple</span>
             </div>
             <p className="mt-1 text-xs text-paper/60">Choose your primary interests to personalize your campus feed.</p>
             <div className="mt-3 flex flex-wrap gap-2">
@@ -241,7 +243,7 @@ export default function Welcome() {
                 <Icon name="link" className="h-3.5 w-3.5 text-gold" />
                 <span>Links & Portfolios (Optional)</span>
               </span>
-              <span className="text-xs font-mono">{showLinks ? '− Hide' : '+ Add links'}</span>
+              <span className="text-xs">{showLinks ? '− Hide' : '+ Add links'}</span>
             </button>
 
             {showLinks && (

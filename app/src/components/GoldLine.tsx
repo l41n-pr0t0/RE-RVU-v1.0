@@ -90,7 +90,7 @@ export function GoldLine({
         )}
         {/* now */}
         <span className="absolute top-1/2 -translate-x-1/2 -translate-y-1/2" style={{ left: `${nowPos * 100}%` }} aria-label="Now">
-          <span className="block h-3 w-3 rotate-45 bg-paper shadow-[0_0_18px_4px_rgb(215_172_84/0.55)]" />
+          <span className="block h-3 w-3 rotate-45 bg-paper outline outline-1 outline-offset-2 outline-gold" />
         </span>
         {week.map((e, i) => (
           <motion.button
