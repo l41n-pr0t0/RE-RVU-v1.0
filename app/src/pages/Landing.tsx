@@ -2,6 +2,7 @@ import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { Component, lazy, Suspense, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { CLUB_HOME, placeFor, type Place } from '../campus/venues'
 import { blankLinks, SignIn } from '../components/SignIn'
+import { ThemeToggle } from '../components/ThemeToggle'
 import { DOLLY, Icon, Logo, Num } from '../components/ui'
 import type { CampusEvent, Club } from '../data/types'
 import { SCHOOLS } from '../data/types'
@@ -128,13 +129,14 @@ function Hero(props: {
 
   return (
     <section className="grid min-h-[100svh] grid-rows-[auto_1fr_auto]" aria-labelledby="hero-title">
-      <header className="wrap flex h-16 items-center justify-between md:h-20">
+      <header className="wrap flex h-20 items-center justify-between md:h-24">
         <a href="#/" aria-label="RVU Connect, start">
-          <Logo className="h-9 md:h-11" />
+          <Logo className="h-12 md:h-16" />
         </a>
-        <nav className="flex items-center gap-1 text-sm" aria-label="On this page">
+        <nav className="flex items-center gap-2 text-sm" aria-label="On this page">
           <a href="#this-week" className="hover-gold hidden px-3 py-2 text-paper/70 sm:inline-block">This week</a>
-                    <button className="btn btn-sm ml-2" onClick={onStart}>{signedIn ? 'Open' : 'Sign in'}</button>
+          <ThemeToggle />
+          <button className="btn btn-sm ml-1" onClick={onStart}>{signedIn ? 'Open' : 'Sign in'}</button>
         </nav>
       </header>
 

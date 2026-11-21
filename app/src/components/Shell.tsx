@@ -52,11 +52,11 @@ export function Shell({ route, children }: { route: Route; children: ReactNode }
       </a>
 
       <header className="sticky top-0 z-40 border-b border-line-strong bg-ink">
-        <div className="wrap flex h-14 items-center gap-3 md:h-16 md:gap-6">
+        <div className="wrap flex h-16 items-center gap-3 md:h-20 md:gap-6">
           <a href={href('home')} aria-label="RVU Connect, today" className="flex shrink-0 items-center gap-3">
-            <Logo className="h-9 md:h-10" />
-            <span className="hidden h-6 w-px bg-line-strong xl:block" aria-hidden />
-            <span className="hidden font-display text-lg italic xl:block">Connect</span>
+            <Logo className="h-11 md:h-14" />
+            <span className="hidden h-7 w-px bg-line-strong xl:block" aria-hidden />
+            <span className="hidden font-display text-xl italic xl:block">Connect</span>
           </a>
 
           <nav aria-label="Main" className="ml-2 hidden h-full items-stretch md:flex lg:ml-6">

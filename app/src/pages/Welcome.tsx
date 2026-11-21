@@ -52,8 +52,8 @@ export default function Welcome() {
   return (
     <div className="min-h-[100dvh] md:grid md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
       <aside className="border-b border-line-strong md:sticky md:top-0 md:flex md:h-[100dvh] md:flex-col md:justify-between md:border-r md:border-b-0 md:bg-slate-2">
-        <div className="wrap flex h-14 items-center md:h-auto md:px-10 md:pt-10">
-          <Logo className="h-8 md:h-11" />
+        <div className="wrap flex h-16 items-center md:h-auto md:px-10 md:pt-10">
+          <Logo className="h-11 md:h-16" />
         </div>
         <div className="wrap pt-8 pb-8 md:px-10 md:pb-14">
           <p className="flex items-center gap-3">

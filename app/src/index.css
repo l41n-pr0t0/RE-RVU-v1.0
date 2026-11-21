@@ -253,8 +253,16 @@
   --color-gold-text: #85631f;
 }
 :root[data-theme="light"] .text-gold { color: var(--color-gold-text); }
-.logo-plate { display: inline-flex; }
-:root[data-theme="light"] .logo-plate { background: #000000; padding: 0.4rem 0.6rem; }
+/* Logo theme matching: gold on dark stage, black on light stage */
+.logo-wrap { display: inline-flex; align-items: center; }
+.logo-dark-theme { display: inline-block; }
+.logo-light-theme { display: none; }
+
+:root[data-theme="light"] .logo-dark-theme { display: none; }
+:root[data-theme="light"] .logo-light-theme { display: inline-block; }
+
+:root[data-theme="light"] .stage-dark .logo-dark-theme { display: inline-block; }
+:root[data-theme="light"] .stage-dark .logo-light-theme { display: none; }
 
 /* Always-dark surfaces (the landing "screen") re-assert the dark tokens in either theme */
 .stage-dark {

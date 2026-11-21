@@ -3,11 +3,26 @@ import { useEffect, useRef, type ReactNode } from 'react'
 
 export const DOLLY = [0.2, 0.7, 0.1, 1] as const
 
-/** Official logo asset, unaltered. In light theme it sits on a black plate: the gold logo never touches a light surface (brand rule). */
-export function Logo({ className = 'h-10' }: { className?: string }) {
+/** Official logo asset matching dark and light themes seamlessly. */
+export function Logo({ className = 'h-11 md:h-14' }: { className?: string }) {
   return (
-    <span className="logo-plate">
-      <img src="/brand/rvu-logo-gold.png" alt="RV University" className={`${className} w-auto select-none`} draggable={false} width={3000} height={1708} />
+    <span className="logo-wrap inline-flex items-center">
+      <img
+        src="/brand/rvu-logo-gold.png"
+        alt="RV University"
+        className={`${className} w-auto select-none logo-dark-theme`}
+        draggable={false}
+        width={3000}
+        height={1708}
+      />
+      <img
+        src="/brand/rvu-logo-black.png"
+        alt="RV University"
+        className={`${className} w-auto select-none logo-light-theme`}
+        draggable={false}
+        width={3000}
+        height={1708}
+      />
     </span>
   )
 }

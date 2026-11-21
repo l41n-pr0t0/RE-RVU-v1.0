@@ -9,7 +9,11 @@
     <script>
       (function () {
         var t;
-        try { t = localStorage.getItem("rvu-connect:theme-v2"); } catch (e) {}
+        try {
+          var params = new URLSearchParams(window.location.search);
+          t = params.get("theme");
+          if (!t) t = localStorage.getItem("rvu-connect:theme-v2");
+        } catch (e) {}
         if (t !== "light" && t !== "dark") t = "light"; // first visit opens in the light theme
         var r = document.documentElement;
         r.dataset.theme = t;
