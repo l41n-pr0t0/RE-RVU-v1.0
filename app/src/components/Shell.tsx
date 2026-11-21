@@ -61,6 +61,7 @@ export function Shell({ route, children }: { route: Route; children: ReactNode }
   return (
     <div className="relative isolate flex min-h-[100dvh] flex-col">
       <Stage route={route} />
+      <div className="motif" data-motif={route.name} aria-hidden />
       <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[70] focus:bg-gold focus:px-3 focus:py-2 focus:text-black">
         Skip to content
       </a>

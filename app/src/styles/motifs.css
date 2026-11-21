@@ -1,0 +1,80 @@
+/* ============================================================
+   Background motifs. Sits above the Stage (components/Stage.tsx), below content.
+   Layout shares the stage: glyphs top right, campus plan bottom left,
+   the stage's page name bottom right.
+   Base: campus blueprint, the real RV University footprints from
+   public/atlas (scripts/make-blueprint.mjs). Accent: one glyph
+   field per page. Brand: abstract line art only. Nothing here
+   uses the logo, crest, sun, book or tree.
+   Colour comes from tokens; the SVGs are only alpha masks.
+   ============================================================ */
+
+.motif {
+  --motif-plan: var(--color-gold);
+  --motif-glyph: var(--color-paper);
+  --plan-alpha: 0.085;
+  --glyph-alpha: 0.11;
+  --glyph: url("/motifs/marks.svg");
+  --glyph-size: 96px 96px;
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  overflow: hidden;
+}
+:root[data-theme="light"] .motif {
+  --motif-plan: var(--color-teal);
+  --motif-glyph: var(--color-teal);
+  --plan-alpha: 0.1;
+  --glyph-alpha: 0.08;
+}
+
+/* Base: the campus plan, bottom left, so the stage's painted page name keeps the bottom right */
+.motif::before {
+  content: "";
+  position: absolute;
+  left: -2vw;
+  bottom: 4vh;
+  width: min(50vw, 800px);
+  aspect-ratio: 1000 / 853;
+  background: var(--motif-plan);
+  opacity: var(--plan-alpha);
+  -webkit-mask: url("/motifs/campus.svg") center / contain no-repeat;
+  mask: url("/motifs/campus.svg") center / contain no-repeat;
+}
+
+/* Accent: the page's glyph field, top right under the header, fading out on all sides */
+.motif::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: min(54vw, 820px);
+  height: min(62vh, 620px);
+  background: var(--motif-glyph);
+  opacity: var(--glyph-alpha);
+  -webkit-mask-image: var(--glyph), radial-gradient(ellipse 75% 85% at 74% 28%, #000 25%, transparent 100%);
+  -webkit-mask-size: var(--glyph-size), 100% 100%;
+  -webkit-mask-repeat: repeat, no-repeat;
+  -webkit-mask-composite: source-in;
+  mask-image: var(--glyph), radial-gradient(ellipse 75% 85% at 74% 28%, #000 25%, transparent 100%);
+  mask-size: var(--glyph-size), 100% 100%;
+  mask-repeat: repeat, no-repeat;
+  mask-composite: intersect;
+}
+
+.motif[data-motif="events"]   { --glyph: url("/motifs/ruler.svg");   --glyph-size: 112px 56px; }
+.motif[data-motif="clubs"]    { --glyph: url("/motifs/rings.svg");   --glyph-size: 120px 120px; }
+.motif[data-motif="projects"] { --glyph: url("/motifs/nodes.svg");   --glyph-size: 128px 128px; }
+.motif[data-motif="notices"]  { --glyph: url("/motifs/ripples.svg"); --glyph-size: 140px 140px; }
+.motif[data-motif="people"]   { --glyph: url("/motifs/stars.svg");   --glyph-size: 160px 160px; --glyph-alpha: 0.15; }
+
+/* Phones: the plan drops behind the tab bar, the glyphs get quieter */
+@media (max-width: 767px) {
+  .motif::before { width: 105vw; left: -38vw; bottom: 16vh; }
+  .motif::after { width: 100vw; height: 46vh; }
+  .motif { --glyph-alpha: 0.08; }
+}
+
+@media print { .motif { display: none; } }
+@media (forced-colors: active) { .motif { display: none; } }
