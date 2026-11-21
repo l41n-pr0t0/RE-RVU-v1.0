@@ -124,9 +124,8 @@ export default function Profile() {
             </label>
             <label className="mt-4 flex cursor-pointer items-center gap-3">
               <input type="checkbox" className="h-5 w-5 accent-[var(--color-gold)]" checked={!!profile.openToCollaborate} onChange={(e) => store.setProfile({ ...profile, openToCollaborate: e.target.checked })} />
-              <span>Open to collaborate <span className="text-sm text-mute">(shows you in People searches)</span></span>
+              <span>Open to collaborate</span>
             </label>
-            <a className="hover-gold mt-4 inline-flex items-center gap-2 text-sm" href={href('people/me')}>See how others see you <Icon name="arrow" /></a>
           </section>
 
           <section aria-labelledby="links">

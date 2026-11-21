@@ -11,7 +11,6 @@ const SCENES: Partial<Record<Route['name'], [string, string]>> = {
   events: ['03', 'Events'],
   clubs: ['04', 'Clubs'],
   projects: ['05', 'Projects'],
-  people: ['06', 'People'],
   profile: ['07', 'You'],
   host: ['08', 'Host'],
   saved: ['09', 'Saved'],

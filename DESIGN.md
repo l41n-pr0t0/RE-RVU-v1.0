@@ -17,14 +17,14 @@ order, size and light, never by decoration.
 **The stage** (`components/Stage.tsx`, mounted once in Shell): a sound stage.
 Dark Slate key light from the top left, two slow follow-spots, a Deep Teal floor
 ruled in perspective to a horizon, hairline rigging on the 12 columns of the
-`.wrap` frame, grain, and the scene's name (Today, Events, People…) painted huge
+`.wrap` frame, grain, and the scene's name (Today, Events, Clubs…) painted huge
 in outlined Playfair italic and cropped at the right edge, so the backdrop says
 where you are. Slate and teal are used in the roles the brand book gives them
 (corporate backgrounds; environmental graphics). Gold never touches the backdrop.
 Sections sit straight on the stage; use `divide-*` hairlines, not opaque
 `bg-ink` cells.
 
-**Navigation**: five sections (Today, Events, Clubs, Projects, People) are the
+**Navigation**: four sections (Today, Events, Clubs, Projects) are the
 whole primary nav, identical in the desktop bar and the phone tab bar. Search
 and alerts sit beside them. Everything personal (profile, saved, calendar,
 notices, host dashboard, theme) is behind the monogram's menu (native popover).
@@ -37,10 +37,7 @@ billing out: the lead lands first, supporting items follow, the ensemble last.
 It comes from this product (a campus of people, clubs and events competing for
 attention) and the app's existing film language, not from an effects catalogue.
 Sustained in: the slate numbers on every page header, the gold line on Home
-(events billed along the week), and the People board, where every ask is ranked
-by how much it needs *you* (skill fit, deadline, urgency, open spots). It reads
-like a job board: billed rows on the left (01 in gold, 01–03 set larger with
-their reasons), the selected post open beside them, re-ranked live with Flip.
+(events billed along the week).
 
 ## 2. Palette and roles
 Only the five brand colours (Brand guidelines §11) and tints/shades mixed from
@@ -80,7 +77,7 @@ them. CSS uses `color-mix()` on the five hex values; TypeScript uses
 - `min-h-[100dvh]`, never `h-screen`.
 
 ## 6. Motion
-- Tier: CSS for hover and press; Framer Motion for small reveals on other pages; GSAP (SplitText, Flip, ScrollTrigger) on People, isolated in that page's tree with `useGSAP` cleanup. No page mixes Framer and GSAP.
+- Tier: CSS for hover and press; Framer Motion for small reveals on other pages.
 - Order = hierarchy: lead → supporting → ensemble. Easing `expo.out` / dolly; no linear easing.
 - Transform and opacity only (Flip runs in scale mode).
 - Everything inside `prefers-reduced-motion: no-preference`; content is visible without JS animation.

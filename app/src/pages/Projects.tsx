@@ -334,7 +334,6 @@ type DetailTab = 'readme' | 'openings' | 'team'
 
 function ProjectDetail({ p }: { p: Project }) {
   const { profile, applications, withdraw, deleteProject } = useStore()
-  const { studentById } = useCatalog()
   const s = useStar(p)
   const [applying, setApplying] = useState<Opening | null>(null)
   const [tab, setTab] = useState<DetailTab>(p.openings.length && !p.mine ? 'openings' : 'readme')
@@ -450,7 +449,6 @@ function ProjectDetail({ p }: { p: Project }) {
           {tab === 'team' && (
             <ul aria-label="Team" className="grid gap-px border border-line bg-line sm:grid-cols-2">
               {p.team.map((m) => {
-                const st = m.studentId ? studentById(m.studentId) : undefined
                 const inner = (
                   <>
                     <Monogram text={m.name} />
@@ -460,7 +458,7 @@ function ProjectDetail({ p }: { p: Project }) {
                     </span>
                   </>
                 )
-                return <li key={m.name} className="bg-ink">{st ? <a href={href(`people/${st.id}`)} className="row-hover flex items-center gap-4 p-4">{inner}</a> : <div className="flex items-center gap-4 p-4">{inner}</div>}</li>
+                return <li key={m.name} className="bg-ink"><div className="flex items-center gap-4 p-4">{inner}</div></li>
               })}
             </ul>
           )}

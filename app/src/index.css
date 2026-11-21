@@ -660,49 +660,6 @@ html.ink-vt::view-transition-group(root) { animation-duration: var(--ink-duratio
   background: repeating-linear-gradient(0deg, rgb(255 255 255 / 0.025) 0 1px, transparent 1px 3px);
 }
 
-/* ---------- The board (People): billing order ----------
-   See DESIGN.md §1b. Rank numerals carry the hierarchy; gold marks billed 01
-   only. Hover is CSS (lightest tier); entrances and re-billing are GSAP. */
-.lead-rank {
-  font-size: clamp(5rem, 3.6rem + 5vw, 9rem);
-  font-weight: 500;
-  line-height: 0.82;
-  letter-spacing: -0.04em;
-  color: var(--color-gold-text);
-}
-.bill-row { position: relative; }
-.bill-row::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: -1px;
-  height: 1px;
-  background: var(--color-gold);
-  transform: scaleX(0);
-  transform-origin: right;
-  transition: transform 0.55s var(--ease-dolly);
-}
-.bill-rank { color: var(--color-mute); transition: color 0.3s var(--ease-dolly), transform 0.45s var(--ease-dolly); display: inline-block; }
-.bill-title { transition: color 0.3s var(--ease-dolly), transform 0.45s var(--ease-dolly); }
-.bill-arrow { transition: transform 0.45s var(--ease-dolly), color 0.3s; }
-.bill-row:focus-visible .bill-rank, .bill-row:focus-visible .bill-title { color: var(--color-gold-text); }
-@media (hover: hover) and (pointer: fine) {
-  .bill-row:hover::after { transform: scaleX(1); transform-origin: left; }
-  .bill-row:hover .bill-rank { color: var(--color-gold-text); transform: translateX(4px); }
-  .bill-row:hover .bill-title { color: var(--color-gold-text); transform: translateX(6px); }
-  .bill-row:hover .bill-arrow { transform: translateX(4px); color: var(--color-gold-text); }
-}
-@media (prefers-reduced-motion: reduce) {
-  .bill-row::after, .bill-rank, .bill-title, .bill-arrow { transition: none; }
-  .bill-row:hover .bill-rank, .bill-row:hover .bill-title, .bill-row:hover .bill-arrow { transform: none; }
-}
-/* A post you just published keeps a gold rule until it settles */
-.bill-fresh::after { transform: scaleX(1); }
-@media (prefers-reduced-motion: no-preference) {
-  .bill-fresh::after { animation: bill-settle 1.4s 1.6s var(--ease-dolly) forwards; }
-}
-@keyframes bill-settle { to { transform: scaleX(0); } }
 :root[data-theme="light"] .slate-no.\!text-teal-bright { color: var(--color-teal) !important; }
 
 /* Composer: once a submit was tried, show every invalid field */

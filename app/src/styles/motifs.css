@@ -67,7 +67,6 @@
 .motif[data-motif="clubs"]    { --glyph: url("/motifs/rings.svg");   --glyph-size: 120px 120px; }
 .motif[data-motif="projects"] { --glyph: url("/motifs/nodes.svg");   --glyph-size: 128px 128px; }
 .motif[data-motif="notices"]  { --glyph: url("/motifs/ripples.svg"); --glyph-size: 140px 140px; }
-.motif[data-motif="people"]   { --glyph: url("/motifs/stars.svg");   --glyph-size: 160px 160px; --glyph-alpha: 0.15; }
 
 /* Phones: the plan drops behind the tab bar, the glyphs get quieter */
 @media (max-width: 767px) {

@@ -331,7 +331,7 @@ function ClubDetail({ c }: { c: Club }) {
             <li key={m.name + m.role} className="flex items-center gap-4 bg-ink p-4">
               <Monogram text={m.name.split(' ').map((w) => w[0]).join('').slice(0, 2)} size="sm" />
               <span className="min-w-0">
-                {m.studentId ? <a className="hover-gold block truncate" href={href(`people/${m.studentId}`)}>{m.name}</a> : <span className="block truncate">{m.name}</span>}
+                <span className="block truncate">{m.name}</span>
                 <span className="block text-sm text-mute">{m.role}</span>
               </span>
             </li>

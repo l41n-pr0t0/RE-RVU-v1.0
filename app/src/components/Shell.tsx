@@ -16,7 +16,6 @@ const NAV: { key: Route['name']; label: string; icon: IconName }[] = [
   { key: 'events', label: 'Events', icon: 'calendar' },
   { key: 'clubs', label: 'Clubs', icon: 'users' },
   { key: 'projects', label: 'Projects', icon: 'layers' },
-  { key: 'people', label: 'People', icon: 'user' },
 ]
 
 /** Everything personal lives behind your monogram, the same on every screen size. */
@@ -99,7 +98,7 @@ export function Shell({ route, children }: { route: Route; children: ReactNode }
               className="group flex h-10 w-9 items-center justify-center gap-2.5 border border-line text-sm sm:w-10 md:justify-start md:px-3 text-mute transition-colors hover:border-gold hover:text-paper md:w-56 xl:w-72"
             >
               <Icon name="search" className="h-4 w-4 shrink-0 transition-colors group-hover:text-gold" />
-              <span className="hidden md:inline">Search people, events, clubs</span>
+              <span className="hidden md:inline">Search events, clubs, projects</span>
               <kbd className="num ml-auto hidden border border-line px-1.5 py-0.5 text-[0.6rem] xl:inline">/</kbd>
             </button>
             <button
@@ -242,7 +241,6 @@ function PaletteBody({ titleId, onClose }: { titleId: string; onClose: () => voi
       ...events.map((e) => ({ kind: 'Event' as const, label: e.title, meta: `${relativeDay(e.start)} · ${e.hostName}`, run: () => openEvent(e.id) })),
       ...clubs.map((c) => ({ kind: 'Club' as const, label: c.name, meta: `${c.category} · ${c.tagline}`, run: () => go(`clubs/${c.id}`) })),
       ...projects.map((p) => ({ kind: 'Project' as const, label: p.name, meta: [p.status, ...p.stack, ...p.openings.map((o) => o.role)].join(', '), run: () => go(`projects/${p.id}`) })),
-      ...students.map((p) => ({ kind: 'Person' as const, label: p.name, meta: p.skills.join(', '), run: () => go(`people/${p.id}`) })),
       ...pastEvents.map((e) => ({ kind: 'Past' as const, label: e.title, meta: `${e.hostName} · archive`, run: () => openEvent(e.id) })),
       ...notices.map((n) => ({ kind: 'Notice' as const, label: n.title, meta: n.from, run: () => go('notices') })),
     ]
@@ -282,7 +280,7 @@ function PaletteBody({ titleId, onClose }: { titleId: string; onClose: () => voi
               pick(hits[i])
             }
           }}
-          placeholder="Events, clubs, projects, people, skills"
+          placeholder="Events, clubs, projects, skills"
           aria-label="Search"
           aria-controls="palette-list"
           aria-activedescendant={hits[i] ? `hit-${i}` : undefined}
